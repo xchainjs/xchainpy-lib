@@ -17,3 +17,19 @@ def mnemonicToPrivateKey(mnemonic, passPhrase = ''):
     child = wallet.get_child_for_path(HD_PATH)
     privateKey = child.get_private_key_hex().decode()
     return privateKey
+
+def privateKeyToPublicKey(privateKey):
+    pk = PrivateKey(bytes(bytearray.fromhex(privateKey)))
+    publicKey = pk.pubkey.serialize(compressed=True)
+    return publicKey
+
+def privateKeyToAddress(privateKey, network):
+    publicKey = privateKeyToPublicKey(privateKey)
+    address = address_from_public_key(publicKey, network.hrp)
+    # address = address_from_public_key(publicKey, 'tbnb' if network == 'testnet' else 'bnb')
+    return address
+
+def publicKeyToAddress(publicKey, network):
+    address = address_from_public_key(publicKey, network.hrp)
+    # address = address_from_public_key(publicKey, 'tbnb' if network == 'testnet' else 'bnb')
+    return address
