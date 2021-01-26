@@ -18,6 +18,9 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         self.setPhrase(phrase)
         self.setNetwork(phrase)
 
+    def getClientUrl(self):
+        return 'https://testnet-dex.binance.org' if self.network == 'testnet' else 'https://dex.binance.org'
+
     def getPrivateKey(self):
         if not self.privateKey:
             if not self.phrase:
