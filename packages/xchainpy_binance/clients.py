@@ -25,6 +25,12 @@ class Client(interface.IXChainClient):
         #set phrase ():
             # check phrase validity (xchainpy_crypto)
 
+    def getAddress(self): 
+        if not self.address:
+            address = None
+        return 
+
+        
     def setPhrase(self, phrase: str):
         if not self.phrase or self.phrase != phrase:
             if not crypto.validatePhrase(phrase):
@@ -38,11 +44,6 @@ class Client(interface.IXChainClient):
     def setNetwork(self, network: str):
         pass
 
-    def getAddress(self): 
-        if not self.address:
-            # address = 
-        return 
-    
     def getBalance(self, address: str, asset):
         pass
 
