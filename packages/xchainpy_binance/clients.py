@@ -3,6 +3,7 @@ from binance_chain.constants import KlineInterval
 from binance_chain.environment import BinanceEnvironment
 
 from xchainpy_client import interface
+from xchainpy_crypto import crypto
 
 class Client(interface.IXChainClient):
     def init(self, phrase, network = 'testnet'):
@@ -25,13 +26,22 @@ class Client(interface.IXChainClient):
             # check phrase validity (xchainpy_crypto)
 
     def setPhrase(self, phrase: str):
-        pass
+        if not self.phrase or self.phrase != phrase:
+            if not crypto.validatePhrase(phrase):
+                pass # throw an err
+            self.phrase = phrase
+            self.privateKey = None
+            self.address = ''
+
+        return getAddress()
 
     def setNetwork(self, network: str):
         pass
 
     def getAddress(self): 
-        pass
+        if not self.address:
+            # address = 
+        return 
     
     def getBalance(self, address: str, asset):
         pass
