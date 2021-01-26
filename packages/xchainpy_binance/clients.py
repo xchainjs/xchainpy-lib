@@ -41,5 +41,5 @@ class Client(interface.IXChainClient):
 
     def getFees(self):
         pass
-  }
+
     
