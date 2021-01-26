@@ -9,8 +9,6 @@ from xchainpy_binance import utils
 
 class Client(interface.IXChainClient): # create an interface for binance methods (getprivatekey, getClientUrl and ...)
 
-    #add these params:
-        # self.privateKey, self.privateKey, self.address, self.client
     phrase = address = network = ''
     privateKey = client = None
 
