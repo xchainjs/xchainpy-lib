@@ -26,10 +26,8 @@ def privateKeyToPublicKey(privateKey):
 def privateKeyToAddress(privateKey, network):
     publicKey = privateKeyToPublicKey(privateKey)
     address = address_from_public_key(publicKey, network.hrp)
-    # address = address_from_public_key(publicKey, 'tbnb' if network == 'testnet' else 'bnb')
     return address
 
 def publicKeyToAddress(publicKey, network):
     address = address_from_public_key(publicKey, network.hrp)
-    # address = address_from_public_key(publicKey, 'tbnb' if network == 'testnet' else 'bnb')
     return address
