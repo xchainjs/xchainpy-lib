@@ -33,7 +33,7 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         return self.privateKey
 
     def getAddress(self):
-        """Get the current address
+        """Get the current addres
 
         :returns: the current address
         :raises: Raises if phrase has not been set before. A phrase is needed to create a wallet and to derive an address from it.
