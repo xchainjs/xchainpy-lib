@@ -1,30 +1,22 @@
 class IXChainClient():
 
-    def setNetwork(self, network: str):
+    def set_network(self, network: str):
         pass
-    def getNetwork(self):
+    def get_network(self):
         pass
-    def getExplorerUrl(self):
+    def validate_address(self, address: str): 
         pass
-    def getExplorerAddressUrl(self, address: str):
+    def get_address(self): 
         pass
-    def getExplorerTxUrl(self, txID: str): 
+    def set_phrase(self, phrase: str):
         pass
-    def validateAddress(self, address: str): 
+    def get_balance(self, address: str, asset):
         pass
-    def getAddress(self): 
+    def get_transaction_data(self, txId: str):
         pass
-    def setPhrase(self, phrase: str):
-        pass
-    def getBalance(self, address: str, asset):
-        pass
-    def getTransactions(self, txHistoryParams):
-        pass
-    def getTransactionData(self, txId: str):
-        pass
-    def getFees(self):
+    def get_fees(self):
         pass
     def transfer(self, txParams):
         pass
-    def purgeClient(self):
+    def purge_client(self):
         pass

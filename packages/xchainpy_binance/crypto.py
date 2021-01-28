@@ -6,28 +6,28 @@ from binance_chain.environment import BinanceEnvironment
 
 HD_PATH = "44'/714'/0'/0/0"
 
-def mnemonicToSeed(mnemonic, passPhrase = ''):
+def mnemonic_to_seed(mnemonic, pass_phrase = ''):
     mnemo = Mnemonic("english")
-    seed = mnemo.to_seed(mnemonic, passPhrase)
+    seed = mnemo.to_seed(mnemonic, pass_phrase)
     return seed
 
-def mnemonicToPrivateKey(mnemonic, passPhrase = ''):
-    seed = mnemonicToSeed(mnemonic, passPhrase)
+def mnemonic_to_private_key(mnemonic, pass_phrase = ''):
+    seed = mnemonic_to_seed(mnemonic, pass_phrase)
     wallet = Bip32Wallet.from_master_secret(seed=seed, network='BTC')
     child = wallet.get_child_for_path(HD_PATH)
-    privateKey = child.get_private_key_hex().decode()
-    return privateKey
+    private_key = child.get_private_key_hex().decode()
+    return private_key
 
-def privateKeyToPublicKey(privateKey):
-    pk = PrivateKey(bytes(bytearray.fromhex(privateKey)))
-    publicKey = pk.pubkey.serialize(compressed=True)
-    return publicKey
+def private_key_to_public_key(private_key):
+    pk = PrivateKey(bytes(bytearray.fromhex(private_key)))
+    public_key = pk.pubkey.serialize(compressed=True)
+    return public_key
 
-def privateKeyToAddress(privateKey, network):
-    publicKey = privateKeyToPublicKey(privateKey)
-    address = address_from_public_key(publicKey, network.hrp)
+def private_key_to_address(private_key, network):
+    public_key = private_key_to_public_key(private_key)
+    address = address_from_public_key(public_key, network.hrp)
     return address
 
-def publicKeyToAddress(publicKey, network):
-    address = address_from_public_key(publicKey, network.hrp)
+def public_key_to_address(public_key, network):
+    address = address_from_public_key(public_key, network.hrp)
     return address

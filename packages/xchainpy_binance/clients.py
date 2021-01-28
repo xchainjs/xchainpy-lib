@@ -7,45 +7,45 @@ from xchainpy_crypto import crypto as xchainpy_crypto
 from xchainpy_binance import crypto
 from xchainpy_binance import utils
 
-class Client(interface.IXChainClient): # create an interface for binance methods (getprivatekey, getClientUrl and ...)
+class Client(interface.IXChainClient): # create an interface for binance methods (getprivate_key, get_client_url and ...)
 
     phrase = address = network = ''
-    privateKey = client = None
+    private_key = client = None
 
     def __init__(self, phrase, network = 'testnet'):
-        self.setNetwork(network)
-        self.setPhrase(phrase)
+        self.set_network(network)
+        self.set_phrase(phrase)
 
-    def getClientUrl(self):
+    def get_client_url(self):
         return 'https://testnet-dex.binance.org' if self.network == 'testnet' else 'https://dex.binance.org'
 
-    def getPrivateKey(self):
+    def get_private_key(self):
         """Get private key
 
         :returns: the private key generated from the given phrase
         :raises: raise an exception if phrase not set
         """
-        if not self.privateKey:
+        if not self.private_key:
             if not self.phrase:
                 raise Exception('Phrase not set')
 
-            self.privateKey = crypto.mnemonicToPrivateKey(self.phrase) # passPhrase ?
-        return self.privateKey
+            self.private_key = crypto.mnemonic_to_private_key(self.phrase) # passPhrase ?
+        return self.private_key
 
-    def getAddress(self):
+    def get_address(self):
         """Get the current addres
 
         :returns: the current address
         :raises: Raises if phrase has not been set before. A phrase is needed to create a wallet and to derive an address from it.
         """
         if not self.address:
-            self.address = crypto.privateKeyToAddress(self.getPrivateKey(), utils.getPrefix(self.network))
+            self.address = crypto.private_key_to_address(self.get_private_key(), utils.get_prefix(self.network))
             if not self.address :
                 raise Exception("Address has to be set. Or set a phrase by calling `setPhrase` before to use an address of an imported key.")
         return self.address
 
 
-    def setPhrase(self, phrase: str):
+    def set_phrase(self, phrase: str):
         """Set/Update a new phrase
 
         :param phrase: A new phrase
@@ -55,16 +55,16 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         """
         
         if not self.phrase or self.phrase != phrase:
-            if not xchainpy_crypto.validatePhrase(phrase):
+            if not xchainpy_crypto.validate_phrase(phrase):
                 raise Exception("invalid phrase")    
             
             self.phrase = phrase
-            self.privateKey = None
+            self.private_key = None
             self.address = ''
 
-        return self.getAddress()
+        return self.get_address()
 
-    def setNetwork(self, network: str):
+    def set_network(self, network: str):
         """Set/update the current network
 
         :param network: "mainnet" or "testnet"
@@ -89,13 +89,13 @@ class Client(interface.IXChainClient): # create an interface for binance methods
                 raise Exception("Invalid network")
         return self.client
 
-    def getBalance(self, address: str, asset):
+    def get_balance(self, address: str, asset):
         pass
 
     def transfer(self, txParams):
         pass
 
-    def getFees(self):
+    def get_fees(self):
         pass
 
     
