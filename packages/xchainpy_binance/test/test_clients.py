@@ -32,13 +32,10 @@ class TestClient:
 
     def test_update_net(self, client):
         client.set_network('testnet')
-        # assert client.get_network()
-        # assert client.get_address() == self.testnetaddress
+        assert client.get_network() == 'testnet'
+        assert client.get_address() == self.testnetaddress
     
     def test_set_phrase_return_address(self, client):
         assert client.set_phrase(self.phrase) == self.mainnetaddress
         client.set_network('testnet')
-        assert client.set_phrase(self.phrase) == self.mainnetaddress
-
-    def test_validate_address(self, client):
-        pass
+        assert client.set_phrase(self.phrase) == self.testnetaddress

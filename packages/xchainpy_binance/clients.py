@@ -17,6 +17,9 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         self.set_phrase(phrase)
 
     def get_client_url(self):
+        """Get client url
+        :returns: the client url for binance chain based on the network
+        """
         return 'https://testnet-dex.binance.org' if self.network == 'testnet' else 'https://dex.binance.org'
 
     def get_private_key(self):
@@ -33,7 +36,7 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         return self.private_key
 
     def get_address(self):
-        """Get the current addres
+        """Get the current address
 
         :returns: the current address
         :raises: Raises if phrase has not been set before. A phrase is needed to create a wallet and to derive an address from it.
@@ -87,7 +90,14 @@ class Client(interface.IXChainClient): # create an interface for binance methods
                 self.client = AsyncHttpApiClient()
             else: 
                 raise Exception("Invalid network")
+        self.address = ''
         return self.client
+
+    def get_network(self):
+        """Get the current network
+        :returns: the current network. (`mainnet` or `testnet`)
+        """
+        return self.network
 
     def get_balance(self, address: str, asset):
         pass
@@ -97,3 +107,9 @@ class Client(interface.IXChainClient): # create an interface for binance methods
 
     def get_fees(self):
         pass
+
+phrase = 'rural bright ball negative already grass good grant nation screen model pizza'
+
+c = Client(phrase)
+
+print('a')
