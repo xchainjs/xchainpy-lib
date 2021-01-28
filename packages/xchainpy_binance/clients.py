@@ -107,9 +107,3 @@ class Client(interface.IXChainClient): # create an interface for binance methods
 
     def get_fees(self):
         pass
-
-phrase = 'rural bright ball negative already grass good grant nation screen model pizza'
-
-c = Client(phrase)
-
-print('a')
