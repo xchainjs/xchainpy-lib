@@ -21,6 +21,7 @@ class Client(interface.IXChainClient): # create an interface for binance methods
 
     def get_private_key(self):
         """Get private key
+
         :returns: the private key generated from the given phrase
         :raises: raise an exception if phrase not set
         """
@@ -32,7 +33,8 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         return self.private_key
 
     def get_address(self):
-        """Get the current address
+        """Get the current addres
+
         :returns: the current address
         :raises: Raises if phrase has not been set before. A phrase is needed to create a wallet and to derive an address from it.
         """
@@ -45,6 +47,7 @@ class Client(interface.IXChainClient): # create an interface for binance methods
 
     def set_phrase(self, phrase: str):
         """Set/Update a new phrase
+
         :param phrase: A new phrase
         :type phrase: str
         :returns: The address from the given phrase
@@ -63,6 +66,7 @@ class Client(interface.IXChainClient): # create an interface for binance methods
 
     def set_network(self, network: str):
         """Set/update the current network
+
         :param network: "mainnet" or "testnet"
         :type network: str
         :returns: the client
@@ -93,5 +97,3 @@ class Client(interface.IXChainClient): # create an interface for binance methods
 
     def get_fees(self):
         pass
-
-    

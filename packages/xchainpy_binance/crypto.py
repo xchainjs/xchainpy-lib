@@ -23,11 +23,11 @@ def private_key_to_public_key(private_key):
     public_key = pk.pubkey.serialize(compressed=True)
     return public_key
 
-def private_key_to_address(private_key, network):
+def private_key_to_address(private_key, prefix):
     public_key = private_key_to_public_key(private_key)
-    address = address_from_public_key(public_key, network.hrp)
+    address = address_from_public_key(public_key, prefix)
     return address
 
-def public_key_to_address(public_key, network):
-    address = address_from_public_key(public_key, network.hrp)
+def public_key_to_address(public_key, prefix):
+    address = address_from_public_key(public_key, prefix)
     return address
