@@ -1,4 +1,4 @@
-from xchainpy_util import chain
+from xchainpy_util.chain import is_chain
 
 class Asset:
     chain = None # "BNB" | "BTC" | "ETH" | "THOR" | "GAIA" | "POLKA"
@@ -13,7 +13,7 @@ class Asset:
         :param ticker: is the symbol or a part of that
         :type ticker: str
         """
-        if chain.is_chain(chain):
+        if is_chain(chain):
             self.chain = chain
         else:
             raise Exception('the chain is invalid')
@@ -26,9 +26,19 @@ class Asset:
         else:
             self.ticker = ticker
     
-    def asset_to_string(self):
+    def __str__(self):
         """Get an asset from a string
 
         :returns: the asset (BNB.BNB or BNB.RUNE)
         """
         return f'{self.chain}.{self.symbol}'
+
+
+    def __eq__(self, asset):
+        """get are two assets equal or not
+
+        :param asset: an asset
+        :type asset: Asset
+        :returns: the assets are equal or not
+        """
+        return str(self) == str(asset)
