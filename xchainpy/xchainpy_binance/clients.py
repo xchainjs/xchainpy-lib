@@ -170,29 +170,3 @@ class Client(interface.IXChainClient): # create an interface for binance methods
 
     def get_fees(self):
         pass
-
-# async def main():
-
-#     asset = Asset('BNB', 'BNB')
-#     recipient = 'tbnb185tqzq3j6y7yep85lncaz9qeectjxqe5054cgn'
-#     amount = 0.001
-
-#     phrase = 'legend civil salute surface insect since gap unfold bleak endless near push damp rate foster hand nature rib repeat novel cross pizza squirrel topple'
-#     a = Client(phrase, 'testnet')
-
-#     b = await a.get_balance()
-#     o = b[0]['amount']
-#     g = b[0]['asset']
-#     g = g['ticker']
-
-#     y = a.private_key
-#     return 4
-
-# import asyncio
-
-# loop = asyncio.get_event_loop()
-# try:
-#     loop.run_until_complete(main())
-# finally:
-#     loop.run_until_complete(loop.shutdown_asyncgens())
-#     loop.close()
