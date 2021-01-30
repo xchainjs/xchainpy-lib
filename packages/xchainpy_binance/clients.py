@@ -1,11 +1,14 @@
 from binance_chain.http import AsyncHttpApiClient
 from binance_chain.constants import KlineInterval
 from binance_chain.environment import BinanceEnvironment
+from binance_chain.messages import TransferMsg
+from binance_chain.wallet import Wallet
 
 from xchainpy_client import interface
 from xchainpy_crypto import crypto as xchainpy_crypto
 from xchainpy_binance import crypto
 from xchainpy_binance import utils
+from xchainpy_util.asset import Asset
 
 class Client(interface.IXChainClient): # create an interface for binance methods (getprivate_key, get_client_url and ...)
 
@@ -102,8 +105,39 @@ class Client(interface.IXChainClient): # create an interface for binance methods
     def get_balance(self, address: str, asset):
         pass
 
-    def transfer(self, txParams):
-        pass
+    def transfer(self, asset : Asset , amount , recipient , memo=''):
+        """transfer balances
+
+        :param asset: asset object containing : chain , symbol , ticker(optional)
+        :type asset: Asset
+        :param amount: amount of asset to transfer (don't multiply by 10**8)
+        :type amount: int , float , decimal
+        :param recipient: destination address
+        :type recipient: str
+        :param memo: optional memo for transaction
+        :type memo: str
+        :returns: result of transfer
+        :raises: raises if asset or amount or destination address not provided
+        """
+        wallet = Wallet(self.get_private_key())
+        client = AsyncHttpApiClient()
+
+        if not asset:
+            raise Exception('Asset must be provided')
+        if not amount:
+            raise Exception('Amount must be provided')
+        if not recipient:
+            raise Exception('Destination address must be provided')
+
+        transfer_msg = TransferMsg(
+            wallet=wallet,
+            symbol=asset.symbol,
+            amount=amount,
+            to_address=recipient,
+            memo=memo
+        )
+        res = client.broadcast_msg(transfer_msg, sync=True) # sync mode
+        return res
 
     def get_fees(self):
         pass
