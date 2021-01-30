@@ -14,8 +14,8 @@ from xchainpy_binance.balance import BinanceBalance
 class Client(interface.IXChainClient): # create an interface for binance methods (getprivate_key, get_client_url and ...)
 
     phrase = address = network = ''
-    private_key = client = None
-
+    private_key = client = env = None
+    
     def __init__(self, phrase, network = 'testnet'):
         """
         :param phrase: a phrase (mnemonic)
@@ -69,7 +69,7 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         
         if not self.phrase or self.phrase != phrase:
             if not xchainpy_crypto.validate_phrase(phrase):
-                raise Exception("invalid phrase")    
+                raise Exception("invalid phrase")
             
             self.phrase = phrase
             self.private_key = None
@@ -93,13 +93,14 @@ class Client(interface.IXChainClient): # create an interface for binance methods
             # choose network (testnet or mainnet)
             if self.network == 'testnet':
                 # initialise with Testnet environment
-                testnet_env = BinanceEnvironment.get_testnet_env()
-                self.client = AsyncHttpApiClient(env=testnet_env)
+                self.env = BinanceEnvironment.get_testnet_env()
             elif self.network == 'mainnet':
-                # Alternatively pass no env to get production
-                self.client = AsyncHttpApiClient()
+                # initialise with mainnet environment
+                self.env = BinanceEnvironment.get_production_env()
             else: 
                 raise Exception("Invalid network")
+
+            self.client = AsyncHttpApiClient(env=self.env)
         self.address = ''
         return self.client
 
@@ -130,7 +131,7 @@ class Client(interface.IXChainClient): # create an interface for binance methods
             print(str(err))
         
 
-    def transfer(self, asset : Asset , amount , recipient , memo=''):
+    async def transfer(self, asset : Asset , amount , recipient , memo=''):
         """transfer balances
         :param asset: asset object containing : chain , symbol , ticker(optional)
         :type asset: Asset
@@ -143,8 +144,7 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         :returns: result of transfer
         :raises: raises if asset or amount or destination address not provided
         """
-        wallet = Wallet(self.get_private_key())
-        client = AsyncHttpApiClient()
+        wallet = Wallet(self.get_private_key(), env=self.env)
 
         if not asset:
             raise Exception('Asset must be provided')
@@ -153,15 +153,19 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         if not recipient:
             raise Exception('Destination address must be provided')
 
-        transfer_msg = TransferMsg(
-            wallet=wallet,
-            symbol=asset.symbol,
-            amount=amount,
-            to_address=recipient,
-            memo=memo
-        )
-        res = client.broadcast_msg(transfer_msg, sync=True) # sync mode
-        return res
+        try:
+            transfer_msg = TransferMsg(
+                wallet=wallet,
+                symbol=asset.symbol,
+                amount=amount,
+                to_address=recipient,
+                memo=memo
+            )
+            res = await self.client.broadcast_msg(transfer_msg)
+            return res
+
+        except Exception as err:
+            print(err)
 
     def get_fees(self):
         pass
