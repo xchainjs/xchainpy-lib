@@ -4,12 +4,12 @@ from binance_chain.environment import BinanceEnvironment
 from binance_chain.messages import TransferMsg
 from binance_chain.wallet import Wallet
 
-from xchainpy_client import interface
-from xchainpy_crypto import crypto as xchainpy_crypto
-from xchainpy_binance import crypto
-from xchainpy_binance import utils
-from xchainpy_util.asset import Asset
-from xchainpy_binance.balance import BinanceBalance
+from xchainpy.xchainpy_client import interface
+from xchainpy.xchainpy_crypto import crypto as xchainpy_crypto
+from xchainpy.xchainpy_binance import crypto
+from xchainpy.xchainpy_binance import utils
+from xchainpy.xchainpy_util.asset import Asset
+from xchainpy.xchainpy_binance.balance import BinanceBalance
 
 class Client(interface.IXChainClient): # create an interface for binance methods (getprivate_key, get_client_url and ...)
 
@@ -133,15 +133,16 @@ class Client(interface.IXChainClient): # create an interface for binance methods
 
     async def transfer(self, asset : Asset , amount , recipient , memo=''):
         """transfer balances
+
         :param asset: asset object containing : chain , symbol , ticker(optional)
         :type asset: Asset
         :param amount: amount of asset to transfer (don't multiply by 10**8)
-        :type amount: int , float , decimal
+        :type amount: int, float, decimal
         :param recipient: destination address
         :type recipient: str
         :param memo: optional memo for transaction
         :type memo: str
-        :returns: result of transfer
+        :returns: the transaction hash
         :raises: raises if asset or amount or destination address not provided
         """
         wallet = Wallet(self.get_private_key(), env=self.env)
@@ -161,8 +162,8 @@ class Client(interface.IXChainClient): # create an interface for binance methods
                 to_address=recipient,
                 memo=memo
             )
-            res = await self.client.broadcast_msg(transfer_msg)
-            return res
+            transfer_result = await self.client.broadcast_msg(transfer_msg)
+            return transfer_result[0]['hash']
 
         except Exception as err:
             print(err)

@@ -1,4 +1,4 @@
-from xchainpy_util.chain import is_chain
+from xchainpy.xchainpy_util.chain import is_chain
 
 class Asset:
     chain = None # "BNB" | "BTC" | "ETH" | "THOR" | "GAIA" | "POLKA"
@@ -42,3 +42,6 @@ class Asset:
         :returns: the assets are equal or not
         """
         return str(self) == str(asset)
+
+    def __getitem__(self, item):
+         return getattr(self, item)
