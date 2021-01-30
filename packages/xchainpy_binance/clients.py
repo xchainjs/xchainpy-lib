@@ -9,6 +9,7 @@ from xchainpy_crypto import crypto as xchainpy_crypto
 from xchainpy_binance import crypto
 from xchainpy_binance import utils
 from xchainpy_util.asset import Asset
+from xchainpy_binance.balance import BinanceBalance
 
 class Client(interface.IXChainClient): # create an interface for binance methods (getprivate_key, get_client_url and ...)
 
@@ -16,6 +17,12 @@ class Client(interface.IXChainClient): # create an interface for binance methods
     private_key = client = None
 
     def __init__(self, phrase, network = 'testnet'):
+        """
+        :param phrase: a phrase (mnemonic)
+        :type phrase: str
+        :param network: testnet or mainnet
+        :type network: str
+        """
         self.set_network(network)
         self.set_phrase(phrase)
 
@@ -102,12 +109,29 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         """
         return self.network
 
-    def get_balance(self, address: str, asset):
-        pass
+    async def get_balance(self, address: str = None, asset: Asset = None):
+        """Get the balance of a given address
+
+        :param address: By default, it will return the balance of the current wallet. (optional)
+        :type If not set, it will return all assets available. (optional)
+        :returns: The balance of the address
+        """
+        try:
+            account = await self.client.get_account(address or self.get_address())
+            binance_balances = account['balances']
+            balances = []
+            for balance in binance_balances:
+                balance = BinanceBalance(balance)
+                if not asset or str(balance.asset) == str(asset):
+                    balances.append(balance)
+            return balances
+
+        except Exception as err:
+            print(str(err))
+        
 
     def transfer(self, asset : Asset , amount , recipient , memo=''):
         """transfer balances
-
         :param asset: asset object containing : chain , symbol , ticker(optional)
         :type asset: Asset
         :param amount: amount of asset to transfer (don't multiply by 10**8)

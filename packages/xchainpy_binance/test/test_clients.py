@@ -1,5 +1,6 @@
 import pytest
 from xchainpy_binance.clients import Client
+from xchainpy_util.asset import Asset
 
 class TestClient:
 
@@ -7,6 +8,7 @@ class TestClient:
     phrase = 'rural bright ball negative already grass good grant nation screen model pizza'
     mainnetaddress = 'bnb1zd87q9dywg3nu7z38mxdcxpw8hssrfp9e738vr'
     testnetaddress = 'tbnb1zd87q9dywg3nu7z38mxdcxpw8hssrfp9htcrvj'
+    bnb_asset = Asset('BNB', 'BNB', 'BNB')
 
     @pytest.fixture
     def client(self):
@@ -39,3 +41,19 @@ class TestClient:
         assert client.set_phrase(self.phrase) == self.mainnetaddress
         client.set_network('testnet')
         assert client.set_phrase(self.phrase) == self.testnetaddress
+
+    @pytest.mark.asyncio
+    async def test_has_no_balances(self, client):
+        assert await client.get_balance() == []
+
+    @pytest.mark.asyncio
+    async def test_has_balances(self, client):
+        client.set_network('testnet')
+        assert await client.get_balance()
+
+    @pytest.mark.asyncio
+    async def test_balance_has_correct_asset(self, client):
+        client.set_network('testnet')
+        balance = await client.get_balance(self.testnetaddress, self.bnb_asset)
+        assert str(balance[0].asset) == str(self.bnb_asset)
+        assert balance[0].amount == '12.92899000'
