@@ -1,4 +1,4 @@
-from xchainpy_util.asset import Asset
+from xchainpy.xchainpy_util.asset import Asset
 
 class Balance:
     asset = None # Asset
@@ -13,3 +13,6 @@ class Balance:
         """
         self.asset = asset
         self.amount = amount
+
+    def __getitem__(self, item):
+         return getattr(self, item)

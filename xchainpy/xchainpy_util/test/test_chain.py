@@ -1,5 +1,5 @@
 import pytest
-from xchainpy_util import chain
+from xchainpy.xchainpy_util import chain
 
 class TestChain:
 

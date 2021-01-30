@@ -1,6 +1,6 @@
-from xchainpy_util.asset import Asset
-from xchainpy_util.balance import Balance
-from xchainpy_util.chain import BNBCHAIN
+from xchainpy.xchainpy_util.asset import Asset
+from xchainpy.xchainpy_util.balance import Balance
+from xchainpy.xchainpy_util.chain import BNBCHAIN
 
 def get_prefix(network):
     """Convert network type to prefix of address

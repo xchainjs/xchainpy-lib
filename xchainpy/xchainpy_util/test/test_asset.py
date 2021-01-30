@@ -1,5 +1,5 @@
 import pytest
-from xchainpy_util.asset import Asset
+from xchainpy.xchainpy_util.asset import Asset
 
 class TestAsset:
 
