@@ -128,7 +128,7 @@ class Client(interface.IXChainClient): # create an interface for binance methods
             return balances
 
         except Exception as err:
-            print(str(err))
+            return err
         
 
     async def transfer(self, asset : Asset , amount , recipient , memo=''):
@@ -166,7 +166,7 @@ class Client(interface.IXChainClient): # create an interface for binance methods
             return transfer_result[0]['hash']
 
         except Exception as err:
-            print(err)
+            return err
 
 
     async def get_transfer_fee(self):
