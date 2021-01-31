@@ -168,5 +168,33 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         except Exception as err:
             print(err)
 
-    def get_fees(self):
-        pass
+
+    async def get_transfer_fee(self):
+        """Get the current transfer fee
+
+        :returns: The current transfer fee
+        """
+        try:
+            fees = await self.client.get_fees()
+            # the first fee from the fees that matches the condition, and returns None if no item matches
+            transfer_fee = next((fee for fee in fees if 'fixed_fee_params' in fee), None)
+            return transfer_fee
+        except Exception as err:
+            return err
+
+
+    async def get_fees(self):
+        """Get the current fee
+
+        :returns: The current fee 
+        """
+        try:
+            transfer_fee = await self.get_transfer_fee()
+            single_tx_fee = transfer_fee['fixed_fee_params']['fee'] * 10 ** -8
+            return {
+                'fast': single_tx_fee,
+                'fastest': single_tx_fee,
+                'average': single_tx_fee
+            }
+        except Exception as err:
+            return err
