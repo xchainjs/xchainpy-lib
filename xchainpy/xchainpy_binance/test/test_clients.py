@@ -15,6 +15,7 @@ class TestClient:
     
     transfer_amount = 0.001
     single_tx_fee = 37500
+    transfer_fee = {'average': single_tx_fee, 'fast': single_tx_fee, 'fastest': single_tx_fee }
 
     @pytest.fixture
     def client(self):
@@ -76,3 +77,11 @@ class TestClient:
         after_balance = await client.get_balance()
         after_balance_amount = after_balance[0].amount
         assert round((float(before_balance_amount) - float(after_balance_amount)) * 10**8) == self.single_tx_fee
+
+    @pytest.mark.asyncio
+    async def test_get_transfer_fees(self, client):
+        client.set_network('testnet')
+        fee = await client.get_fees()
+        assert fee['average'] == self.transfer_fee['average'] * 10**-8
+        assert fee['fast'] == self.transfer_fee['fast'] * 10**-8
+        assert fee['fastest'] == self.transfer_fee['fastest'] * 10**-8
