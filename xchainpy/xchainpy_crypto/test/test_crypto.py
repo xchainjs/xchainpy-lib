@@ -14,9 +14,10 @@ class TestCrypto:
     def test_invalid_phrase(self):
         assert crypto.validate_phrase('invalid phrase') == False
 
-    def test_export_keystore(self):
+    @pytest.mark.asyncio
+    async def test_export_keystore(self):
         password = 'thorchain'
-        keystore = crypto.encrypt_to_keystore(self.phrase , password)
+        keystore = await crypto.encrypt_to_keystore(self.phrase , password)
         assert keystore['crypto']['cipher'] == AES.MODE_CTR
         assert keystore['crypto']['kdf'] == 'pbkdf2'
         assert keystore['crypto']['kdf_params']['prf'] == 'hmac-sha256'
@@ -24,9 +25,10 @@ class TestCrypto:
         assert keystore['version'] == 1
         assert keystore['meta'] == 'xchain-keystore'
     
-    def test_import_keystore(self):
+    @pytest.mark.asyncio
+    async def test_import_keystore(self):
         password = 'thorchain'
-        keystore = crypto.encrypt_to_keystore(self.phrase , password)
-        decrypted = crypto.decrypt_from_keystore(keystore , password)
+        keystore = await crypto.encrypt_to_keystore(self.phrase , password)
+        decrypted = await crypto.decrypt_from_keystore(keystore , password)
         assert decrypted == self.phrase
 
