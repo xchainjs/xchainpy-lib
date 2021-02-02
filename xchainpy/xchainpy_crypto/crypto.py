@@ -35,6 +35,18 @@ def validate_phrase(phrase: str):
 
 
 async def encrypt_to_keystore(phrase: str, password: str):
+    """Get the Keystore from the given phrase and password.
+
+    Args:
+        phrase (str): phrase
+        password (str): password
+
+    Raises:
+        Exception: if phrase is invalid
+
+    Returns:
+        [type]: Keystore
+    """
     if not validate_phrase(phrase):
         raise Exception("Invalid BIP39 Phrase")
 
@@ -66,6 +78,19 @@ async def encrypt_to_keystore(phrase: str, password: str):
 
 
 async def decrypt_from_keystore(keystore : Keystore, password: str):
+    """ Get the phrase from the keystore
+
+    Args:
+        keystore (Keystore): keystore
+        password (str): password
+
+    Raises:
+        Exception: if password is incorrect
+        Exception: any inner exceptions
+
+    Returns:
+        [type]: the phrase from keystore
+    """
     kdf_params = keystore.crypto.kdf_params
     try:
         derived_key = await utils.pbkdf2(
