@@ -1,12 +1,15 @@
+from typing import Counter
 from bip_utils import Bip39MnemonicValidator
 from Crypto.Random import get_random_bytes
 from Crypto.Hash import SHA256
 from Crypto.Hash import BLAKE2b
 from Crypto.Cipher import AES
+from Crypto.Util import Counter
 import xchainpy.xchainpy_crypto.utils as utils
 import uuid
 
 CIPHER = AES.MODE_CTR
+NBITS = 128
 KDF = 'pbkdf2'
 PRF = 'hmac-sha256'
 DKLEN = 32
@@ -41,8 +44,11 @@ def encrypt_to_keystore(phrase: str, password: str):
 
     derived_key = utils.pbkdf2(
         password, salt, kdf_params['c'], kdf_params['dklen'], HASHFUNCTION)
-    aes_cipher = AES.new(derived_key[0:16], CIPHER, iv)
-    cipher_bytes = aes_cipher.encrypt(phrase)
+
+    ctr = Counter.new(NBITS,initial_value=int(iv.hex(),16))
+    aes_cipher = AES.new(derived_key[0:16], AES.MODE_CTR,counter=ctr)
+    cipher_bytes = aes_cipher.encrypt(phrase.encode('utf8'))
+
     blake256 = BLAKE2b.new(digest_bits=256)
     blake256.update((derived_key[16:32] + cipher_bytes))
     mac = blake256.hexdigest()
@@ -54,7 +60,7 @@ def encrypt_to_keystore(phrase: str, password: str):
         "crypto" : crypto_struct,
         "id" : ID,
         "version" : 1,
-        "mata" : META
+        "meta" : META
     }
 
     return keystore
@@ -74,11 +80,12 @@ def decrypt_from_keystore(keystore , password : str):
         if mac != keystore['crypto']['mac'] :
             raise Exception('Invalid Password')
 
-        aes_decipher = AES.new(derived_key[0:16],keystore['crypto']['cipher'],bytes.fromhex(keystore['crypto']['cipher_params']['iv']))
+        ctr = Counter.new(NBITS,initial_value=int(keystore['crypto']['cipher_params']['iv'],16))
+        aes_decipher = AES.new(derived_key[0:16],keystore['crypto']['cipher'],counter=ctr)
         decipher_bytes = aes_decipher.decrypt(cipher_bytes)
 
         res = bytes.decode(decipher_bytes)
-        return res;
+        return res
         
 
     except Exception as err:
