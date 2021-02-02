@@ -22,10 +22,10 @@ HASHFUNCTION = SHA256
 META = "xchain-keystore"
 
 
-# Validate a mnemonic string by verifying its checksum
 def validate_phrase(phrase: str):
     """Check validity of mnemonic (phrase)
 
+    Validate a mnemonic string by verifying its checksum
     :param phrase: a phrase
     :type phrase: str
     :returns: is the phrase valid or not (true or false)
@@ -34,8 +34,7 @@ def validate_phrase(phrase: str):
     return is_valid
 
 
-# TODO: must be async
-def encrypt_to_keystore(phrase: str, password: str):
+async def encrypt_to_keystore(phrase: str, password: str):
     if not validate_phrase(phrase):
         raise Exception("Invalid BIP39 Phrase")
 
@@ -48,7 +47,7 @@ def encrypt_to_keystore(phrase: str, password: str):
     cipther_params = CipherParams(iv.hex())
 
 
-    derived_key = utils.pbkdf2(
+    derived_key = await utils.pbkdf2(
         password, salt, kdf_params.c, kdf_params.dklen, HASHFUNCTION
     )
 
@@ -66,11 +65,10 @@ def encrypt_to_keystore(phrase: str, password: str):
     return keystore
 
 
-# TODO: must be async
-def decrypt_from_keystore(keystore : Keystore, password: str):
+async def decrypt_from_keystore(keystore : Keystore, password: str):
     kdf_params = keystore.crypto.kdf_params
     try:
-        derived_key = utils.pbkdf2(
+        derived_key = await utils.pbkdf2(
             password,
             bytes.fromhex(kdf_params.salt),
             kdf_params.c,
