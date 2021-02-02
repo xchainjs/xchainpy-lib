@@ -1,21 +1,25 @@
 from typing import Counter
+from xchainpy.xchainpy_crypto.models.Keystore import Keystore
+from xchainpy.xchainpy_crypto.models.KdfParams import KdfParams
 from bip_utils import Bip39MnemonicValidator
 from Crypto.Random import get_random_bytes
 from Crypto.Hash import SHA256
 from Crypto.Hash import BLAKE2b
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
+from xchainpy.xchainpy_crypto.models.CryptoStruct import CryptoStruct
+from xchainpy.xchainpy_crypto.models.CipherParams import CipherParams
 import xchainpy.xchainpy_crypto.utils as utils
 import uuid
 
 CIPHER = AES.MODE_CTR
 NBITS = 128
-KDF = 'pbkdf2'
-PRF = 'hmac-sha256'
+KDF = "pbkdf2"
+PRF = "hmac-sha256"
 DKLEN = 32
 C = 262144
 HASHFUNCTION = SHA256
-META = 'xchain-keystore'
+META = "xchain-keystore"
 
 
 # Validate a mnemonic string by verifying its checksum
@@ -30,63 +34,70 @@ def validate_phrase(phrase: str):
     return is_valid
 
 
-#TODO: must be async
+# TODO: must be async
 def encrypt_to_keystore(phrase: str, password: str):
     if not validate_phrase(phrase):
         raise Exception("Invalid BIP39 Phrase")
 
-    ID = uuid.uuid4()
+    ID = str(uuid.uuid4())
     salt = get_random_bytes(32)
     iv = get_random_bytes(16)
 
-    kdf_params = {"prf": PRF, "dklen": DKLEN, "salt": salt.hex(), "c": C}
-    cipther_params = {"iv": iv.hex()}
+    kdf_params = KdfParams(prf=PRF , dklen=DKLEN , salt=salt.hex(),c=C)
+
+    cipther_params = CipherParams(iv.hex())
+
 
     derived_key = utils.pbkdf2(
-        password, salt, kdf_params['c'], kdf_params['dklen'], HASHFUNCTION)
+        password, salt, kdf_params.c, kdf_params.dklen, HASHFUNCTION
+    )
 
-    ctr = Counter.new(NBITS,initial_value=int(iv.hex(),16))
-    aes_cipher = AES.new(derived_key[0:16], AES.MODE_CTR,counter=ctr)
-    cipher_bytes = aes_cipher.encrypt(phrase.encode('utf8'))
+    ctr = Counter.new(NBITS, initial_value=int(iv.hex(), 16))
+    aes_cipher = AES.new(derived_key[0:16], AES.MODE_CTR, counter=ctr)
+    cipher_bytes = aes_cipher.encrypt(phrase.encode("utf8"))
 
     blake256 = BLAKE2b.new(digest_bits=256)
     blake256.update((derived_key[16:32] + cipher_bytes))
     mac = blake256.hexdigest()
 
-    crypto_struct = {"cipher": CIPHER, "cipher_text": cipher_bytes.hex()
-    , "cipher_params": cipther_params, "kdf": KDF, "kdf_params": kdf_params, "mac": mac}
+    crypto_struct = CryptoStruct(CIPHER , cipher_bytes.hex() , cipther_params ,KDF,kdf_params,mac)
 
-    keystore = {
-        "crypto" : crypto_struct,
-        "id" : ID,
-        "version" : 1,
-        "meta" : META
-    }
-
+    keystore = Keystore(crypto_struct , ID, 1 , META)
     return keystore
 
-#TODO: must be async
-def decrypt_from_keystore(keystore , password : str):
-    kdf_params = keystore['crypto']['kdf_params']
-    try:
-        derived_key = utils.pbkdf2(password ,bytes.fromhex(kdf_params['salt']),kdf_params['c'],kdf_params['dklen'],HASHFUNCTION)
 
-        cipher_bytes = bytes.fromhex(keystore['crypto']['cipher_text'])
-        
+# TODO: must be async
+def decrypt_from_keystore(keystore : Keystore, password: str):
+    kdf_params = keystore.crypto.kdf_params
+    try:
+        derived_key = utils.pbkdf2(
+            password,
+            bytes.fromhex(kdf_params.salt),
+            kdf_params.c,
+            kdf_params.dklen,
+            HASHFUNCTION,
+        )
+
+        cipher_bytes = bytes.fromhex(keystore.crypto.cipher_text)
+
         blake256 = BLAKE2b.new(digest_bits=256)
         blake256.update((derived_key[16:32] + cipher_bytes))
         mac = blake256.hexdigest()
 
-        if mac != keystore['crypto']['mac'] :
-            raise Exception('Invalid Password')
+        if mac != keystore.crypto.mac:
+            raise Exception("Invalid Password")
 
-        ctr = Counter.new(NBITS,initial_value=int(keystore['crypto']['cipher_params']['iv'],16))
-        aes_decipher = AES.new(derived_key[0:16],keystore['crypto']['cipher'],counter=ctr)
+        ctr = Counter.new(
+            NBITS, initial_value=int(keystore.crypto.cipher_params.iv, 16)
+        )
+        aes_decipher = AES.new(
+            derived_key[0:16], keystore.crypto.cipher, counter=ctr
+        )
+
         decipher_bytes = aes_decipher.decrypt(cipher_bytes)
 
         res = bytes.decode(decipher_bytes)
         return res
-        
 
     except Exception as err:
         raise Exception(err)
