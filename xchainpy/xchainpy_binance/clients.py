@@ -154,6 +154,13 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         if not recipient:
             raise Exception('Destination address must be provided')
 
+        before_balance = await self.get_balance()
+        before_balance_amount = before_balance[0].amount
+        fee = await self.get_transfer_fee()
+        fee = fee['fixed_fee_params']['fee'] * 10 ** -8
+        if (amount + fee) > float(before_balance_amount) :
+            raise Exception('input asset amout is higher than current (asset balance - transfer fee)')
+
         try:
             transfer_msg = TransferMsg(
                 wallet=wallet,
