@@ -6,17 +6,17 @@ class CryptoStruct:
     def __init__(
         self,
         cipher: int,
-        cipher_text: str,
-        cipher_params: CipherParams,
+        ciphertext: str,
+        cipherparams: CipherParams,
         kdf: str,
-        kdf_params: KdfParams,
+        kdfparams: KdfParams,
         mac: str,
     ):
         self.__cipher = cipher
-        self.__cipher_text = cipher_text
-        self.__cipher_params = cipher_params
+        self.__ciphertext = ciphertext
+        self.__cipherparams = cipherparams
         self.__kdf = kdf
-        self.__kdf_params = kdf_params
+        self.__kdfparams = kdfparams
         self.__mac = mac
 
     @property
@@ -28,20 +28,20 @@ class CryptoStruct:
         self.__cipher = cipher
 
     @property
-    def cipher_text(self):
-        return self.__cipher_text
+    def ciphertext(self):
+        return self.__ciphertext
 
-    @cipher_text.setter
-    def cipher_text(self, cipher_text):
-        self.__cipher_text = cipher_text
+    @ciphertext.setter
+    def ciphertext(self, ciphertext):
+        self.__ciphertext = ciphertext
 
     @property
-    def cipher_params(self):
-        return self.__cipher_params
+    def cipherparams(self):
+        return self.__cipherparams
 
-    @cipher_params.setter
-    def cipher_params(self, cipher_params):
-        self.__cipher_params = cipher_params
+    @cipherparams.setter
+    def cipherparams(self, cipherparams):
+        self.__cipherparams = cipherparams
 
     @property
     def kdf(self):
@@ -52,12 +52,12 @@ class CryptoStruct:
         self.__kdf = kdf
 
     @property
-    def kdf_params(self):
-        return self.__kdf_params
+    def kdfparams(self):
+        return self.__kdfparams
 
-    @kdf_params.setter
-    def kdf_params(self, kdf_params):
-        self.__kdf_params = kdf_params
+    @kdfparams.setter
+    def kdfparams(self, kdfparams):
+        self.__kdfparams = kdfparams
 
     @property
     def mac(self):
@@ -66,3 +66,6 @@ class CryptoStruct:
     @mac.setter
     def mac(self, mac):
         self.__mac = mac
+
+    def __getitem__(self, item):
+         return getattr(self, item)
