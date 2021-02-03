@@ -54,7 +54,7 @@ async def encrypt_to_keystore(phrase: str, password: str):
     salt = get_random_bytes(32)
     iv = get_random_bytes(16)
 
-    kdfparams = KdfParams(prf=PRF , dklen=DKLEN , salt=salt.hex(),c=C)
+    kdfparams = KdfParams(prf=PRF, dklen=DKLEN, salt=salt.hex(), c=C)
 
     ciptherparams = CipherParams(iv.hex())
 
@@ -71,7 +71,7 @@ async def encrypt_to_keystore(phrase: str, password: str):
     blake256.update((derived_key[16:32] + cipherbytes))
     mac = blake256.hexdigest()
 
-    crypto_struct = CryptoStruct("aes-128-ctr" , cipherbytes.hex() , ciptherparams ,KDF,kdfparams,mac)
+    crypto_struct = CryptoStruct("aes-128-ctr" , cipherbytes.hex() , ciptherparams ,KDF, kdfparams, mac)
 
     keystore = Keystore(crypto_struct , ID, 1 , META)
     return keystore
@@ -91,27 +91,30 @@ async def decrypt_from_keystore(keystore : Keystore, password: str):
     Returns:
         [type]: the phrase from keystore
     """
-    kdfparams = keystore['crypto']['kdfparams']
+    if not isinstance(keystore, Keystore):
+        keystore = Keystore.from_dict(keystore)
+
+    kdfparams = keystore.crypto.kdfparams
     try:
         derived_key = await utils.pbkdf2(
             password,
-            bytes.fromhex(kdfparams['salt']),
-            kdfparams['c'],
-            kdfparams['dklen'],
+            bytes.fromhex(kdfparams.salt),
+            kdfparams.c,
+            kdfparams.dklen,
             HASHFUNCTION,
         )
 
-        cipherbytes = bytes.fromhex(keystore['crypto']['ciphertext'])
+        cipherbytes = bytes.fromhex(keystore.crypto.ciphertext)
 
         blake256 = BLAKE2b.new(digest_bits=256)
         blake256.update((derived_key[16:32] + cipherbytes))
         mac = blake256.hexdigest()
 
-        if mac != keystore['crypto']['mac']:
+        if mac != keystore.crypto.mac:
             raise Exception("Invalid Password")
 
         ctr = Counter.new(
-            NBITS, initial_value=int(keystore['crypto']['cipherparams']['iv'], 16)
+            NBITS, initial_value=int(keystore.crypto.cipherparams.iv, 16)
         )
         aes_decipher = AES.new(
             derived_key[0:16], AES.MODE_CTR, counter=ctr

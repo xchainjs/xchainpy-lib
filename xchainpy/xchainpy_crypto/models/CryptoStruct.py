@@ -12,60 +12,70 @@ class CryptoStruct:
         kdfparams: KdfParams,
         mac: str,
     ):
-        self.__cipher = cipher
-        self.__ciphertext = ciphertext
-        self.__cipherparams = cipherparams
-        self.__kdf = kdf
-        self.__kdfparams = kdfparams
-        self.__mac = mac
+        self._cipher = cipher
+        self._ciphertext = ciphertext
+        self._cipherparams = cipherparams
+        self._kdf = kdf
+        self._kdfparams = kdfparams
+        self._mac = mac
+
+    @classmethod
+    def from_dict(cls, crypto):
+        new_crypto = cls.__new__(cls)
+        for key in crypto:
+            setattr(new_crypto, key, crypto[key])
+        return new_crypto
 
     @property
     def cipher(self):
-        return self.__cipher
+        return self._cipher
 
     @cipher.setter
     def cipher(self, cipher):
-        self.__cipher = cipher
+        self._cipher = cipher
 
     @property
     def ciphertext(self):
-        return self.__ciphertext
+        return self._ciphertext
 
     @ciphertext.setter
     def ciphertext(self, ciphertext):
-        self.__ciphertext = ciphertext
+        self._ciphertext = ciphertext
 
     @property
     def cipherparams(self):
-        return self.__cipherparams
+        return self._cipherparams
 
     @cipherparams.setter
     def cipherparams(self, cipherparams):
-        self.__cipherparams = cipherparams
+        if isinstance(cipherparams, dict):
+            self._cipherparams = CipherParams.from_dict(cipherparams)
+        else:
+            self._cipherparams = cipherparams
 
     @property
     def kdf(self):
-        return self.__kdf
+        return self._kdf
 
     @kdf.setter
     def kdf(self, kdf):
-        self.__kdf = kdf
+        self._kdf = kdf
 
     @property
     def kdfparams(self):
-        return self.__kdfparams
+        return self._kdfparams
 
     @kdfparams.setter
     def kdfparams(self, kdfparams):
-        self.__kdfparams = kdfparams
+        if isinstance(kdfparams, dict):
+            self._kdfparams = KdfParams.from_dict(kdfparams)
+        else:
+            self._kdfparams = kdfparams
 
     @property
     def mac(self):
-        return self.__mac
+        return self._mac
 
     @mac.setter
     def mac(self, mac):
-        self.__mac = mac
-
-    def __getitem__(self, item):
-         return getattr(self, item)
+        self._mac = mac
