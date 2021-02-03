@@ -9,3 +9,6 @@ class CipherParams:
     @iv.setter
     def iv(self, iv):
         self.__iv = iv
+
+    def __getitem__(self, item):
+         return getattr(self, item)

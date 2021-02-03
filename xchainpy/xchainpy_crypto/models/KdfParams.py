@@ -36,3 +36,6 @@ class KdfParams:
     @c.setter
     def c(self, c):
         self.__c = c
+
+    def __getitem__(self, item):
+         return getattr(self, item)

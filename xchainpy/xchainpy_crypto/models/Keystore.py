@@ -39,3 +39,6 @@ class Keystore:
     @meta.setter
     def meta(self, meta):
         self.__meta = meta
+
+    def __getitem__(self, item):
+         return getattr(self, item)
