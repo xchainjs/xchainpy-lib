@@ -18,10 +18,10 @@ class TestCrypto:
     async def test_export_keystore(self):
         password = 'thorchain'
         keystore = await crypto.encrypt_to_keystore(self.phrase , password)
-        assert keystore.crypto.cipher == AES.MODE_CTR
+        assert keystore.crypto.cipher == 'aes-128-ctr'
         assert keystore.crypto.kdf == 'pbkdf2'
-        assert keystore.crypto.kdf_params.prf == 'hmac-sha256'
-        assert keystore.crypto.kdf_params.c == 262144
+        assert keystore.crypto.kdfparams.prf == 'hmac-sha256'
+        assert keystore.crypto.kdfparams.c == 262144
         assert keystore.version == 1
         assert keystore.meta == 'xchain-keystore'
     

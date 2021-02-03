@@ -54,24 +54,24 @@ async def encrypt_to_keystore(phrase: str, password: str):
     salt = get_random_bytes(32)
     iv = get_random_bytes(16)
 
-    kdf_params = KdfParams(prf=PRF , dklen=DKLEN , salt=salt.hex(),c=C)
+    kdfparams = KdfParams(prf=PRF, dklen=DKLEN, salt=salt.hex(), c=C)
 
-    cipther_params = CipherParams(iv.hex())
+    ciptherparams = CipherParams(iv.hex())
 
 
     derived_key = await utils.pbkdf2(
-        password, salt, kdf_params.c, kdf_params.dklen, HASHFUNCTION
+        password, salt, kdfparams.c, kdfparams.dklen, HASHFUNCTION
     )
 
     ctr = Counter.new(NBITS, initial_value=int(iv.hex(), 16))
     aes_cipher = AES.new(derived_key[0:16], AES.MODE_CTR, counter=ctr)
-    cipher_bytes = aes_cipher.encrypt(phrase.encode("utf8"))
+    cipherbytes = aes_cipher.encrypt(phrase.encode("utf8"))
 
     blake256 = BLAKE2b.new(digest_bits=256)
-    blake256.update((derived_key[16:32] + cipher_bytes))
+    blake256.update((derived_key[16:32] + cipherbytes))
     mac = blake256.hexdigest()
 
-    crypto_struct = CryptoStruct(CIPHER , cipher_bytes.hex() , cipther_params ,KDF,kdf_params,mac)
+    crypto_struct = CryptoStruct("aes-128-ctr" , cipherbytes.hex() , ciptherparams ,KDF, kdfparams, mac)
 
     keystore = Keystore(crypto_struct , ID, 1 , META)
     return keystore
@@ -91,33 +91,36 @@ async def decrypt_from_keystore(keystore : Keystore, password: str):
     Returns:
         [type]: the phrase from keystore
     """
-    kdf_params = keystore.crypto.kdf_params
+    if not isinstance(keystore, Keystore):
+        keystore = Keystore.from_dict(keystore)
+
+    kdfparams = keystore.crypto.kdfparams
     try:
         derived_key = await utils.pbkdf2(
             password,
-            bytes.fromhex(kdf_params.salt),
-            kdf_params.c,
-            kdf_params.dklen,
+            bytes.fromhex(kdfparams.salt),
+            kdfparams.c,
+            kdfparams.dklen,
             HASHFUNCTION,
         )
 
-        cipher_bytes = bytes.fromhex(keystore.crypto.cipher_text)
+        cipherbytes = bytes.fromhex(keystore.crypto.ciphertext)
 
         blake256 = BLAKE2b.new(digest_bits=256)
-        blake256.update((derived_key[16:32] + cipher_bytes))
+        blake256.update((derived_key[16:32] + cipherbytes))
         mac = blake256.hexdigest()
 
         if mac != keystore.crypto.mac:
             raise Exception("Invalid Password")
 
         ctr = Counter.new(
-            NBITS, initial_value=int(keystore.crypto.cipher_params.iv, 16)
+            NBITS, initial_value=int(keystore.crypto.cipherparams.iv, 16)
         )
         aes_decipher = AES.new(
-            derived_key[0:16], keystore.crypto.cipher, counter=ctr
+            derived_key[0:16], AES.MODE_CTR, counter=ctr
         )
 
-        decipher_bytes = aes_decipher.decrypt(cipher_bytes)
+        decipher_bytes = aes_decipher.decrypt(cipherbytes)
 
         res = bytes.decode(decipher_bytes)
         return res
