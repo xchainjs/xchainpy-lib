@@ -205,3 +205,11 @@ class Client(interface.IXChainClient): # create an interface for binance methods
             }
         except Exception as err:
             return err
+
+    def purge_client(self):
+        """Purge client
+        """
+        self.phrase = ''
+        self.address = ''
+        self.private_key = None
+        self.client.session.close()
