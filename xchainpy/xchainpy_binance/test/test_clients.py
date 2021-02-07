@@ -89,7 +89,7 @@ class TestClient:
         send_amount = float(before_balance_amount) + 1
         with pytest.raises(Exception) as err:
             assert await self.client.transfer(asset=self.bnb_asset, amount=send_amount, recipient=self.testnetaddressForTx)
-        assert err.value
+        assert str(err.value) == "input asset amout is higher than current (asset balance - transfer fee)"
 
     @pytest.mark.asyncio
     async def test_get_transfer_fees(self, client):

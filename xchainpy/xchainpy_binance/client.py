@@ -1,8 +1,10 @@
+import asyncio
 from binance_chain.http import AsyncHttpApiClient
 from binance_chain.constants import KlineInterval
 from binance_chain.environment import BinanceEnvironment
-from binance_chain.messages import TransferMsg
+from binance_chain.messages import TransferMsg, Transfer, MultiTransferMsg
 from binance_chain.wallet import Wallet
+from typing import Optional
 
 from xchainpy.xchainpy_client import interface
 from xchainpy.xchainpy_crypto import crypto as xchainpy_crypto
@@ -10,13 +12,17 @@ from xchainpy.xchainpy_binance import crypto
 from xchainpy.xchainpy_binance import utils
 from xchainpy.xchainpy_util.asset import Asset
 from xchainpy.xchainpy_binance.balance import BinanceBalance
+from xchainpy.xchainpy_binance.coin import Coin
+from binance_chain.constants import TransactionSide, TransactionType
 
-class Client(interface.IXChainClient): # create an interface for binance methods (getprivate_key, get_client_url and ...)
+
+# create an interface for binance methods (getprivate_key, get_client_url and ...)
+class Client(interface.IXChainClient):
 
     phrase = address = network = ''
     private_key = client = env = None
-    
-    def __init__(self, phrase, network = 'testnet'):
+
+    def __init__(self, phrase, network='testnet'):
         """
         :param phrase: a phrase (mnemonic)
         :type phrase: str
@@ -42,7 +48,8 @@ class Client(interface.IXChainClient): # create an interface for binance methods
             if not self.phrase:
                 raise Exception('Phrase not set')
 
-            self.private_key = crypto.mnemonic_to_private_key(self.phrase) # passPhrase ?
+            self.private_key = crypto.mnemonic_to_private_key(
+                self.phrase)  # passPhrase ?
         return self.private_key
 
     def get_address(self):
@@ -52,11 +59,12 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         :raises: Raises if phrase has not been set before. A phrase is needed to create a wallet and to derive an address from it.
         """
         if not self.address:
-            self.address = crypto.private_key_to_address(self.get_private_key(), utils.get_prefix(self.network))
-            if not self.address :
-                raise Exception("Address has to be set. Or set a phrase by calling `setPhrase` before to use an address of an imported key.")
+            self.address = crypto.private_key_to_address(
+                self.get_private_key(), utils.get_prefix(self.network))
+            if not self.address:
+                raise Exception(
+                    "Address has to be set. Or set a phrase by calling `setPhrase` before to use an address of an imported key.")
         return self.address
-
 
     def set_phrase(self, phrase: str):
         """Set/Update a new phrase
@@ -66,11 +74,11 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         :returns: The address from the given phrase
         :raises: 'Invalid Phrase' if the given phrase is invalid
         """
-        
+
         if not self.phrase or self.phrase != phrase:
             if not xchainpy_crypto.validate_phrase(phrase):
                 raise Exception("invalid phrase")
-            
+
             self.phrase = phrase
             self.private_key = None
             self.address = ''
@@ -97,7 +105,7 @@ class Client(interface.IXChainClient): # create an interface for binance methods
             elif self.network == 'mainnet':
                 # initialise with mainnet environment
                 self.env = BinanceEnvironment.get_production_env()
-            else: 
+            else:
                 raise Exception("Invalid network")
 
             self.client = AsyncHttpApiClient(env=self.env)
@@ -129,9 +137,8 @@ class Client(interface.IXChainClient): # create an interface for binance methods
 
         except Exception as err:
             return err
-        
 
-    async def transfer(self, asset : Asset , amount , recipient , memo=''):
+    async def transfer(self, asset: Asset, amount, recipient, memo=''):
         """transfer balances
 
         :param asset: asset object containing : chain , symbol , ticker(optional)
@@ -158,8 +165,9 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         before_balance_amount = before_balance[0].amount
         fee = await self.get_transfer_fee()
         fee = fee['fixed_fee_params']['fee'] * 10 ** -8
-        if (amount + fee) > float(before_balance_amount) :
-            raise Exception('input asset amout is higher than current (asset balance - transfer fee)')
+        if (amount + fee) > float(before_balance_amount):
+            raise Exception(
+                'input asset amout is higher than current (asset balance - transfer fee)')
 
         try:
             transfer_msg = TransferMsg(
@@ -175,6 +183,40 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         except Exception as err:
             return err
 
+    async def multi_send(self, coins, recipient, memo=''):
+        """transfer balances
+
+        :param asset: asset object containing : chain , symbol , ticker(optional)
+        :type asset: Asset
+        :param amount: amount of asset to transfer (don't multiply by 10**8)
+        :type amount: int, float, decimal
+        :param recipient: destination address
+        :type recipient: str
+        :param memo: optional memo for transaction
+        :type memo: str
+        :returns: the transaction hash
+        :raises: raises if asset or amount or destination address not provided
+        """
+        if not type(coins, list):
+            raise Exception('coins should be a list of Coin objects')
+
+        wallet = Wallet(self.get_private_key(), env=self.env)
+
+        transfers = (Transfer(symbol=coin.asset.symbol, amount=coin.amount)
+                     for coin in coins)
+
+        try:
+            multi_transfer_msg = MultiTransferMsg(
+                wallet=wallet,
+                transfers=transfers,
+                to_address=recipient,
+                memo=memo
+            )
+            transfer_result = await self.client.broadcast_msg(multi_transfer_msg)
+            return transfer_result[0]['hash']
+
+        except Exception as err:
+            return err
 
     async def get_transfer_fee(self):
         """Get the current transfer fee
@@ -184,11 +226,11 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         try:
             fees = await self.client.get_fees()
             # the first fee from the fees that matches the condition, and returns None if no item matches
-            transfer_fee = next((fee for fee in fees if 'fixed_fee_params' in fee), None)
+            transfer_fee = next(
+                (fee for fee in fees if 'fixed_fee_params' in fee), None)
             return transfer_fee
         except Exception as err:
             return err
-
 
     async def get_fees(self):
         """Get the current fee
@@ -206,6 +248,48 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         except Exception as err:
             return err
 
+    async def get_multi_send_fees(self):
+        """Get the current transfer fee
+
+        :returns: The current transfer fee
+        """
+        try:
+            transfer_fee = await self.get_transfer_fee()
+            multi_tx_fee = round(transfer_fee['multi_transfer_fee'] * 10 ** -8, 8)
+
+            return {
+                'fast': multi_tx_fee,
+                'fastest': multi_tx_fee,
+                'average': multi_tx_fee
+            }
+        except Exception as err:
+            return err
+
+    async def get_single_and_multi_fees(self):
+        """Get the current transfer fee
+
+        :returns: The current transfer fee
+        """
+        try:
+            transfer_fee = await self.get_transfer_fee()
+            multi_tx_fee = round(transfer_fee['multi_transfer_fee'] * 10 ** -8, 8)
+            single_tx_fee = transfer_fee['fixed_fee_params']['fee'] * 10 ** -8
+
+            return {
+                'single': {
+                    'fast': single_tx_fee,
+                    'fastest': single_tx_fee,
+                    'average': single_tx_fee
+                },
+                'multi': {
+                    'fast': multi_tx_fee,
+                    'fastest': multi_tx_fee,
+                    'average': multi_tx_fee
+                }
+            }
+        except Exception as err:
+            return err
+
     def purge_client(self):
         """Purge client
         """
@@ -213,3 +297,81 @@ class Client(interface.IXChainClient): # create an interface for binance methods
         self.address = ''
         self.private_key = None
         self.client.session.close()
+
+    def validate_address(self, address: str, prefix: str):
+        """Validate the given address
+
+        :param address: address
+        :type address: str
+        :param prefix: bnb or tbnb
+        :type prefix: str
+        :returns: True or False
+        """
+        return True if crypto.check_address(address, prefix) else False
+
+    async def get_transactions(self, params):
+
+        params['address'] = params['address'] or self.address
+
+        network_changed = False
+        if params['address'].startswith('bnb') and self.get_network() == 'testnet':
+            network_changed = True
+            self.set_network('mainnet')
+        elif params['address'].startswith('tbnb') and self.get_network() == 'mainnet':
+            network_changed = True
+            self.set_network('testnet')
+
+        from datetime import datetime
+        import time
+        now = datetime.now()
+        now = time.mktime(now.timetuple()) * 1000
+        now = int(now)
+
+        diff_time = 90 * 24 * 60 * 60 * 1000
+        end_time = now
+        start_time = end_time - diff_time
+
+        if 'start_time' in params and not 'end_time' in params:
+            params['end_time'] = int(params['start_time']) + diff_time
+        elif 'end_time' in params and not 'start_time' in params:
+            params['start_time'] = int(params['end_time']) - diff_time
+        elif not 'start_time' in params and not 'end_time' in params:
+            params['start_time'] = start_time
+            params['end_time'] = end_time
+        
+        try:
+            transactions = await self.client.get_transactions(**params)
+
+            if network_changed:
+                self.set_network('testnet' if self.network == 'mainnet' else 'mainnet')
+
+            txs = list(map(utils.parse_tx, transactions['tx']))
+
+            return {
+                'total': transactions['total'],
+                'tx': txs
+            }
+
+        except Exception as err:
+            return err
+
+
+# multi_send
+
+
+async def main():
+    phrase = 'rural bright ball negative already grass good grant nation screen model pizza'
+
+    client = Client(phrase)
+
+    # a = await client.get_transactions({'address' :'bnb14vqt47g9ufhzwxf38ls4cgeyyepurrx6m0gkx7'})
+
+    return 4
+
+
+loop = asyncio.get_event_loop()
+try:
+    loop.run_until_complete(main())
+finally:
+    loop.run_until_complete(loop.shutdown_asyncgens())
+    loop.close()
