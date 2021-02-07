@@ -5,8 +5,11 @@ from binance_chain.environment import BinanceEnvironment
 from binance_chain.messages import TransferMsg, Transfer, MultiTransferMsg
 from binance_chain.wallet import Wallet
 from typing import Optional
+from datetime import datetime
+import time
 
 from xchainpy.xchainpy_client import interface
+from xchainpy.xchainpy_client import types
 from xchainpy.xchainpy_crypto import crypto as xchainpy_crypto
 from xchainpy.xchainpy_binance import crypto
 from xchainpy.xchainpy_binance import utils
@@ -309,7 +312,7 @@ class Client(interface.IXChainClient):
         """
         return True if crypto.check_address(address, prefix) else False
 
-    async def get_transactions(self, params):
+    async def search_transactions(self, params):
 
         params['address'] = params['address'] or self.address
 
@@ -321,8 +324,6 @@ class Client(interface.IXChainClient):
             network_changed = True
             self.set_network('testnet')
 
-        from datetime import datetime
-        import time
         now = datetime.now()
         now = time.mktime(now.timetuple()) * 1000
         now = int(now)
@@ -355,8 +356,49 @@ class Client(interface.IXChainClient):
         except Exception as err:
             return err
 
+    async def get_transactions(self, params: types.TxHistoryParams):
+        """Purge client
+        """
+        transaction_params = {}
+        transaction_params['address'] = params.address
+        transaction_params['tx_asset'] = params.asset.symbol if params.asset else None
+        transaction_params['limit'] = params.limit
+        transaction_params['offset'] = params.offset
+        if params.start_time:
+            transaction_params['start_time'] = params.start_time
 
-# multi_send
+        try:
+            transactions = await self.search_transactions(transaction_params)
+            return transactions
+        except Exception as err:
+            return err
+
+
+    async def get_transaction_data(self, tx_id):
+        """Purge client
+        """
+        try:
+            address = ''
+            transaction = await self.client.get_transaction(tx_id)
+            msgs = transaction['tx']['value']['msg']
+            if len(msgs):
+                msg = msgs[0]['value']
+                if msg['inputs'] and len(msg['inputs']):
+                    address = msg['inputs'][0]['address']
+                elif msg['outputs'] and len(msg['outputs']):
+                    address = msg['outputs'][0]['address']
+
+            transactions = await self.search_transactions({'address': address})
+            transaction = next(filter(lambda v: v.tx_hash == tx_id , transactions['tx']), None)
+            if transaction:
+                return transaction
+
+            raise Exception('transaction not found')
+        except Exception as err:
+            return err
+
+        
+
 
 
 async def main():
@@ -364,7 +406,9 @@ async def main():
 
     client = Client(phrase)
 
-    # a = await client.get_transactions({'address' :'bnb14vqt47g9ufhzwxf38ls4cgeyyepurrx6m0gkx7'})
+    a = await client.get_transactions(types.TxHistoryParams(address='bnb14vqt47g9ufhzwxf38ls4cgeyyepurrx6m0gkx7'))
+    # client.set_network('mainnet')
+    # b = await client.get_transaction_data('3F98AF964038C125E0B50336925C81E19C144362EE96CB32358483B619754A9')
 
     return 4
 
