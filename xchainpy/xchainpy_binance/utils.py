@@ -16,15 +16,28 @@ def get_prefix(network):
 
 
 def get_tx_type(tx_type: str):
+    """Get tx type
+
+    :param network: testnet or mainnet
+    :type network: str
+    :returns: transfer or unknown
+    """
+
     if tx_type == 'TRANSFER' or tx_type == 'DEPOSIT':
         return 'transfer'
     return 'unknown'
 
 
 def parse_tx(tx):
+    """Parse tx
+
+    :param tx: The transaction to be parsed
+    :type tx: str
+    :returns: The transaction parsed from the binance tx
+    """
     asset = Asset.from_str(f'BNB.{tx["txAsset"]}')
-    tx_from = types.TxFrom(tx['fromAddr'], tx['value'])
-    tx_to = types.TxTo(tx['toAddr'], tx['value'])
+    tx_from = list(types.TxFrom(tx['fromAddr'], tx['value']))
+    tx_to = list(types.TxTo(tx['toAddr'], tx['value']))
     tx_date = datetime.datetime.strptime(
         tx['timeStamp'], "%Y-%m-%dT%H:%M:%S.%fz")
     tx_type = get_tx_type(tx['txType'])

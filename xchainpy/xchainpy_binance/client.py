@@ -19,7 +19,6 @@ from xchainpy.xchainpy_binance.coin import Coin
 from binance_chain.constants import TransactionSide, TransactionType
 
 
-# create an interface for binance methods (getprivate_key, get_client_url and ...)
 class Client(interface.IXChainClient):
 
     phrase = address = network = ''
@@ -187,18 +186,16 @@ class Client(interface.IXChainClient):
             return err
 
     async def multi_send(self, coins, recipient, memo=''):
-        """transfer balances
+        """Broadcast multi-send transaction 
 
-        :param asset: asset object containing : chain , symbol , ticker(optional)
-        :type asset: Asset
-        :param amount: amount of asset to transfer (don't multiply by 10**8)
-        :type amount: int, float, decimal
+        :param coins: contains assets and amounts
+        :type coins: Array of Coin
         :param recipient: destination address
         :type recipient: str
         :param memo: optional memo for transaction
         :type memo: str
         :returns: the transaction hash
-        :raises: raises if asset or amount or destination address not provided
+        :raises: raises if coins was not a list or destination address not provided
         """
         if not type(coins, list):
             raise Exception('coins should be a list of Coin objects')
@@ -252,9 +249,9 @@ class Client(interface.IXChainClient):
             return err
 
     async def get_multi_send_fees(self):
-        """Get the current transfer fee
+        """Get the current fee for multi-send transaction
 
-        :returns: The current transfer fee
+        :returns: The current fee for multi-send transaction
         """
         try:
             transfer_fee = await self.get_transfer_fee()
@@ -269,9 +266,9 @@ class Client(interface.IXChainClient):
             return err
 
     async def get_single_and_multi_fees(self):
-        """Get the current transfer fee
+        """Get the current fee for both single and multi-send transaction
 
-        :returns: The current transfer fee
+        :returns: The current fee for both single and multi-send transaction
         """
         try:
             transfer_fee = await self.get_transfer_fee()
@@ -312,7 +309,27 @@ class Client(interface.IXChainClient):
         """
         return True if crypto.check_address(address, prefix) else False
 
-    async def search_transactions(self, params):
+    async def search_transactions(self, params: dict = None):
+        """Search transactions with parameters
+
+        :param params: a dict that could be empty or have these fields:
+            address (default = self.address)
+            symbol
+            side (SEND or RECEIVE)
+            tx_asset
+            tx_type
+            height
+            offset (default = 0)
+            limit (default = 500)
+            start_time (default = 90 days ago)
+            end_time: (default = now)
+            
+            see the link below for further information:
+            https://docs.binance.org/api-reference/dex-api/paths.html#apiv1transactions
+
+        :type params: dict
+        :returns: The parameters to be used for transaction search
+        """
 
         params['address'] = params['address'] or self.address
 
@@ -357,6 +374,14 @@ class Client(interface.IXChainClient):
             return err
 
     async def get_transactions(self, params: types.TxHistoryParams):
+        """Get transaction history of a given address with pagination options
+        * By default it will return the transaction history of the current wallet
+
+        :param params: params
+        :type params: types.TxHistoryParams
+        :returns: The parameters to be used for transaction search
+        """
+
         transaction_params = {}
         transaction_params['address'] = params.address
         transaction_params['tx_asset'] = params.asset.symbol if params.asset else None
@@ -371,8 +396,17 @@ class Client(interface.IXChainClient):
         except Exception as err:
             return err
 
-
     async def get_transaction_data(self, tx_id):
+        """Get the transaction details of a given transaction id
+
+        if you wnat to give a hash that is for mainnet and the current self.network is 'testnet',
+        you should call self.set_network('mainnet') (and vice versa) and then call this method.
+
+        :param tx_id: The transaction id
+        :type tx_id: str
+        :returns: The parameters to be used for transaction search
+        """
+
         try:
             address = ''
             transaction = await self.client.get_transaction(tx_id)
