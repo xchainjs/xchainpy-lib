@@ -1,6 +1,8 @@
 import pytest
 from xchainpy.xchainpy_binance.client import Client
+from xchainpy.xchainpy_binance.coin import Coin
 from xchainpy.xchainpy_util.asset import Asset
+from xchainpy.xchainpy_client import types
 
 class TestClient:
 
@@ -15,7 +17,10 @@ class TestClient:
     
     transfer_amount = 0.0001
     single_tx_fee = 37500
+    multi_tx_fee = 30000
     transfer_fee = {'average': single_tx_fee, 'fast': single_tx_fee, 'fastest': single_tx_fee }
+    multi_send_fee = {'average': multi_tx_fee, 'fast': multi_tx_fee, 'fastest': multi_tx_fee }
+
 
     @pytest.fixture
     def client(self):
@@ -98,3 +103,75 @@ class TestClient:
         assert fee['average'] == self.transfer_fee['average'] * 10**-8
         assert fee['fast'] == self.transfer_fee['fast'] * 10**-8
         assert fee['fastest'] == self.transfer_fee['fastest'] * 10**-8
+
+    def test_validate_address(self, client):
+        assert self.client.validate_address(self.testnetaddress, 'tbnb') == True
+
+    def test_validate_address_false_address(self, client):
+        assert self.client.validate_address(self.testnetaddress + '1', 'tbnb') == False
+
+    def test_validate_address_false_prefix(self, client):
+        assert self.client.validate_address(self.testnetaddress, 'bnb') == False
+
+    @pytest.mark.asyncio
+    async def test_get_multi_send_fees(self, client):
+        fee = await self.client.get_multi_send_fees()
+        assert fee['average'] == round(self.multi_send_fee['average'] * 10 ** -8, 8)
+        assert fee['fast'] == round(self.multi_send_fee['fast'] * 10 ** -8, 8)
+        assert fee['fastest'] == round(self.multi_send_fee['fastest'] * 10 ** -8, 8)
+
+    @pytest.mark.asyncio
+    async def test_get_single_and_multi_fees(self, client):
+        fee = await self.client.get_single_and_multi_fees()
+        assert fee['multi']['average'] == round(self.multi_send_fee['average'] * 10 ** -8, 8)
+        assert fee['multi']['fast'] == round(self.multi_send_fee['fast'] * 10 ** -8, 8)
+        assert fee['multi']['fastest'] == round(self.multi_send_fee['fastest'] * 10 ** -8, 8)
+        assert fee['single']['average'] == self.transfer_fee['average'] * 10**-8
+        assert fee['single']['fast'] == self.transfer_fee['fast'] * 10**-8
+        assert fee['single']['fastest'] == self.transfer_fee['fastest'] * 10**-8
+
+    @pytest.mark.asyncio
+    async def test_search_transactions(self, client):
+        self.client.set_network('testnet')
+        transactions = await self.client.search_transactions({'address': self.testnetaddress})
+        assert transactions
+        if transactions['total'] > 0:
+            assert isinstance(transactions['tx'][0], types.TX)
+
+    @pytest.mark.asyncio
+    async def test_get_transactions(self, client):
+        self.client.set_network('testnet')
+        params = types.TxHistoryParams(address=self.testnetaddressForTx, limit=1)
+        transactions = await self.client.get_transactions(params)
+        assert transactions
+        assert len(transactions['tx']) == 1 or 0
+        if transactions['total'] > 0:
+            assert isinstance(transactions['tx'][0], types.TX)
+
+    @pytest.mark.asyncio
+    async def test_get_transaction_data(self, client):
+        self.client.set_network('testnet')
+        try:
+            params = types.TxHistoryParams(address=self.testnetaddressForTx, limit=1)
+            transactions = await self.client.get_transactions(params)
+            transaction = await self.client.get_transaction_data(transactions['tx'][0].tx_hash)
+            assert transaction
+            assert isinstance(transaction, types.TX)
+        except Exception as err:
+            assert str(err) == 'list index out of range' # there is not any transaction in the last 3 months for this address
+
+    @pytest.mark.asyncio
+    async def test_multi_send(self, client):
+        self.client.set_network('testnet')
+        self.client.set_phrase(self.phraseForTX)
+        assert self.client.get_address() == self.testnetaddressForTx
+        before_balance = await self.client.get_balance()
+        assert len(before_balance) == 1
+        before_balance_amount = before_balance[0].amount
+
+        coins = [Coin(self.bnb_asset, self.transfer_amount), Coin(Asset.from_str('BNB.BNB'), self.transfer_amount)]
+        tx_hash = await self.client.multi_send(coins, 'tbnb185tqzq3j6y7yep85lncaz9qeectjxqe5054cgn')
+
+        after_balance = await self.client.get_balance()
+        after_balance_amount = after_balance[0].amount
+        assert round((float(before_balance_amount) - float(after_balance_amount)) * 10**8) == round(self.multi_tx_fee * 10 ** -8, 8)

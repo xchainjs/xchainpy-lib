@@ -19,7 +19,6 @@ from xchainpy.xchainpy_binance.coin import Coin
 from binance_chain.constants import TransactionSide, TransactionType
 
 
-# create an interface for binance methods (getprivate_key, get_client_url and ...)
 class Client(interface.IXChainClient):
 
     phrase = address = network = ''
@@ -139,7 +138,7 @@ class Client(interface.IXChainClient):
             return balances
 
         except Exception as err:
-            return err
+            raise Exception(str(err))
 
     async def transfer(self, asset: Asset, amount, recipient, memo=''):
         """transfer balances
@@ -184,29 +183,26 @@ class Client(interface.IXChainClient):
             return transfer_result[0]['hash']
 
         except Exception as err:
-            return err
+            raise Exception(str(err))
 
     async def multi_send(self, coins, recipient, memo=''):
-        """transfer balances
+        """Broadcast multi-send transaction 
 
-        :param asset: asset object containing : chain , symbol , ticker(optional)
-        :type asset: Asset
-        :param amount: amount of asset to transfer (don't multiply by 10**8)
-        :type amount: int, float, decimal
+        :param coins: contains assets and amounts
+        :type coins: Array of Coin
         :param recipient: destination address
         :type recipient: str
         :param memo: optional memo for transaction
         :type memo: str
         :returns: the transaction hash
-        :raises: raises if asset or amount or destination address not provided
+        :raises: raises if coins was not a list or destination address not provided
         """
-        if not type(coins, list):
+        if not isinstance(coins, list):
             raise Exception('coins should be a list of Coin objects')
 
         wallet = Wallet(self.get_private_key(), env=self.env)
 
-        transfers = (Transfer(symbol=coin.asset.symbol, amount=coin.amount)
-                     for coin in coins)
+        transfers = [Transfer(symbol=coin.asset.symbol, amount=coin.amount) for coin in coins]
 
         try:
             multi_transfer_msg = MultiTransferMsg(
@@ -219,7 +215,7 @@ class Client(interface.IXChainClient):
             return transfer_result[0]['hash']
 
         except Exception as err:
-            return err
+            raise Exception(str(err))
 
     async def get_transfer_fee(self):
         """Get the current transfer fee
@@ -233,7 +229,7 @@ class Client(interface.IXChainClient):
                 (fee for fee in fees if 'fixed_fee_params' in fee), None)
             return transfer_fee
         except Exception as err:
-            return err
+            raise Exception(str(err))
 
     async def get_fees(self):
         """Get the current fee
@@ -249,12 +245,12 @@ class Client(interface.IXChainClient):
                 'average': single_tx_fee
             }
         except Exception as err:
-            return err
+            raise Exception(str(err))
 
     async def get_multi_send_fees(self):
-        """Get the current transfer fee
+        """Get the current fee for multi-send transaction
 
-        :returns: The current transfer fee
+        :returns: The current fee for multi-send transaction
         """
         try:
             transfer_fee = await self.get_transfer_fee()
@@ -266,12 +262,12 @@ class Client(interface.IXChainClient):
                 'average': multi_tx_fee
             }
         except Exception as err:
-            return err
+            raise Exception(str(err))
 
     async def get_single_and_multi_fees(self):
-        """Get the current transfer fee
+        """Get the current fee for both single and multi-send transaction
 
-        :returns: The current transfer fee
+        :returns: The current fee for both single and multi-send transaction
         """
         try:
             transfer_fee = await self.get_transfer_fee()
@@ -291,7 +287,7 @@ class Client(interface.IXChainClient):
                 }
             }
         except Exception as err:
-            return err
+            raise Exception(str(err))
 
     def purge_client(self):
         """Purge client
@@ -312,7 +308,27 @@ class Client(interface.IXChainClient):
         """
         return True if crypto.check_address(address, prefix) else False
 
-    async def search_transactions(self, params):
+    async def search_transactions(self, params: dict = None):
+        """Search transactions with parameters
+
+        :param params: a dict that could be empty or have these fields:
+            address (default = self.address)
+            symbol
+            side (SEND or RECEIVE)
+            tx_asset
+            tx_type
+            height
+            offset (default = 0)
+            limit (default = 500)
+            start_time (default = 90 days ago)
+            end_time: (default = now)
+            
+            see the link below for further information:
+            https://docs.binance.org/api-reference/dex-api/paths.html#apiv1transactions
+
+        :type params: dict
+        :returns: The parameters to be used for transaction search
+        """
 
         params['address'] = params['address'] or self.address
 
@@ -354,9 +370,17 @@ class Client(interface.IXChainClient):
             }
 
         except Exception as err:
-            return err
+            raise Exception(str(err))
 
     async def get_transactions(self, params: types.TxHistoryParams):
+        """Get transaction history of a given address with pagination options
+        * By default it will return the transaction history of the current wallet
+
+        :param params: params
+        :type params: types.TxHistoryParams
+        :returns: The parameters to be used for transaction search
+        """
+
         transaction_params = {}
         transaction_params['address'] = params.address
         transaction_params['tx_asset'] = params.asset.symbol if params.asset else None
@@ -369,10 +393,19 @@ class Client(interface.IXChainClient):
             transactions = await self.search_transactions(transaction_params)
             return transactions
         except Exception as err:
-            return err
-
+            raise Exception(str(err))
 
     async def get_transaction_data(self, tx_id):
+        """Get the transaction details of a given transaction id
+
+        if you wnat to give a hash that is for mainnet and the current self.network is 'testnet',
+        you should call self.set_network('mainnet') (and vice versa) and then call this method.
+
+        :param tx_id: The transaction id
+        :type tx_id: str
+        :returns: The parameters to be used for transaction search
+        """
+
         try:
             address = ''
             transaction = await self.client.get_transaction(tx_id)
@@ -391,4 +424,53 @@ class Client(interface.IXChainClient):
 
             raise Exception('transaction not found')
         except Exception as err:
-            return err
+            raise Exception(str(err))
+
+
+
+async def main():
+    k = ''
+    phrase = 'rural bright ball negative already grass good grant nation screen model pizza'
+    passa = 'thorchain'
+    
+    import json 
+ 
+    # f = open('xchainpy/xchainpy_crypto/keeeeeeeeeeeeeeeeeeyyyyyyyyyystooooooooreeeeee.json',) 
+    # data = json.load(f) 
+    # f.close() 
+    # a = await decrypt_from_keystore(data , passa)
+
+    origin_tx = {
+            'txHash': '0C6B721844BB5751311EC8910ED17F6E950E7F2D3D404145DBBA4E8B6428C3F1',
+            'blockHeight': 123553830,
+            'txType': 'TRANSFER',
+            'timeStamp': '2020-11-03T17:21:34.152Z',
+            'fromAddr': 'bnb1jxfh2g85q3v0tdq56fnevx6xcxtcnhtsmcu64m',
+            'toAddr': 'bnb1c259wjqv38uqedhhufpz7haajqju0t5thass5v',
+            'value': '4.97300000',
+            'txAsset': 'USDT-6D8',
+            'txFee': '0.00037500',
+            'proposalId': None,
+            'txAge': 58638,
+            'orderId': None,
+            'code': 0,
+            'data': None,
+            'confirmBlocks': 0,
+            'memo': '',
+            'source': 0,
+            'sequence': 1034585,
+        }
+    # tx = utils.parse_tx(origin_tx)
+
+    return 4
+
+
+
+import asyncio
+
+loop = asyncio.get_event_loop()
+try:
+    loop.run_until_complete(main())
+finally:
+    loop.run_until_complete(loop.shutdown_asyncgens())
+    loop.close()

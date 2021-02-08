@@ -45,10 +45,10 @@ class TxTo:
         self._amount = amount
 
 class TX:
-    def __init__(self, asset: Asset, tx_from: TxFrom, tx_to: TxTo, tx_date, tx_type, tx_hash):
+    def __init__(self, asset: Asset, tx_froms, tx_tos, tx_date, tx_type:str, tx_hash:str):
         self._asset = asset
-        self._tx_from = tx_from
-        self._tx_to = tx_to
+        self._tx_from = tx_froms # list of "to" txs. BNC will have one `TxFrom` only, `BTC` might have many transactions going "in" (based on UTXO)
+        self._tx_to = tx_tos # list of "to" transactions. BNC will have one `TxTo` only, `BTC` might have many transactions going "out" (based on UTXO)
         self._tx_date = tx_date
         self._tx_type = tx_type
         self._tx_hash = tx_hash
