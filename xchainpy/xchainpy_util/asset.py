@@ -25,7 +25,14 @@ class Asset:
                 self.ticker = symbol
         else:
             self.ticker = ticker
-    
+
+    @classmethod
+    def from_str(cls, asset_str):
+        chain = asset_str[0:asset_str.index('.')]
+        symbol = asset_str[asset_str.index('.'):]
+        return Asset(chain, symbol)
+
+
     def __str__(self):
         """Get an asset from a string
 
