@@ -24,3 +24,12 @@ class TestCrypto:
 
     def test_public_key_to_address(self):
         assert crypto.public_key_to_address(self.public_key, 'tbnb')
+
+    def test_check_address(self):
+        assert crypto.check_address(self.testnetaddress, 'tbnb') == True
+
+    def test_check_address_false_address(self):
+        assert crypto.check_address(self.testnetaddress + '1', 'tbnb') == False
+
+    def test_check_address_false_prefix(self):
+        assert crypto.check_address(self.testnetaddress, 'bnb') == False
