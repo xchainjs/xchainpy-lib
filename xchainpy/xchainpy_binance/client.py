@@ -357,8 +357,6 @@ class Client(interface.IXChainClient):
             return err
 
     async def get_transactions(self, params: types.TxHistoryParams):
-        """Purge client
-        """
         transaction_params = {}
         transaction_params['address'] = params.address
         transaction_params['tx_asset'] = params.asset.symbol if params.asset else None
@@ -375,8 +373,6 @@ class Client(interface.IXChainClient):
 
 
     async def get_transaction_data(self, tx_id):
-        """Purge client
-        """
         try:
             address = ''
             transaction = await self.client.get_transaction(tx_id)
@@ -396,26 +392,3 @@ class Client(interface.IXChainClient):
             raise Exception('transaction not found')
         except Exception as err:
             return err
-
-        
-
-
-
-async def main():
-    phrase = 'rural bright ball negative already grass good grant nation screen model pizza'
-
-    client = Client(phrase)
-
-    a = await client.get_transactions(types.TxHistoryParams(address='bnb14vqt47g9ufhzwxf38ls4cgeyyepurrx6m0gkx7'))
-    # client.set_network('mainnet')
-    # b = await client.get_transaction_data('3F98AF964038C125E0B50336925C81E19C144362EE96CB32358483B619754A9')
-
-    return 4
-
-
-loop = asyncio.get_event_loop()
-try:
-    loop.run_until_complete(main())
-finally:
-    loop.run_until_complete(loop.shutdown_asyncgens())
-    loop.close()
