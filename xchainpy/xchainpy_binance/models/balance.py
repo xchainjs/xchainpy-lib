@@ -1,10 +1,8 @@
 from xchainpy.xchainpy_util.asset import Asset
-from xchainpy.xchainpy_util.balance import Balance
+from xchainpy.xchainpy_client.models.balance import Balance
 from xchainpy.xchainpy_util.chain import BNBCHAIN
 
 class BinanceBalance(Balance):
-    asset = None # Asset
-    amount = 0
 
     def __init__(self, balance):
         """

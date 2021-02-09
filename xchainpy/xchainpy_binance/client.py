@@ -9,17 +9,29 @@ from datetime import datetime
 import time
 
 from xchainpy.xchainpy_client import interface
-from xchainpy.xchainpy_client import types
+from xchainpy.xchainpy_client.models import tx_types
 from xchainpy.xchainpy_crypto import crypto as xchainpy_crypto
 from xchainpy.xchainpy_binance import crypto
 from xchainpy.xchainpy_binance import utils
 from xchainpy.xchainpy_util.asset import Asset
-from xchainpy.xchainpy_binance.balance import BinanceBalance
-from xchainpy.xchainpy_binance.coin import Coin
+from xchainpy.xchainpy_binance.models.balance import BinanceBalance
+from xchainpy.xchainpy_binance.models.coin import Coin
 from binance_chain.constants import TransactionSide, TransactionType
 
+class IBinanceClient():
 
-class Client(interface.IXChainClient):
+    def purge_client(self):
+        pass
+    def get_bnb_client(self):
+        pass
+    def get_multi_send_fees(self): 
+        pass
+    def get_single_and_multi_fees(self): 
+        pass
+    def multi_send(self, coins, recipient, memo):
+        pass
+
+class Client(interface.IXChainClient, IBinanceClient):
 
     phrase = address = network = ''
     private_key = client = env = None
@@ -39,6 +51,9 @@ class Client(interface.IXChainClient):
         :returns: the client url for binance chain based on the network
         """
         return 'https://testnet-dex.binance.org' if self.network == 'testnet' else 'https://dex.binance.org'
+
+    def get_bnb_client(self):
+        return self.client
 
     def get_private_key(self):
         """Get private key
@@ -372,12 +387,12 @@ class Client(interface.IXChainClient):
         except Exception as err:
             raise Exception(str(err))
 
-    async def get_transactions(self, params: types.TxHistoryParams):
+    async def get_transactions(self, params: tx_types.TxHistoryParams):
         """Get transaction history of a given address with pagination options
         * By default it will return the transaction history of the current wallet
 
         :param params: params
-        :type params: types.TxHistoryParams
+        :type params: tx_types.TxHistoryParams
         :returns: The parameters to be used for transaction search
         """
 
@@ -425,52 +440,3 @@ class Client(interface.IXChainClient):
             raise Exception('transaction not found')
         except Exception as err:
             raise Exception(str(err))
-
-
-
-async def main():
-    k = ''
-    phrase = 'rural bright ball negative already grass good grant nation screen model pizza'
-    passa = 'thorchain'
-    
-    import json 
- 
-    # f = open('xchainpy/xchainpy_crypto/keeeeeeeeeeeeeeeeeeyyyyyyyyyystooooooooreeeeee.json',) 
-    # data = json.load(f) 
-    # f.close() 
-    # a = await decrypt_from_keystore(data , passa)
-
-    origin_tx = {
-            'txHash': '0C6B721844BB5751311EC8910ED17F6E950E7F2D3D404145DBBA4E8B6428C3F1',
-            'blockHeight': 123553830,
-            'txType': 'TRANSFER',
-            'timeStamp': '2020-11-03T17:21:34.152Z',
-            'fromAddr': 'bnb1jxfh2g85q3v0tdq56fnevx6xcxtcnhtsmcu64m',
-            'toAddr': 'bnb1c259wjqv38uqedhhufpz7haajqju0t5thass5v',
-            'value': '4.97300000',
-            'txAsset': 'USDT-6D8',
-            'txFee': '0.00037500',
-            'proposalId': None,
-            'txAge': 58638,
-            'orderId': None,
-            'code': 0,
-            'data': None,
-            'confirmBlocks': 0,
-            'memo': '',
-            'source': 0,
-            'sequence': 1034585,
-        }
-    # tx = utils.parse_tx(origin_tx)
-
-    return 4
-
-
-
-import asyncio
-
-loop = asyncio.get_event_loop()
-try:
-    loop.run_until_complete(main())
-finally:
-    loop.run_until_complete(loop.shutdown_asyncgens())
-    loop.close()

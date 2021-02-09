@@ -110,7 +110,6 @@ class TxHistoryParams:
         self._asset = asset
 
 
-
     @property
     def address(self):
         return self._address

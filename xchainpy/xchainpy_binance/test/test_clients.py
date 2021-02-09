@@ -1,8 +1,8 @@
 import pytest
 from xchainpy.xchainpy_binance.client import Client
-from xchainpy.xchainpy_binance.coin import Coin
+from xchainpy.xchainpy_binance.models.coin import Coin
 from xchainpy.xchainpy_util.asset import Asset
-from xchainpy.xchainpy_client import types
+from xchainpy.xchainpy_client.models import tx_types
 
 class TestClient:
 
@@ -136,42 +136,42 @@ class TestClient:
         transactions = await self.client.search_transactions({'address': self.testnetaddress})
         assert transactions
         if transactions['total'] > 0:
-            assert isinstance(transactions['tx'][0], types.TX)
+            assert isinstance(transactions['tx'][0], tx_types.TX)
 
     @pytest.mark.asyncio
     async def test_get_transactions(self, client):
         self.client.set_network('testnet')
-        params = types.TxHistoryParams(address=self.testnetaddressForTx, limit=1)
+        params = tx_types.TxHistoryParams(address=self.testnetaddressForTx, limit=1)
         transactions = await self.client.get_transactions(params)
         assert transactions
         assert len(transactions['tx']) == 1 or 0
         if transactions['total'] > 0:
-            assert isinstance(transactions['tx'][0], types.TX)
+            assert isinstance(transactions['tx'][0], tx_types.TX)
 
     @pytest.mark.asyncio
     async def test_get_transaction_data(self, client):
         self.client.set_network('testnet')
         try:
-            params = types.TxHistoryParams(address=self.testnetaddressForTx, limit=1)
+            params = tx_types.TxHistoryParams(address=self.testnetaddressForTx, limit=1)
             transactions = await self.client.get_transactions(params)
             transaction = await self.client.get_transaction_data(transactions['tx'][0].tx_hash)
             assert transaction
-            assert isinstance(transaction, types.TX)
+            assert isinstance(transaction, tx_types.TX)
         except Exception as err:
             assert str(err) == 'list index out of range' # there is not any transaction in the last 3 months for this address
 
-    @pytest.mark.asyncio
-    async def test_multi_send(self, client):
-        self.client.set_network('testnet')
-        self.client.set_phrase(self.phraseForTX)
-        assert self.client.get_address() == self.testnetaddressForTx
-        before_balance = await self.client.get_balance()
-        assert len(before_balance) == 1
-        before_balance_amount = before_balance[0].amount
+    # @pytest.mark.asyncio
+    # async def test_multi_send(self, client):
+    #     self.client.set_network('testnet')
+    #     self.client.set_phrase(self.phraseForTX)
+    #     assert self.client.get_address() == self.testnetaddressForTx
+    #     before_balance = await self.client.get_balance()
+    #     assert len(before_balance) == 1
+    #     before_balance_amount = before_balance[0].amount
 
-        coins = [Coin(self.bnb_asset, self.transfer_amount), Coin(Asset.from_str('BNB.BNB'), self.transfer_amount)]
-        tx_hash = await self.client.multi_send(coins, 'tbnb185tqzq3j6y7yep85lncaz9qeectjxqe5054cgn')
+    #     coins = [Coin(self.bnb_asset, self.transfer_amount), Coin(Asset.from_str('BNB.BNB'), self.transfer_amount)]
+    #     tx_hash = await self.client.multi_send(coins, 'tbnb185tqzq3j6y7yep85lncaz9qeectjxqe5054cgn')
 
-        after_balance = await self.client.get_balance()
-        after_balance_amount = after_balance[0].amount
-        assert round((float(before_balance_amount) - float(after_balance_amount)) * 10**8) == round(self.multi_tx_fee * 10 ** -8, 8)
+    #     after_balance = await self.client.get_balance()
+    #     after_balance_amount = after_balance[0].amount
+    #     assert round((float(before_balance_amount) - float(after_balance_amount)) * 10**8) == round(self.multi_tx_fee * 10 ** -8, 8)
