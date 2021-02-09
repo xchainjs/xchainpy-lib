@@ -1,8 +1,8 @@
 from xchainpy.xchainpy_util.chain import is_chain
 
 class Asset:
-    chain = None # "BNB" | "BTC" | "ETH" | "THOR" | "GAIA" | "POLKA"
-    symbol = ticker = '' 
+    _chain = None # "BNB" | "BTC" | "ETH" | "THOR" | "GAIA" | "POLKA"
+    _symbol = _ticker = '' 
 
     def __init__(self, chain, symbol, ticker = ''):
         """
@@ -14,17 +14,17 @@ class Asset:
         :type ticker: str
         """
         if is_chain(chain):
-            self.chain = chain
+            self._chain = chain
         else:
             raise Exception('the chain is invalid')
-        self.symbol = symbol
+        self._symbol = symbol
         if not ticker:
             if '-' in symbol:
-                self.ticker = symbol[0:symbol.index('-')]
+                self._ticker = symbol[0:symbol.index('-')]
             else:
-                self.ticker = symbol
+                self._ticker = symbol
         else:
-            self.ticker = ticker
+            self._ticker = ticker
 
     @classmethod
     def from_str(cls, asset_str):
@@ -52,3 +52,27 @@ class Asset:
 
     def __getitem__(self, item):
          return getattr(self, item)
+
+    @property
+    def chain(self):
+        return self._chain
+
+    @chain.setter
+    def chain(self, chain):
+        self._chain = chain
+
+    @property
+    def symbol(self):
+        return self._symbol
+
+    @symbol.setter
+    def symbol(self, symbol):
+        self._symbol = symbol
+
+    @property
+    def ticker(self):
+        return self._ticker
+
+    @ticker.setter
+    def ticker(self, ticker):
+        self._ticker = ticker
