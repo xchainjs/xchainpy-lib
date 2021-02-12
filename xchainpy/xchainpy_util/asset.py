@@ -29,7 +29,7 @@ class Asset:
     @classmethod
     def from_str(cls, asset_str):
         chain = asset_str[0:asset_str.index('.')]
-        symbol = asset_str[asset_str.index('.'):]
+        symbol = asset_str[asset_str.index('.')+1:]
         return Asset(chain, symbol)
 
 
