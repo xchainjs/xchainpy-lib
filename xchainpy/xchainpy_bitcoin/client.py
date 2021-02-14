@@ -115,9 +115,14 @@ class Client(IBitcoinClient,IXChainClient):
         raise Exception('Phrase must be provided')
 
     async def get_balance(self, address:str=None):
+        """Get the BTC balance of a given address
+
+        :param address: By default, it will return the balance of the current wallet. (optional)
+        :type address: str
+        :returns: The BTC balance of the address.
+        """
         try:
-            amount = await utils.get_balance(self.service, address or self.address)
-            amount = round(amount * 10 ** -8, 8) 
+            amount = await sochain_api.get_balance(self.net, address or self.address)
             balance = Balance(Asset.from_str('BTC.BTC'), amount)
             return balance
         except Exception as err:
