@@ -38,7 +38,7 @@ async def get_tx(net: str, hash: str):
         raise Exception(str(err))
 
 
-async def get_suggested_tx_fee(net: str, hash: str):
+async def get_suggested_tx_fee():
     # Note: sochain does not provide fee rate related data
     # This number is from https://bitcoinfees.earn.com API
     # Refer: https://bitcoinfees.earn.com/api
@@ -49,7 +49,7 @@ async def get_suggested_tx_fee(net: str, hash: str):
         response = await client.get(api_url)
 
         if response.status_code == 200:
-            return json.loads(response.content.decode('utf-8'))['data']['fastestFee']
+            return json.loads(response.content.decode('utf-8'))['fastestFee']
         else:
             return None
     except Exception as err:

@@ -42,9 +42,9 @@ class Client(IBitcoinClient,IXChainClient):
                 self.net = network
     
     def set_wallet(self, phrase):
-        # self.wallet = Wallet("Wallet")
-        wallet_delete_if_exists('Wallet')
-        self.wallet = Wallet.create("Wallet", keys=self.phrase , witness_type='segwit', network=self.get_network())
+        self.wallet = Wallet("Wallet")
+        # wallet_delete_if_exists('Wallet')
+        # self.wallet = Wallet.create("Wallet", keys=self.phrase , witness_type='segwit', network=self.get_network())
         return self.wallet
 
     def set_phrase(self , phrase : str):
@@ -123,7 +123,7 @@ class Client(IBitcoinClient,IXChainClient):
             raise Exception(str(err))
 
 
-    async def get_fees_with_rates(self):
+    async def get_fees_with_rates(self, memo:str=''):
         tx_fee = await sochain_api.get_suggested_tx_fee()
         return {
                 'rates': {
@@ -131,9 +131,38 @@ class Client(IBitcoinClient,IXChainClient):
                     'fastest': tx_fee * 1,
                     'average': tx_fee * 0.5
                 },
-                'multi': {
+                'fees': {
                     'fast': tx_fee,
                     'fastest': tx_fee,
                     'average': tx_fee
                 }
             }
+
+    async def get_fees(self):
+        try:
+            fees = (await self.get_fees_with_rates())['fees']
+            return fees
+        except Exception as err:
+            raise Exception(str(err))
+
+
+    async def get_fees_with_memo(self, memo:str):
+        try:
+            fees = (await self.get_fees_with_rates(memo))['fees']
+            return fees
+        except Exception as err:
+            raise Exception(str(err))
+
+    async def get_fee_rates(self):
+        try:
+            rates = (await self.get_fees_with_rates())['rates']
+            return rates
+        except Exception as err:
+            raise Exception(str(err))
+
+    def transfer(self, amount, recipient, memo:str=None, fee=None):
+        self.wallet.utxos_update()
+        tx = self.wallet.send_to(to_address=recipient, amount=amount)
+        self.wallet.info()
+        self.wallet.scan()
+        return tx
