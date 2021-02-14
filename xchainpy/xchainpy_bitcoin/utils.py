@@ -20,14 +20,6 @@ DUST_THRESHOLD = 1000
 def get_derive_path(index:int=0):
     return DerivePath(index=index)
 
-async def get_balance(service:Service, address:str):
-    get_balance_async = asyncio.coroutine(service.getbalance)
-    return await get_balance_async(address)
-
-# async def get_transactions(service:Service, address:str, limit=10000):
-#     get_transactions_async = asyncio.coroutine(service.gettransactions)
-#     return await get_transactions_async(address, limit)
-
 def parse_tx(tx):
     """Parse tx
 

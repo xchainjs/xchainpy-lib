@@ -389,7 +389,7 @@ class Client(interface.IXChainClient, IBinanceClient):
 
     async def get_transactions(self, params: tx_types.TxHistoryParams):
         """Get transaction history of a given address with pagination options
-        * By default it will return the transaction history of the current wallet
+        By default it will return the transaction history of the current wallet
 
         :param params: params
         :type params: tx_types.TxHistoryParams
@@ -413,7 +413,7 @@ class Client(interface.IXChainClient, IBinanceClient):
     async def get_transaction_data(self, tx_id):
         """Get the transaction details of a given transaction id
 
-        if you wnat to give a hash that is for mainnet and the current self.network is 'testnet',
+        if you want to give a hash that is for mainnet and the current self.network is 'testnet',
         you should call self.set_network('mainnet') (and vice versa) and then call this method.
 
         :param tx_id: The transaction id

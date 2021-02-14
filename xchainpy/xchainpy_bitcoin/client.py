@@ -27,12 +27,26 @@ class Client(IBitcoinClient,IXChainClient):
     wallet = None
 
     def __init__(self, phrase , network='testnet'):
+        """
+        :param phrase: a phrase (mnemonic)
+        :type phrase: str
+        :param network: testnet or mainnet
+        :type network: str
+        """
         self.set_network(network)
         self.set_phrase(phrase)
         self.service = Service(network=self.get_network())
 
 
     def set_network(self, network: str):
+        """Set/update the current network
+
+        :param network: "mainnet" or "testnet"
+        :type network: str
+        :returns: the client
+        :raises: raises if network not provided
+        :raises: `Invalid network' if the given network is invalid
+        """
         if not network :
             raise Exception("Network must be provided")
         else:
@@ -42,12 +56,25 @@ class Client(IBitcoinClient,IXChainClient):
                 self.net = network
     
     def set_wallet(self, phrase):
+        """Set/update the current wallet
+
+        :param phrase: A new phrase
+        :type phrase: str
+        :returns: the wallet
+        """
         # self.wallet = Wallet("Wallet")
-        wallet_delete_if_exists('Wallet')
+        wallet_delete_if_exists('Wallet', force=True)
         self.wallet = Wallet.create("Wallet", keys=self.phrase , witness_type='segwit', network=self.get_network())
         return self.wallet
 
     def set_phrase(self , phrase : str):
+        """Set/Update a new phrase
+
+        :param phrase: A new phrase
+        :type phrase: str
+        :returns: The address from the given phrase
+        :raises: 'Invalid Phrase' if the given phrase is invalid
+        """
         if validate_phrase(phrase):
             self.phrase = phrase
             self.set_wallet(self.phrase)
@@ -73,10 +100,10 @@ class Client(IBitcoinClient,IXChainClient):
 
 
     def get_address(self):
-        """Get private key
+        """Get the current address
 
-        :returns: the private key generated from the given phrase
-        :raises: raise an exception if phrase not set
+        :returns: the current address
+        :raises: Raises if phrase has not been set before. A phrase is needed to create a wallet and to derive an address from it.
         """
         if self.phrase:
             self.address = self.wallet.get_key().address
@@ -88,15 +115,27 @@ class Client(IBitcoinClient,IXChainClient):
         raise Exception('Phrase must be provided')
 
     async def get_balance(self, address:str=None):
+        """Get the BTC balance of a given address
+
+        :param address: By default, it will return the balance of the current wallet. (optional)
+        :type address: str
+        :returns: The BTC balance of the address.
+        """
         try:
-            amount = await utils.get_balance(self.service, address or self.address)
-            amount = round(amount * 10 ** -8, 8) 
+            amount = await sochain_api.get_balance(self.net, address or self.address)
             balance = Balance(Asset.from_str('BTC.BTC'), amount)
             return balance
         except Exception as err:
             raise Exception(str(err))
 
     async def get_transactions(self, params: tx_types.TxHistoryParams):
+        """Get transaction history of a given address with pagination options
+        By default it will return the transaction history of the current wallet
+
+        :param params: params
+        :type params: tx_types.TxHistoryParams
+        :returns: The transaction history
+        """
         try:
             transactions = await sochain_api.get_transactions(self.net, self.address)
             total = transactions['total_txs']
@@ -115,6 +154,15 @@ class Client(IBitcoinClient,IXChainClient):
 
 
     async def get_transaction_data(self, tx_id:str):
+        """Get the transaction details of a given transaction id
+
+        if you want to give a hash that is for mainnet and the current self.net is 'testnet',
+        you should call self.set_network('mainnet') (and vice versa) and then call this method.
+
+        :param tx_id: The transaction id
+        :type tx_id: str
+        :returns: The transaction details of the given transaction id
+        """
         try:
             tx = await sochain_api.get_tx(self.net, tx_id)
             tx = utils.parse_tx(tx)
@@ -122,8 +170,15 @@ class Client(IBitcoinClient,IXChainClient):
         except Exception as err:
             raise Exception(str(err))
 
+    
+    #todo: complete this method by adding calc_fee(memo) method
+    async def get_fees_with_rates(self, memo:str=''):
+        """Get the rates and fees
 
-    async def get_fees_with_rates(self):
+        :param memo: The memo to be used for fee calculation (optional)
+        :type memo: str
+        :returns: The fees and rates
+        """
         tx_fee = await sochain_api.get_suggested_tx_fee()
         return {
                 'rates': {
@@ -131,9 +186,54 @@ class Client(IBitcoinClient,IXChainClient):
                     'fastest': tx_fee * 1,
                     'average': tx_fee * 0.5
                 },
-                'multi': {
+                'fees': {
                     'fast': tx_fee,
                     'fastest': tx_fee,
                     'average': tx_fee
                 }
             }
+
+    async def get_fees(self):
+        """Get the current fees
+
+        :returns: The fees without memo
+        """
+        try:
+            fees = (await self.get_fees_with_rates())['fees']
+            return fees
+        except Exception as err:
+            raise Exception(str(err))
+
+
+    async def get_fees_with_memo(self, memo:str):
+        """Get the fees for transactions with memo
+        If you want to get `fees` and `fee_rates` at once, use `get_fees_with_rates` method
+
+        :param memo: The memo to be used for fee calculation (optional)
+        :type memo: str
+        :returns: The fees with memo
+        """
+        try:
+            fees = (await self.get_fees_with_rates(memo))['fees']
+            return fees
+        except Exception as err:
+            raise Exception(str(err))
+
+    async def get_fee_rates(self):
+        """Get the fee rates for transactions without a memo
+        If you want to get `fees` and `fee_rates` at once, use `get_fees_with_rates` method
+
+        :returns: The fee rate
+        """
+        try:
+            rates = (await self.get_fees_with_rates())['rates']
+            return rates
+        except Exception as err:
+            raise Exception(str(err))
+
+    def transfer(self, amount, recipient, memo:str=None, fee=None):
+        self.wallet.utxos_update()
+        tx = self.wallet.send_to(to_address=recipient, amount=amount)
+        self.wallet.info()
+        self.wallet.scan()
+        return tx
