@@ -15,7 +15,7 @@ async def main():
 
     print(client.get_address())
 
-    await client.transfer(1, "tthor13gym97tmw3axj3hpewdggy2cr288d3qffr8skg")
+    await client.transfer(1, "tthor1pttyuys2muhj674xpr9vutsqcxj9hepy4ddueq")
 
 
 

@@ -9,6 +9,8 @@ import http3
 import json
 import base64
 
+# import httpx
+
 class CosmosSDKClient:
     server = chain_id = prefix = derive_path = ''
 
@@ -113,8 +115,8 @@ class CosmosSDKClient:
             self._account_num = account['result']['value']['account_number']
             self._sequence = account['result']['value']['sequence']
 
-        self._gas = "100000000"
-        self._fee = "100000000"
+        self._gas = "10000000"
+        self._fee = "10000000"
         self._privkey = self.privkey
         self._fee_denom = fee_denom
         self._memo = memo
@@ -125,7 +127,7 @@ class CosmosSDKClient:
 
     def add_transfer(self, recipient: str, amount: int, denom: str = "rune") -> None:
         transfer = {
-            "type": "cosmos-sdk/MsgSend",
+            "type": "thorchain/MsgSend",
             "value": {
                 "from_address": self.privkey_to_address(self._privkey),
                 "to_address": recipient,
@@ -142,15 +144,13 @@ class CosmosSDKClient:
                 "msg": self._msgs,
                 "fee": {
                     "gas": str(self._gas),
-                    "amount": [{"denom": self._fee_denom, "amount": str(self._fee)}],
+                    "amount": [],
                 },
                 "memo": self._memo,
                 "signatures": [
                     {
                         "signature": self._sign(),
                         "pub_key": {"type": "tendermint/PubKeySecp256k1", "value": base64_pubkey},
-                        "account_number": str(self._account_num),
-                        "sequence": str(self._sequence),
                     }
                 ],
             },
@@ -163,7 +163,9 @@ class CosmosSDKClient:
 
         client = http3.AsyncClient()
 
-        response = await client.post(api_url, data={'txBroadcast': content})
+        print(content)
+
+        response = await client.post(api_url, data=content)
 
         print(response)
 
@@ -189,7 +191,7 @@ class CosmosSDKClient:
             "account_number": str(self._account_num),
             "fee": {
                 "gas": str(self._gas),
-                "amount": [{"amount": str(self._fee), "denom": self._fee_denom}],
+                "amount": [],
             },
             "memo": self._memo,
             "sequence": str(self._sequence),
