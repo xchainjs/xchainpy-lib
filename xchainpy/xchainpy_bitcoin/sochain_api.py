@@ -107,11 +107,27 @@ async def get_balance(net: str, address: str):
 
 
 async def get_unspent_txs(network, address):
-    api_url = f'{api_url_base}/get_tx_unspent/{to_sochain_network(network)}/{address}'
+    try:
+        api_url = f'{api_url_base}/get_tx_unspent/{to_sochain_network(network)}/{address}'
 
-    client = http3.AsyncClient()
-    response = await client.get(api_url)
+        client = http3.AsyncClient()
+        response = await client.get(api_url)
 
-    if response.status_code == 200:
-        txs = json.loads(response.content.decode('utf-8'))['data']['txs']
-        return txs
+        if response.status_code == 200:
+            txs = json.loads(response.content.decode('utf-8'))['data']['txs']
+            return txs
+    except Exception as err:
+        raise Exception(str(err))
+
+async def broadcast_tx(network, tx_hex):
+    try:
+        api_url = f'{api_url_base}/send_tx/{to_sochain_network(network)}'
+
+        client = http3.AsyncClient()
+        response = await client.post(url=api_url, data={'tx_hex': tx_hex})
+
+        if response.status_code == 200:
+            res = json.loads(response.content.decode('utf-8'))['data']
+            return res['txid']
+    except Exception as err:
+        raise Exception(str(err))
