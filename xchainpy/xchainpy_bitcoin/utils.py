@@ -1,3 +1,4 @@
+from bitcoinlib.keys import Address
 from typing import List, Optional, Union
 import asyncio
 from xchainpy.xchainpy_bitcoin.const import MIN_TX_FEE
@@ -12,16 +13,17 @@ import datetime
 import binascii
 
 
-TX_EMPTY_SIZE = 4 + 1 + 1 + 4 #10
-TX_INPUT_BASE = 32 + 4 + 1 + 4 #41
+TX_EMPTY_SIZE = 4 + 1 + 1 + 4  # 10
+TX_INPUT_BASE = 32 + 4 + 1 + 4  # 41
 TX_INPUT_PUBKEYHASH = 107
-TX_OUTPUT_BASE = 8 + 1 #9
+TX_OUTPUT_BASE = 8 + 1  # 9
 TX_OUTPUT_PUBKEYHASH = 25
 DUST_THRESHOLD = 1000
 
 
-def get_derive_path(index:int=0):
+def get_derive_path(index: int = 0):
     return DerivePath(index=index)
+
 
 def parse_tx(tx):
     """Parse tx
@@ -41,28 +43,52 @@ def parse_tx(tx):
     return tx
 
 
-def calc_fee(fee_rate , memo=''):
+def calc_fee(fee_rate, memo=''):
     compiled_memo = compile_memo(memo) if memo else None
-    fee = get_fee([] , fee_rate , compiled_memo)
+    fee = get_fee([], fee_rate, compiled_memo)
     return fee
 
-def compile_memo(memo : str):
-    # data = memo.encode('utf-8').hex()
-    data = bytes(memo , 'utf-8')
-    # raw = binascii.a2b_hex(data)
-    return data
 
-# def input_bytes(input : UTXO):
-#     result = TX_INPUT_BASE + (len(input.witness_utxo.script) if input.witness_utxo.script else TX_INPUT_PUBKEYHASH)
-#     return result
+def compile_memo(memo: str):
+    metadata = bytes(memo, 'utf-8')
+    metadata_len = len(metadata)
 
-def get_fee(inputs : List[UTXO] , fee_rate : float , data : Optional[bytes] = None):
+    if metadata_len <= 75:
+        # length byte + data (https://en.bitcoin.it/wiki/Script)
+        payload = bytearray((metadata_len,))+metadata
+    elif metadata_len <= 256:
+        # OP_PUSHDATA1 format
+        payload = "\x4c"+bytearray((metadata_len,))+metadata
+    else:
+        payload = "\x4d"+bytearray((metadata_len % 256,))+bytearray(
+            (int(metadata_len/256),))+metadata  # OP_PUSHDATA2 format
+
+    compiled_memo = binascii.b2a_hex(payload).decode('utf-8')
+    compiled_memo = '6a' + compiled_memo
+    compiled_memo = compiled_memo.encode('utf-8')
+    return compiled_memo
+
+
+def validate_address(network, address):
+    try:
+        address = Address.import_address(address=address, network=(
+            'bitcoin' if network == 'mainnet' else network))
+        return True
+    except:
+        return False
+
+
+def get_fee(inputs: List[UTXO], fee_rate: float, data: Optional[bytes] = None):
     lst_reduce = 0
     if len(inputs) > 0:
         for x in inputs:
-            lst_reduce += TX_INPUT_BASE + (len(x.witness_utxo.script) if x.witness_utxo.script else TX_INPUT_PUBKEYHASH)
+            lst_reduce += TX_INPUT_BASE + \
+                (len(x.witness_utxo.script)
+                 if x.witness_utxo.script else TX_INPUT_PUBKEYHASH)
 
-    sum = TX_EMPTY_SIZE + lst_reduce + len(inputs) + TX_OUTPUT_BASE + TX_OUTPUT_PUBKEYHASH + TX_OUTPUT_BASE + TX_OUTPUT_PUBKEYHASH
+    sum = TX_EMPTY_SIZE + lst_reduce + \
+        len(inputs) + TX_OUTPUT_BASE + TX_OUTPUT_PUBKEYHASH + \
+        TX_OUTPUT_BASE + TX_OUTPUT_PUBKEYHASH
     if data:
         sum = sum + TX_OUTPUT_BASE + len(data)
     fee = sum * fee_rate
@@ -74,6 +100,7 @@ async def scan_UTXOs(network, address):
     utxos = await sochain_api.get_unspent_txs(network, address)
     utxos = list(map(UTXO.from_sochain_utxo, utxos))
     return utxos
+
 
 async def get_change(value_out, network, address):
     try:
@@ -95,7 +122,9 @@ async def build_tx(amount, recipient, memo, fee_rate, sender, network):
 
         balance = await sochain_api.get_balance(network, sender)
 
-        #validate address
+        if not validate_address(network, recipient):
+            raise Exception('Invalid address')
+
         fee_rate_whole = int(fee_rate)
 
         compiled_memo = None
@@ -107,51 +136,26 @@ async def build_tx(amount, recipient, memo, fee_rate, sender, network):
         if fee + amount > balance * 10 ** 8:
             raise Exception('Balance insufficient for transaction')
 
-        t = Transaction(network=network, witness_type='segwit', version=1)
-        # t.add_input(prev_txid=prev_tx, output_n=1, keys=ki.public_hex, compressed=False)
-        # for i in utxos:
-        i = utxos[1]
-        t.add_input(prev_txid=i.hash, output_n=i.index, value=i.witness_utxo.value, witnesses=i.witness_utxo.script)
+        t = Transaction(network=network, witness_type='segwit')
 
-
-            # # t.add_input(prev_txid=prev_tx, output_n=1, keys=ki.public_hex, compressed=False)
-            # t.add_input(prev_txid=i.hash, output_n=i.index, keys=i.witness_utxo.value, witnesses=i.witness_utxo.script)
-            # # t.add_input(prev_txid=i.hash, output_n=i.index, value=i.witness_utxo.value, witnesses=i.witness_utxo.script)
-
+        for i in utxos:
+            t.add_input(prev_txid=i.hash, output_n=i.index,
+                    value=i.witness_utxo.value, witnesses=i.witness_utxo.script)
 
         t.add_output(address=recipient, value=amount)
         change = await get_change(amount + fee, network, sender)
 
         if change > 0:
-            t.add_output(address=sender, value=1025498)
+            t.add_output(address=sender, value=change)
 
-        metadata = compiled_memo
-        metadata_len=len(metadata)
-	
-        if metadata_len<=75:
-            payload=bytearray((metadata_len,))+metadata # length byte + data (https://en.bitcoin.it/wiki/Script)
-        elif metadata_len<=256:
-            payload="\x4c"+bytearray((metadata_len,))+metadata # OP_PUSHDATA1 format
-        else:
-            payload="\x4d"+bytearray((metadata_len%256,))+bytearray((int(metadata_len/256),))+metadata # OP_PUSHDATA2 format
-        
-        
         if compiled_memo:
-            b = binascii.b2a_hex(payload).decode('utf-8')
-            print(b)
-            a = '6a'+b
-            # f = data = bytes(a , 'utf-8')
-            # a = a.encode('utf-8')
-            print(a)
-            # b = binascii.b2a_hex(compiled_memo).decode('utf-8')
-            # a = '6a'+b
-            t.add_output(lock_script=a, value=0)
+            t.add_output(lock_script=compiled_memo, value=0)
 
         return t, utxos
-    
+
     except Exception as err:
         raise Exception(str(err))
-        
 
 
-
+async def broadcast_tx(network, tx_hex):
+    return await sochain_api.broadcast_tx(network, tx_hex)
