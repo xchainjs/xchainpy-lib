@@ -44,12 +44,26 @@ def parse_tx(tx):
 
 
 def calc_fee(fee_rate, memo=''):
+    """Calculate fees based on fee rate and memo
+
+    :param fee_rate: fee rate
+    :type fee_rate: int
+    :param memo: memo
+    :type memo: str
+    :returns: The calculated fees based on fee rate and the memo
+    """
     compiled_memo = compile_memo(memo) if memo else None
     fee = get_fee([], fee_rate, compiled_memo)
     return fee
 
 
 def compile_memo(memo: str):
+    """Compile memo
+
+    :param memo: The memo to be compiled
+    :type memo: str
+    :returns: The compiled memo
+    """
     metadata = bytes(memo, 'utf-8')
     metadata_len = len(metadata)
 
@@ -70,6 +84,14 @@ def compile_memo(memo: str):
 
 
 def validate_address(network, address):
+    """Validate the BTC address
+
+    :param network: testnet or mainnet
+    :type network: str
+    :param address: address
+    :type address: str
+    :returns: True or False
+    """
     try:
         address = Address.import_address(address=address, network=(
             'bitcoin' if network == 'mainnet' else network))
@@ -78,7 +100,17 @@ def validate_address(network, address):
         return False
 
 
-def get_fee(inputs: List[UTXO], fee_rate: float, data: Optional[bytes] = None):
+def get_fee(inputs: List[UTXO], fee_rate: float, data: Optional[bytes]=None):
+    """Get the transaction fee
+
+    :param inputs: the UTXOs
+    :type inputs: List[UTXO]
+    :param fee_rate: the fee rate
+    :type fee_rate: float
+    :param data: The compiled memo (Optional)
+    :type data: bytes
+    :returns: The fee amount
+    """
     lst_reduce = 0
     if len(inputs) > 0:
         for x in inputs:
@@ -97,12 +129,30 @@ def get_fee(inputs: List[UTXO], fee_rate: float, data: Optional[bytes] = None):
 
 
 async def scan_UTXOs(network, address):
+    """Scan UTXOs from sochain
+
+    :param network: testnet or mainnet
+    :type network: str
+    :param address: address
+    :type address: str
+    :returns: The UTXOs of the given address
+    """
     utxos = await sochain_api.get_unspent_txs(network, address)
     utxos = list(map(UTXO.from_sochain_utxo, utxos))
     return utxos
 
 
 async def get_change(value_out, network, address):
+    """Get the balance changes amount
+
+    :param value_out: amount you wnat to transfer
+    :type value_out: int
+    :param network: testnet or mainnet
+    :type network: str
+    :param address: address
+    :type address: str
+    :returns: The UTXOs of the given address
+    """
     try:
         balance = await sochain_api.get_balance(network, address)
         balance = balance * 10 ** 8
@@ -115,6 +165,22 @@ async def get_change(value_out, network, address):
 
 
 async def build_tx(amount, recipient, memo, fee_rate, sender, network):
+    """Build transcation
+
+    :param amount: amount of BTC to transfer
+    :type amount: int
+    :param recipient: destination address
+    :type recipient: str
+    :param memo: optional memo for transaction
+    :type memo: str
+    :param fee_rate: fee rates for transaction
+    :type fee_rate: int
+    :param sender: sender's address
+    :type sender: str
+    :param network: testnet or mainnet
+    :type network: str
+    :returns: transaction
+    """
     try:
         utxos = await scan_UTXOs(network, sender)
         if len(utxos) == 0:
@@ -158,4 +224,12 @@ async def build_tx(amount, recipient, memo, fee_rate, sender, network):
 
 
 async def broadcast_tx(network, tx_hex):
+    """Broadcast the transaction
+
+    :param network: testnet or mainnet
+    :type network: str
+    :param tx_hex: tranaction hex
+    :type tx_hex: str
+    :returns: The transaction hash
+    """
     return await sochain_api.broadcast_tx(network, tx_hex)

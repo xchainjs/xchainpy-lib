@@ -247,8 +247,6 @@ class Client(IBitcoinClient, IXChainClient):
     async def transfer(self, amount, recipient, memo:str=None, fee_rate=None):
         """Transfer BTC
 
-        :param network: The transfer options
-
         :param amount: amount of BTC to transfer (don't multiply by 10**8)
         :type amount: int, float, decimal
         :param recipient: destination address
