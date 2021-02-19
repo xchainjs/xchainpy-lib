@@ -172,7 +172,6 @@ class Client(IBitcoinClient, IXChainClient):
         except Exception as err:
             raise Exception(str(err))
 
-    # todo: complete this method by adding calc_fee(memo) method
     async def get_fees_with_rates(self, memo: str = ''):
         """Get the rates and fees
 
@@ -181,17 +180,20 @@ class Client(IBitcoinClient, IXChainClient):
         :returns: The fees and rates
         """
         tx_fee = await sochain_api.get_suggested_tx_fee()
-        return {
-            'rates': {
+
+        rates = {
                 'fast': tx_fee * 5,
                 'fastest': tx_fee * 1,
                 'average': tx_fee * 0.5
-            },
-            'fees': {
-                'fast': tx_fee,
-                'fastest': tx_fee,
-                'average': tx_fee
             }
+        fees = {
+                'fast': utils.calc_fee(rates['fast'], memo),
+                'fastest': utils.calc_fee(rates['fastest'], memo),
+                'average': utils.calc_fee(rates['average'], memo),
+            }
+        return {
+            rates,
+            fees
         }
 
     async def get_fees(self):
