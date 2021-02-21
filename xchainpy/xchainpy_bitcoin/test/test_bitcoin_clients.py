@@ -59,7 +59,8 @@ class TestBitcoinClient:
         assert balance1.amount == balance2.amount
 
     @pytest.mark.asyncio
-    async def test_transfer_with_memo_and_fee_rate(self, client):
+    async def test_transfer_with_memo_and_fee_rate(self):
+        self.client = Client(self.phrase_for_tx1, network='testnet')
         fee_rates = await self.client.get_fee_rates()
         fee_rate = fee_rates['fast']
         balance = await self.client.get_balance()
@@ -67,6 +68,7 @@ class TestBitcoinClient:
             amount = 0.0000001
             tx_id = await self.client.transfer(amount, self.testnetaddress_for_tx2, self.memo, fee_rate)
             assert tx_id
+        self.client.purge_client()
 
     @pytest.mark.asyncio
     async def test_purge_client_should_purge_phrase_and_utxos(self):
