@@ -1,3 +1,9 @@
+from xchainpy.xchainpy_util.asset import Asset
+from xchainpy.xchainpy_client.models.balance import Balance
+from xchainpy.xchainpy_bitcoincash.haskoin_api import get_account
+from bitcash.wallet import Key, PrivateKeyTestnet
+from cashaddress import convert
+from cashaddress.convert import Address
 from xchainpy.xchainpy_bitcoincash.crypto import mnemonic_to_private_key, private_key_to_address, private_key_to_public_key
 from mnemonic.mnemonic import Mnemonic
 from xchainpy.xchainpy_crypto.crypto import validate_phrase
@@ -17,7 +23,7 @@ class IBitcoinCashClient():
 
 class Client(IBitcoinCashClient , IXChainClient):
     def __init__(self, client_url : ClientUrl , phrase : str , network = 'testnet'):
-        self.network = network
+        self.set_network(network)
         self.client_url = client_url if client_url else self.get_default_client_url()
         self.set_phrase(phrase)
 
@@ -53,3 +59,53 @@ class Client(IBitcoinCashClient , IXChainClient):
 
     def derive_path(self):
         return get_derive_path().testnet if self.network == 'testnet' else get_derive_path().mainnet
+
+    def purge_client(self):
+        self.phrase = ''
+
+    def get_network(self):
+        return self.network
+
+    def set_network(self, network: str):
+        if not network:
+            raise Exception("Network must be provided")
+        else:
+            self.network = network
+
+    def set_client_url(self , url : ClientUrl):
+        self.client_url = url
+
+    def get_client_url(self):
+        return self.get_client_url_by_network(self.get_network())
+
+    def get_client_url_by_network(self, network):
+        if network == "testnet":
+            return self.client_url.testnet
+        if network == "mainnet":
+            return self.client_url.mainnet
+
+    def validate_address(self, address: str):
+        return convert.is_valid(address)
+
+    async def get_balance(self, address: str = ""):
+        try:
+            
+            #TODO: test this library
+            # key = Key.from_hex(self.get_private_key(self.phrase))
+            # balance = key.balance
+            # return balance
+            
+            # or use haskoin api
+            account = await get_account(self.get_client_url() , address or self.get_address())
+            if not account:
+                raise Exception("Invalid Address")
+            
+            balance = Balance(Asset.from_str("BCH.BCH"), account.confirmed)
+            return balance
+
+                
+        except Exception as err:
+            raise Exception(str(err))
+    
+    async def get_transaction_data(self, txId: str):
+        pass
