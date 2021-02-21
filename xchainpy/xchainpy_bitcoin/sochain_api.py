@@ -147,5 +147,7 @@ async def broadcast_tx(network, tx_hex):
         if response.status_code == 200:
             res = json.loads(response.content.decode('utf-8'))['data']
             return res['txid']
+        else:
+            return json.loads(response.content.decode('utf-8'))['data']
     except Exception as err:
         raise Exception(str(err))
