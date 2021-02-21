@@ -1,7 +1,7 @@
 import json
 import http3
 
-api_url_base = 'https://sochain.com/api/v2/'
+api_url_base = 'https://sochain.com/api/v2'
 
 
 def to_sochain_network(net: str):

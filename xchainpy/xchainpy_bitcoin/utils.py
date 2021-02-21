@@ -212,7 +212,7 @@ async def build_tx(amount, recipient, memo, fee_rate, sender, network):
         change = await get_change(amount + fee, network, sender)
 
         if change > 0:
-            t.add_output(address=sender, value=change)
+            t.add_output(address=sender, value=int(change))
 
         if compiled_memo:
             t.add_output(lock_script=compiled_memo, value=0)
