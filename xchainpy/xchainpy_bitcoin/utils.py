@@ -76,10 +76,11 @@ def compile_memo(memo: str):
     else:
         payload = "\x4d"+bytearray((metadata_len % 256,))+bytearray(
             (int(metadata_len/256),))+metadata  # OP_PUSHDATA2 format
+    
 
     compiled_memo = binascii.b2a_hex(payload).decode('utf-8')
     compiled_memo = '6a' + compiled_memo
-    compiled_memo = compiled_memo.encode('utf-8')
+    compiled_memo = binascii.unhexlify(compiled_memo)
     return compiled_memo
 
 
@@ -210,9 +211,9 @@ async def build_tx(amount, recipient, memo, fee_rate, sender, network):
 
         t.add_output(address=recipient, value=amount)
         change = await get_change(amount + fee, network, sender)
-
+        
         if change > 0:
-            t.add_output(address=sender, value=change)
+            t.add_output(address=sender, value=int(change))
 
         if compiled_memo:
             t.add_output(lock_script=compiled_memo, value=0)

@@ -58,6 +58,8 @@ class Client(IBitcoinClient, IXChainClient):
                 raise Exception('Invalid network')
             else:
                 self.net = network
+                if self.phrase:
+                    self.set_wallet(self.phrase)
 
     def set_wallet(self, phrase):
         """Set/update the current wallet
@@ -70,6 +72,7 @@ class Client(IBitcoinClient, IXChainClient):
         wallet_delete_if_exists('Wallet', force=True)
         self.wallet = Wallet.create(
             "Wallet", keys=self.phrase, witness_type='segwit', network=self.get_network())
+        self.get_address()
         return self.wallet
 
     def set_phrase(self, phrase: str):
@@ -87,6 +90,7 @@ class Client(IBitcoinClient, IXChainClient):
             return address
         else:
             raise Exception("Invalid Phrase")
+        raise Exception('Phrase must be provided')
 
     def purge_client(self):
         """Purge client
@@ -125,7 +129,7 @@ class Client(IBitcoinClient, IXChainClient):
         :returns: The BTC balance of the address.
         """
         try:
-            amount = await sochain_api.get_balance(self.net, address or self.address)
+            amount = await sochain_api.get_balance(self.net, address or self.get_address())
             balance = Balance(Asset.from_str('BTC.BTC'), amount)
             return balance
         except Exception as err:
@@ -142,6 +146,9 @@ class Client(IBitcoinClient, IXChainClient):
         try:
             transactions = await sochain_api.get_transactions(self.net, self.address)
             total = transactions['total_txs']
+            offset = params['offset'] if 'offset' in params else 0
+            limit = params['limit'] if 'limit' in params else len(transactions)
+            transactions['txs'] = transactions['txs'][offset:limit]
             txs = []
             for tx in transactions['txs']:
                 tx = await sochain_api.get_tx(self.net, tx['txid'])
@@ -172,7 +179,6 @@ class Client(IBitcoinClient, IXChainClient):
         except Exception as err:
             raise Exception(str(err))
 
-    # todo: complete this method by adding calc_fee(memo) method
     async def get_fees_with_rates(self, memo: str = ''):
         """Get the rates and fees
 
@@ -181,17 +187,20 @@ class Client(IBitcoinClient, IXChainClient):
         :returns: The fees and rates
         """
         tx_fee = await sochain_api.get_suggested_tx_fee()
+
+        rates = {
+            'fastest': tx_fee * 5,
+            'fast': tx_fee * 1,
+            'average': tx_fee * 0.5
+        }
+        fees = {
+            'fastest': utils.calc_fee(rates['fastest'], memo),
+            'fast': utils.calc_fee(rates['fast'], memo),
+            'average': utils.calc_fee(rates['average'], memo)
+        }
         return {
-            'rates': {
-                'fast': tx_fee * 5,
-                'fastest': tx_fee * 1,
-                'average': tx_fee * 0.5
-            },
-            'fees': {
-                'fast': tx_fee,
-                'fastest': tx_fee,
-                'average': tx_fee
-            }
+            'rates': rates,
+            'fees': fees
         }
 
     async def get_fees(self):
@@ -231,7 +240,6 @@ class Client(IBitcoinClient, IXChainClient):
         except Exception as err:
             raise Exception(str(err))
 
-
     def validate_address(self, network, address):
         """Validate the given address
 
@@ -243,8 +251,7 @@ class Client(IBitcoinClient, IXChainClient):
         """
         return utils.validate_address(network, address)
 
-
-    async def transfer(self, amount, recipient, memo:str=None, fee_rate=None):
+    async def transfer(self, amount, recipient, memo: str = None, fee_rate=None):
         """Transfer BTC
 
         :param amount: amount of BTC to transfer (don't multiply by 10**8)
@@ -257,7 +264,10 @@ class Client(IBitcoinClient, IXChainClient):
         :type fee_rate: int
         :returns: the transaction hash
         """
-        
+        if not fee_rate:
+            fee_rates = await self.get_fee_rates()
+            fee_rate = fee_rates['fast']
+
         t, utxos = await utils.build_tx(amount=int(amount*10**8), recipient=recipient, memo=memo, fee_rate=fee_rate,
                                         sender=self.get_address(), network=self.net)
 
