@@ -21,7 +21,8 @@ async def get_account(client_url: str, address: str) -> AddressBalance:
 
         if response.status_code == 200:
             balance_response = json.loads(response.content.decode('utf-8'))
-            return balance_response
+            result = AddressBalance(balance_response['received'],balance_response['utxo'],balance_response['address'],balance_response['txs'],balance_response['unconfirmed'],balance_response['confirmed'])
+            return result
         else:
             return None
     except Exception as err:

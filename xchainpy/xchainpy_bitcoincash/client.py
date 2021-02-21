@@ -106,3 +106,6 @@ class Client(IBitcoinCashClient , IXChainClient):
                 
         except Exception as err:
             raise Exception(str(err))
+    
+    async def get_transaction_data(self, txId: str):
+        pass

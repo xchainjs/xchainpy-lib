@@ -53,4 +53,9 @@ class AddressBalance:
 
     @confirmed.setter
     def confirmed(self, confirmed):
-        self._confirmed = confirmed
+        self._confirmed = confirmed 
+
+
+class Transaction:
+    def __init__(self , time , size , inputs , weight , fee , locktime , block , outputs , version , deleted , rbf , txid):
+        pass
