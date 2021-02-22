@@ -1,6 +1,6 @@
 from xchainpy.xchainpy_util.asset import Asset
 from xchainpy.xchainpy_client.models.balance import Balance
-from xchainpy.xchainpy_bitcoincash.haskoin_api import get_account, get_transaction
+from xchainpy.xchainpy_bitcoincash.haskoin_api import get_account, get_suggested_tx_fee, get_transaction
 from bitcash.wallet import Key, PrivateKeyTestnet
 from cashaddress import convert
 from cashaddress.convert import Address
@@ -194,3 +194,33 @@ class Client(IBitcoinCashClient , IXChainClient):
 
         except Exception as err:
             raise Exception(str(err))
+
+    async def get_fees_with_rates(self, memo: str = ''):
+        """Get the rates and fees
+
+        :param memo: The memo to be used for fee calculation (optional)
+        :type memo: str
+        :returns: The fees and rates
+        """
+        next_block_fee_rates = await get_suggested_tx_fee()
+
+        rates = {
+            'fastest': next_block_fee_rates * 5,
+            'fast': next_block_fee_rates * 1,
+            'average': next_block_fee_rates * 0.5
+        }
+        fees = {
+            'fastest': utils.calc_fee(rates['fastest'], memo),
+            'fast': utils.calc_fee(rates['fast'], memo),
+            'average': utils.calc_fee(rates['average'], memo)
+        }
+        return {
+            'rates': rates,
+            'fees': fees
+        }
+
+    def get_fee_rates(self):
+        pass
+    
+    async def transfer(self, amount, recipient, memo: str = None, fee_rate=None) -> str:
+        fee_rate = fee_rate or (await self.get_fee_rates()).fast

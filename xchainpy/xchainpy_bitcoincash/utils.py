@@ -1,9 +1,14 @@
 import datetime
+
+import bitcash
 from xchainpy.xchainpy_bitcoincash.models.api_types import Transaction
 from xchainpy.xchainpy_util.asset import Asset
 from xchainpy.xchainpy_util.chain import BITCOINCASH
 from xchainpy.xchainpy_client.models import tx_types
 
+
+BCH_DECIMAL = 8
+DEFAULT_SUGGESTED_TRANSACTION_FEE = 1
 
 class DerivePath:
     def __init__(self, index:int=0):
@@ -68,3 +73,10 @@ def parse_tx(tx : Transaction):
 
     tx = tx_types.TX(asset, tx_from, tx_to, tx_date, tx_type, tx_hash)
     return tx
+
+def calc_fee(fee_rate , memo = None , utxos = None):
+    key = bitcash.PrivateKey()
+    random_address = key.address
+    transaction = key.create_transaction(utxos or [(random_address,0,'bch')],fee=fee_rate,message=memo)
+    # to be continued
+    
