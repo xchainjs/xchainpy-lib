@@ -1,11 +1,13 @@
-from bitcash.format import bytes_to_wif
-from bitcash.wallet import wif_to_key
-from bitcoinlib.wallets import Wallet
-from secp256k1 import PrivateKey
+# from bitcash.format import bytes_to_wif
+# from bitcash.wallet import wif_to_key
+# from bitcoinlib.wallets import Wallet
 from xchainpy.xchainpy_bitcoincash.utils import get_derive_path
 from mnemonic.mnemonic import Mnemonic
-from pywallet.utils.bip32 import Wallet as Bip32Wallet
-from bitcash import Key
+import binascii
+from bip_utils import Bip32, Bip32Utils
+
+# from pywallet.utils.bip32 import Wallet as Bip32Wallet
+from bitcash import Key, PrivateKeyTestnet
 
 def mnemonic_to_seed(mnemonic, pass_phrase = ''):
     """Convert mnemonic (phrase) to seed
@@ -32,28 +34,22 @@ def mnemonic_to_private_key(mnemonic,network, pass_phrase = ''):
     :returns: private key
     """
     seed = mnemonic_to_seed(mnemonic, pass_phrase)
-    wallet = Bip32Wallet.from_master_secret(seed=seed, network='BCH')
+    bip32_ctx = Bip32.FromSeed(seed)
+    network = 'mainnet'
     HD_PATH = get_derive_path().testnet if network == "testnet" else get_derive_path().mainnet
-    child = wallet.get_child_for_path(HD_PATH)
-    private_key = child.get_private_key_hex()
-    return private_key
+    hd_path = HD_PATH[2:]
 
-def private_key_to_public_key(private_key):
-    """Convert a private key to a public key
+    bip32_ctx = bip32_ctx.DerivePath(hd_path)
+    priv_key = bip32_ctx.PrivateKey().Raw().ToHex()
+    return priv_key
+    
 
-    :param private_key
-    :type private_key: str
-    :returns: public key
-    """
-    pk = PrivateKey(bytes(bytearray.fromhex(private_key)))
-    public_key = pk.pubkey.serialize(compressed=True)
-    return public_key
-
-def private_key_to_address(priv_key):
+def private_key_to_address(priv_key, network):
     """Convert a private key to an address
 
     :param priv_key
     :type public_key: hex
     """
-    key = Key.from_hex(priv_key)
+    KeyClass = PrivateKeyTestnet if network == "testnet" else Key
+    key = KeyClass.from_hex(priv_key)
     return key.address
