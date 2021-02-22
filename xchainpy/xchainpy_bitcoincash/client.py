@@ -61,7 +61,7 @@ class Client(IBitcoinCashClient , IXChainClient):
                 priv_key = self.get_private_key(self.phrase)
                 address = private_key_to_address(priv_key, self.network)
                 return str(address)
-            except Exception as err:
+            except:
                 print('Address not defined')
         else:
             raise Exception("Phrase must be provided")
@@ -76,7 +76,7 @@ class Client(IBitcoinCashClient , IXChainClient):
         try:
             privKey = mnemonic_to_private_key(phrase,self.network)
             return privKey
-        except Exception as err:
+        except:
             raise Exception("Invalid Phrase")
 
 

@@ -32,10 +32,9 @@ def mnemonic_to_private_key(mnemonic,network, pass_phrase = ''):
     :param pass_phrase: A password
     :type pass_phrase: str
     :returns: private key
-    """
+    """    
     seed = mnemonic_to_seed(mnemonic, pass_phrase)
     bip32_ctx = Bip32.FromSeed(seed)
-    network = 'mainnet'
     HD_PATH = get_derive_path().testnet if network == "testnet" else get_derive_path().mainnet
     hd_path = HD_PATH[2:]
 
