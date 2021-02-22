@@ -1,3 +1,10 @@
+import datetime
+from xchainpy.xchainpy_bitcoincash.models.api_types import Transaction
+from xchainpy.xchainpy_util.asset import Asset
+from xchainpy.xchainpy_util.chain import BITCOINCASH
+from xchainpy.xchainpy_client.models import tx_types
+
+
 class DerivePath:
     def __init__(self, index:int=0):
 
@@ -44,3 +51,20 @@ class ClientUrl:
     @testnet.setter
     def testnet(self, testnet : str):
         self._testnet = testnet
+    
+
+def parse_tx(tx : Transaction):
+    """Parse tx
+    :param tx: The transaction to be parsed
+    :type tx: str
+    :returns: The transaction parsed from the binance tx
+    """
+    asset = Asset.from_str(f'{BITCOINCASH}.BCH')
+    tx_from = [tx_types.TxFrom(i.address, i.value) for i in tx.inputs]
+    tx_to = [tx_types.TxTo(i.address, i.value) for i in tx.outputs]
+    tx_date = datetime.datetime.fromtimestamp(tx.time)
+    tx_type = 'transfer'
+    tx_hash = tx.txid
+
+    tx = tx_types.TX(asset, tx_from, tx_to, tx_date, tx_type, tx_hash)
+    return tx
