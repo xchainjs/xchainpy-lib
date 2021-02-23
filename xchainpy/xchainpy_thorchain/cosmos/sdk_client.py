@@ -11,6 +11,7 @@ import base64
 
 # import httpx
 
+
 class CosmosSDKClient:
     server = chain_id = prefix = derive_path = ''
 
@@ -38,20 +39,21 @@ class CosmosSDKClient:
         self.privkey = derived_privkey
 
         return derived_privkey
-    
+
     def privkey_to_pubkey(self, privkey: bytes) -> bytes:
-        privkey_obj = ecdsa.SigningKey.from_string(privkey, curve=ecdsa.SECP256k1)
+        privkey_obj = ecdsa.SigningKey.from_string(
+            privkey, curve=ecdsa.SECP256k1)
         pubkey_obj = privkey_obj.get_verifying_key()
-        
+
         return pubkey_obj.to_string("compressed")
 
     def pubkey_to_address(self, pubkey: bytes) -> str:
         s = hashlib.new("sha256", pubkey).digest()
         r = hashlib.new("ripemd160", s).digest()
         five_bit_r = bech32.convertbits(r, 8, 5)
-        
+
         assert five_bit_r is not None, "Unsuccessful bech32.convertbits call"
-        
+
         return bech32.bech32_encode(self.prefix, five_bit_r)
 
     def privkey_to_address(self, privkey: bytes) -> str:
@@ -102,13 +104,13 @@ class CosmosSDKClient:
             if response.status_code == 200:
                 return json.loads(response.content.decode('utf-8'))
             else:
-                raise Exception(json.loads(response.content.decode('utf-8'))['error'])
+                raise Exception(json.loads(
+                    response.content.decode('utf-8'))['error'])
 
         except Exception as err:
             raise Exception(err)
 
-
-    async def make_transaction( self, privkey: bytes, from_address: str, fee_denom: str = "rune", memo: str = "", sync_mode: str = "block"):
+    async def make_transaction(self, privkey: bytes, from_address: str, fee_denom: str = "rune", memo: str = "", sync_mode: str = "block"):
         if not self._account_num:
             account = await self.account_address_get(address=from_address)
             print(account)
@@ -171,18 +173,19 @@ class CosmosSDKClient:
 
         print(response.content.decode('utf-8'))
 
-
-
     def _sign(self) -> str:
-        message_str = json.dumps(self._get_sign_message(), separators=(",", ":"), sort_keys=True)
+        message_str = json.dumps(
+            self._get_sign_message(), separators=(",", ":"), sort_keys=True)
         message_bytes = message_str.encode("utf-8")
 
-        privkey = ecdsa.SigningKey.from_string(self._privkey, curve=ecdsa.SECP256k1)
+        privkey = ecdsa.SigningKey.from_string(
+            self._privkey, curve=ecdsa.SECP256k1)
         signature_compact = privkey.sign_deterministic(
             message_bytes, hashfunc=hashlib.sha256, sigencode=ecdsa.util.sigencode_string_canonize
         )
 
-        signature_base64_str = base64.b64encode(signature_compact).decode("utf-8")
+        signature_base64_str = base64.b64encode(
+            signature_compact).decode("utf-8")
         return signature_base64_str
 
     def _get_sign_message(self):
@@ -197,5 +200,3 @@ class CosmosSDKClient:
             "sequence": str(self._sequence),
             "msgs": self._msgs,
         }
-        
-    
