@@ -9,15 +9,12 @@ import http3
 import json
 import base64
 
-# import httpx
-
-
 class CosmosSDKClient:
     server = chain_id = prefix = derive_path = ''
 
     _account_num = None
 
-    def __init__(self, server, prefix='cosmos', derive_path="44'/118'/0'/0/0", chain_id="thorchain"):
+    def __init__(self, server, prefix: str = 'cosmos', derive_path="44'/118'/0'/0/0", chain_id="thorchain"):
         self.prefix = prefix
         self.derive_path = derive_path
         self.server = server

@@ -37,7 +37,7 @@ class Client(interface.IXChainClient, IThorchainClient):
     phrase = address = network = ''
     private_key = None
 
-    def __init__(self, phrase, network="testnet", client_url=None, explorer_url=None):
+    def __init__(self, phrase: str, network: str = "testnet", client_url: str = None, explorer_url: str = None) -> None:
         """Constructor
 
         Client has to be initialised with network type and phrase.
@@ -45,7 +45,14 @@ class Client(interface.IXChainClient, IThorchainClient):
 
         :param phrase: phrase of wallet (mnemonic) will be set to the Class
         :param network: network of chain can either be `testnet` or `mainnet`
-        :param client_url
+        :param client_url: client url can be added manually
+        :param explorer_url: explorer url can be added manually
+        :type phrase: string
+        :type network: string
+        :type client_url: string
+        :type explorer_url: string
+        :return: returns void (None)
+        :rtype: None
         """
         self.network = network
         self.client_url = client_url or self.get_default_client_url()
@@ -55,21 +62,23 @@ class Client(interface.IXChainClient, IThorchainClient):
         if phrase:
             self.set_phrase(phrase)
 
-    def purge_client(self):
-        """Purge client.
+    def purge_client(self) -> None:
+        """Purge client
 
-        :returns: None
+        :return: returns void (None)
+        :rtype: None
         """
         self.phrase = self.address = ''
         self.private_key = None
 
-    def set_network(self, network):
+    def set_network(self, network: str) -> None:
         """Set/update the current network.
 
-        :param: {Network} network `mainnet` or `testnet`.
-        :returns: None
-        :raise: {"Network must be provided"}
-        Thrown if network has not been set before.
+        :param netowrk: network `mainnet` or `testnet`
+        :type network: string
+        :returns: Nothing (Void/None)
+        :raises:
+            Exception: "Network must be provided". -> Thrown if network has not been set before.
         """
         if not network:
             raise Exception('Network must be provided')
@@ -78,7 +87,7 @@ class Client(interface.IXChainClient, IThorchainClient):
             self.thor_client = self.get_new_thor_client()
             self.address = ''
 
-    def set_phrase(self, phrase: str):
+    def set_phrase(self, phrase: str) -> str:
         if not self.phrase or self.phrase != phrase:
             if not xchainpy_crypto.validate_phrase(phrase):
                 raise Exception("invalid phrase")
@@ -89,27 +98,30 @@ class Client(interface.IXChainClient, IThorchainClient):
 
         return self.get_address()
 
-    def get_network(self):
+    def get_network(self) -> str:
         """Get the current network.
 
-        :returns: {Network} The current network. (`mainnet` or `testnet`)
+        :returns: The current network. (`mainnet` or `testnet`)
+        :rtype: string
         """
         return self.network
 
-    def set_client_url(self, client_url):
+    def set_client_url(self, client_url: str) -> None:
         """Set/update the client URL.
 
-        :param: {string} client_url The client url to be set.
-        :returns: {void}
+        :param client_url: The client url to be set.
+        :type client_url: string
+        :returns: Nothing (None)
+        :rtype: None
         """
         self.client_url = client_url
         self.thor_client = self.get_new_thor_client()
 
-    def get_default_client_url(self):
+    def get_default_client_url(self) -> object:
         """Get the client url.
 
-        :param: {Network} network
-        :returns: {NodeUrl} The client url (both node, rpc) for thorchain based on the network.
+        :returns: The client url (both node, rpc) for thorchain based on the network.
+        :rtype: {NodeUrl} as a object
         """
         return {
             "testnet": {
@@ -122,41 +134,51 @@ class Client(interface.IXChainClient, IThorchainClient):
             },
         }
 
-    def get_default_explorer_url(self):
+    def get_default_explorer_url(self) -> str:
         """Get the explorer url.
 
-        :returns: {explorer_url} The explorer url (both mainnet and testnet) for thorchain.
+        :returns: The explorer url (both mainnet and testnet) for thorchain.
+        :rtype: string
         """
         return 'https://testnet.thorchain.net' if self.network == 'testnet' else 'https://thorchain.net'
 
-    def get_prefix(self):
+    def get_prefix(self, netowrk: str = None) -> str:
         """Get address prefix based on the network.
 
-        :param: {string} network
-        :returns: {string} The address prefix based on the network.
+        :param network: network
+        :type network: string
+        :returns: The address prefix based on the network.
+        :rtype: string
         """
-        return 'tthor' if self.network == 'testnet' else 'thor'
+        if netowrk:
+            return 'tthor' if network == 'testnet' else 'thor'
+        else:
+            return 'tthor' if self.network == 'testnet' else 'thor'
 
-    def get_chain_id(self):
+    def get_chain_id(self) -> str:
         """Get the chain id.
 
-        :returns: {string} The chain id based on the network.
+        :returns: The chain id based on the network.
+        :rtype: string
         """
         return 'thorchain'
 
     def get_new_thor_client(self):
         """Get new thorchain client.
 
-        :returns: {CosmosSDKClient} The new thorchain client.    
+        :returns: The new thorchain client.
+        :rtype: CosmosSDKClient Class    
         """
         network = self.get_network()
         return CosmosSDKClient(server=self.get_default_client_url()[network]["node"], prefix=self.get_prefix(), derive_path="m/44'/931'/0'/0/0", chain_id=self.get_chain_id())
 
-    def get_private_key(self):
+    def get_private_key(self) -> bytes:
         """Get private key.
 
         :returns: The private key generated from the given phrase
-        :raises: {"Phrase not set"} Throws an error if phrase has not been set before
+        :rtype: bytes
+        :raises: 
+            Exception: {"Phrase not set"} -> Throws an error if phrase has not been set before
         """
         if not self.private_key:
             if not self.phrase:
@@ -166,11 +188,14 @@ class Client(interface.IXChainClient, IThorchainClient):
 
         return self.private_key
 
-    def get_address(self):
+    def get_address(self) -> str:
         """Get the current address
 
         :returns: the current address
-        :raises: Raises if phrase has not been set before. A phrase is needed to create a wallet and to derive an address from it.
+        :rtype: string
+        :raises: 
+            Exception: {"Address has to be set. Or set a phrase by calling `setPhrase` before to use an address of an imported key."}
+                        -> Raises if phrase has not been set before. A phrase is needed to create a wallet and to derive an address from it.
         """
         if not self.address:
             self.address = self.thor_client.privkey_to_address(
@@ -180,13 +205,14 @@ class Client(interface.IXChainClient, IThorchainClient):
                     "Address has to be set. Or set a phrase by calling `setPhrase` before to use an address of an imported key.")
         return self.address
 
-    async def get_balance(self, address=None, asset=None):
+    async def get_balance(self, address: str = None, asset: str = None) -> list:
         """
          Get the balance of a given address.
 
-         :param Address: address By default, it will return the balance of the current wallet. (optional)
-         :param Asset: asset If not set, it will return all assets available. (optional)
-         :returns: Array<Balance>: The balance of the address.
+         :param address: address By default, it will return the balance of the current wallet. (optional)
+         :param asset: asset If not set, it will return all assets available. (optional)
+         :returns: The balance of the address.
+         :rtype: list
         """
         if not address:
             address = self.get_address()
@@ -195,13 +221,13 @@ class Client(interface.IXChainClient, IThorchainClient):
 
         balances = []
         for balance in response:
-            print(balance)
-            balances.append(
-                {"asset": balance['denom'], "amount": balance['amount']})
+            if not asset or str(balance['denom']) == str(asset):
+                balances.append(
+                    {"asset": balance['denom'], "amount": balance['amount']})
 
         return balances
 
-    async def get_transaction_data(self, tx_id: str):
+    async def get_transaction_data(self, tx_id: str) -> object:
         """Get the transaction details of a given transaction id
 
         if you want to give a hash that is for mainnet and the current self.net is 'testnet',
@@ -210,8 +236,8 @@ class Client(interface.IXChainClient, IThorchainClient):
         :param tx_id: The transaction id
         :type tx_id: str
         :returns: The transaction details of the given transaction id
+        :rtype: object
         """
-
         try:
             tx_result = await self.thor_client.txs_hash_get(tx_id)
             if not tx_result:
@@ -220,23 +246,31 @@ class Client(interface.IXChainClient, IThorchainClient):
         except Exception as err:
             raise Exception(err)
 
-    async def transfer(self, amount: int, recipient: str, asset: str = "rune", memo: str = ""):
+    async def transfer(self, amount: int, recipient: str, asset: str = "rune", memo: str = "") -> dict:
         """Transfer balances with MsgSend
 
-        :param: amount: 
-        :returns: The transaction hash.
+        :param amount: amount which you want to send
+        :param recipient: the address of recipient to be send
+        :param asset: asset need to be send
+        :param memo: memo of the transaction
+        :type amount: int
+        :type recipient: string
+        :type asset: string
+        :type memo: string
+        :returns: The transaction hash
+        :rtype: object
         """
         await self.thor_client.make_transaction(self.get_private_key(), self.get_address(), fee_denom=asset, memo=memo)
         self.thor_client.add_transfer(recipient, amount, denom=asset)
         Msg = self.thor_client.get_pushable()
         return await self.thor_client.do_transfer(Msg)
 
-    async def get_fees(self):
+    async def get_fees(self) -> dict:
         """Get the current fees
 
         :returns: The fees with three rates
+        :rtype: dict
         """
-
         fee = utils.DEFAULT_GAS_VALUE
 
         return {
