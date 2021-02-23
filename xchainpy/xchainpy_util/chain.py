@@ -12,7 +12,7 @@ POLKADOTCHAIN = "POLKA"
 
 BITCOINCASH = "BCH"
 
-chains = ["BNB", "BTC", "ETH", "THOR", "GAIA", "POLKA"]
+chains = ["BNB", "BTC", "ETH", "THOR", "GAIA", "POLKA", "BCH"]
 
 def is_chain(chain):
     """Is the argument a chain or not
