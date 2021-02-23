@@ -7,7 +7,7 @@ from cashaddress.convert import Address
 from xchainpy.xchainpy_bitcoincash.crypto import mnemonic_to_private_key, private_key_to_address
 from mnemonic.mnemonic import Mnemonic
 from xchainpy.xchainpy_crypto.crypto import validate_phrase
-from xchainpy.xchainpy_bitcoincash.utils import ClientUrl, get_derive_path, parse_tx
+from xchainpy.xchainpy_bitcoincash.utils import ClientUrl, get_derive_path, parse_tx, calc_fee
 from xchainpy.xchainpy_client.interface import IXChainClient
 
 
@@ -202,17 +202,51 @@ class Client(IBitcoinCashClient , IXChainClient):
             'average': next_block_fee_rates * 0.5
         }
         fees = {
-            'fastest': utils.calc_fee(rates['fastest'], memo),
-            'fast': utils.calc_fee(rates['fast'], memo),
-            'average': utils.calc_fee(rates['average'], memo)
+            'fastest': calc_fee(rates['fastest'], memo),
+            'fast': calc_fee(rates['fast'], memo),
+            'average': calc_fee(rates['average'], memo)
         }
         return {
             'rates': rates,
             'fees': fees
         }
 
-    def get_fee_rates(self):
-        pass
+    async def get_fees(self):
+        """Get the current fees
+
+        :returns: The fees without memo
+        """
+        try:
+            fees = (await self.get_fees_with_rates())['fees']
+            return fees
+        except Exception as err:
+            raise Exception(str(err))
+
+    async def get_fees_with_memo(self, memo: str):
+        """Get the fees for transactions with memo
+        If you want to get `fees` and `fee_rates` at once, use `get_fees_with_rates` method
+
+        :param memo: The memo to be used for fee calculation (optional)
+        :type memo: str
+        :returns: The fees with memo
+        """
+        try:
+            fees = (await self.get_fees_with_rates(memo))['fees']
+            return fees
+        except Exception as err:
+            raise Exception(str(err))
+
+    async def get_fee_rates(self):
+        """Get the fee rates for transactions without a memo
+        If you want to get `fees` and `fee_rates` at once, use `get_fees_with_rates` method
+
+        :returns: The fee rate
+        """
+        try:
+            rates = (await self.get_fees_with_rates())['rates']
+            return rates
+        except Exception as err:
+            raise Exception(str(err))
     
     async def transfer(self, amount, recipient, memo: str = None, fee_rate=None) -> str:
         fee_rate = fee_rate or (await self.get_fee_rates()).fast
