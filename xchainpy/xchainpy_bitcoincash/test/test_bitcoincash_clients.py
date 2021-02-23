@@ -1,6 +1,6 @@
 import pytest
 from xchainpy.xchainpy_bitcoincash.client import Client
-# from xchainpy.xchainpy_util.asset import Asset
+from xchainpy.xchainpy_util.asset import Asset
 # from xchainpy.xchainpy_client.models import tx_types
 
 
@@ -9,6 +9,8 @@ class TestBitcoincashClient:
     phrase = 'atom green various power must another rent imitate gadget creek fat then'
     testnet_address = 'bchtest:qpd7jmj0hltgxux06v9d9u6933vq7zd0kyjlapya0g'
     mainnet_address = 'bitcoincash:qp4kjpk684c3d9qjk5a37vl2xn86wxl0f5j2ru0daj'
+
+    bch_asset = Asset('BCH', 'BCH')
     
     @pytest.fixture
     def client(self):
@@ -17,29 +19,43 @@ class TestBitcoincashClient:
         self.client.purge_client()
 
     def test_set_phrase_should_return_correct_address(self, client):
+        self.client.set_network('testnet')
         assert self.client.set_phrase(self.phrase) == self.testnet_address
 
-    # def test_invalid_phrase(self):
-    #     with pytest.raises(Exception) as err:
-    #         assert Client(phrase='Invalid Phrase')
-    #     assert str(err.value) == "Invalid Phrase"
+        self.client.set_network('mainnet')
+        assert self.client.set_phrase(self.phrase) == self.mainnet_address
 
-    # def test_right_phrase(self, client):
-    #     assert self.client.set_phrase(self.phrase) == self.testnetaddress
 
-    # def test_validate_address(self, client):
-    #     assert self.client.validate_address(
-    #         network=self.client.net, address=self.testnetaddress)
+    def test_invalid_phrase(self):
+        with pytest.raises(Exception) as err:
+            assert Client(phrase='Invalid Phrase')
+        assert str(err.value) == "Invalid Phrase"
 
-    # @pytest.mark.asyncio
-    # async def test_has_balances(self, client):
-    #     assert await self.client.get_balance()
+    def test_right_phrase(self, client):
+        assert self.client.set_phrase(self.phrase) == self.testnet_address
 
-    # @pytest.mark.asyncio
-    # async def test_has_no_balances(self, client):
-    #     self.client.set_network('mainnet')
-    #     balance = await self.client.get_balance()
-    #     assert balance.amount == 0
+    def test_validate_address(self, client):
+        assert self.client.validate_address(address=self.mainnet_address)
+        assert self.client.validate_address(address=self.testnet_address)
+
+    @pytest.mark.asyncio
+    async def test_has_balances(self, client):
+        balance = await self.client.get_balance()
+        assert balance.asset == self.bch_asset
+        assert isinstance(balance.amount, float)
+
+    @pytest.mark.asyncio
+    async def test_get_transaction_with_hash(self, client):
+        tx_data = await self.client.get_transaction_data('0d5764c89d3fbf8bea9b329ad5e0ddb6047e72313c0f7b54dcb14f4d242da64b')
+        assert tx_data.tx_hash == '0d5764c89d3fbf8bea9b329ad5e0ddb6047e72313c0f7b54dcb14f4d242da64b'
+        assert len(tx_data.tx_from) == 1
+        assert tx_data.tx_from[0].address == 'bchtest:qzyrvsm6z4ucrhaq4zza3wylre7mavvldgr67jrxt4'
+        assert str(tx_data.tx_from[0].amount) == '0.04008203'
+
+        assert len(tx_data.tx_to) == 2
+        assert tx_data.tx_to[0].address == 'bchtest:qq235k7k9y5cwf3s2vfpxwgu8c5497sxnsdnxv6upc'
+        assert str(tx_data.tx_to[0].amount) == '0.04005704'
+    
 
     # @pytest.mark.asyncio
     # async def test_equal_balances_when_call_getbalance_twice(self, client):
@@ -159,18 +175,3 @@ class TestBitcoincashClient:
     # async def test_get_transactions_limit_should_work(self, client):
     #     txs = await self.client.get_transactions({'address': self.address_for_transactions, 'limit': 1})
     #     assert len(txs['tx']) == 1    
-
-    # @pytest.mark.asyncio
-    # async def test_get_transaction_with_hash(self, client):
-    #     tx_data = await self.client.get_transaction_data('b660ee07167cfa32681e2623f3a29dc64a089cabd9a3a07dd17f9028ac956eb8')
-    #     assert tx_data.tx_hash == 'b660ee07167cfa32681e2623f3a29dc64a089cabd9a3a07dd17f9028ac956eb8'
-    #     assert len(tx_data.tx_from) == 1
-    #     assert tx_data.tx_from[0].address == '2N4nhhJpjauDekVUVgA1T51M5gVg4vzLzNC'
-    #     assert tx_data.tx_from[0].amount == '0.08898697'
-
-    #     assert len(tx_data.tx_to) == 2
-    #     assert tx_data.tx_to[0].address == 'tb1q3a00snh7erczk94k48fe9q5z0fldgnh4twsh29'
-    #     assert tx_data.tx_to[0].amount == '0.00100000'
-
-    #     assert tx_data.tx_to[1].address == 'tb1qxx4azx0lw4tc6ylurc55ak5hl7u2ws0w9kw9h3'
-    #     assert tx_data.tx_to[1].amount == '0.08798533'
