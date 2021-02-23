@@ -15,16 +15,16 @@ import electrumsv_secp256k1
 
 
 class IThorchainClient():
-    def setClientUrl(self, clientUrl):
+    def set_client_url(self, client_url):
         pass
 
-    def setClientUrl(self):
+    def set_client_url(self):
         pass
 
-    def setExplorerUrl(self):
+    def set_explorer_url(self):
         pass
 
-    def getExplorerNodeUrl(self):
+    def get_explorer_node_url(self):
         pass
 
     def deposit(self):
@@ -37,16 +37,20 @@ class Client(interface.IXChainClient, IThorchainClient):
     phrase = address = network = ''
     private_key = None
 
-    def __init__(self, phrase, network="testnet", clientUrl=None, explorerUrl=None):
+    def __init__(self, phrase, network="testnet", client_url=None, explorer_url=None):
         """Constructor
-        
+
         Client has to be initialised with network type and phrase.
         It will throw an error if an invalid phrase has been passed.
+
+        :param phrase: phrase of wallet (mnemonic) will be set to the Class
+        :param network: network of chain can either be `testnet` or `mainnet`
+        :param client_url
         """
         self.network = network
-        self.clientUrl = clientUrl or self.get_default_client_url()
-        self.explorerUrl = explorerUrl or self.get_default_explorer_url()
-        self.thorClient = self.get_new_thor_client()
+        self.client_url = client_url or self.get_default_client_url()
+        self.explorer_url = explorer_url or self.get_default_explorer_url()
+        self.thor_client = self.get_new_thor_client()
 
         if phrase:
             self.set_phrase(phrase)
@@ -71,7 +75,7 @@ class Client(interface.IXChainClient, IThorchainClient):
             raise Exception('Network must be provided')
         else:
             self.network = network
-            self.thorClient = self.get_new_thor_client()
+            self.thor_client = self.get_new_thor_client()
             self.address = ''
 
     def set_phrase(self, phrase: str):
@@ -92,14 +96,14 @@ class Client(interface.IXChainClient, IThorchainClient):
         """
         return self.network
 
-    def setClientUrl(self, clientUrl):
+    def set_client_url(self, client_url):
         """Set/update the client URL.
 
-        :param: {string} clientUrl The client url to be set.
+        :param: {string} client_url The client url to be set.
         :returns: {void}
         """
-        self.clientUrl = clientUrl
-        self.thorClient = self.get_new_thor_client()
+        self.client_url = client_url
+        self.thor_client = self.get_new_thor_client()
 
     def get_default_client_url(self):
         """Get the client url.
@@ -121,7 +125,7 @@ class Client(interface.IXChainClient, IThorchainClient):
     def get_default_explorer_url(self):
         """Get the explorer url.
 
-        :returns: {ExplorerUrl} The explorer url (both mainnet and testnet) for thorchain.
+        :returns: {explorer_url} The explorer url (both mainnet and testnet) for thorchain.
         """
         return 'https://testnet.thorchain.net' if self.network == 'testnet' else 'https://thorchain.net'
 
@@ -158,7 +162,7 @@ class Client(interface.IXChainClient, IThorchainClient):
             if not self.phrase:
                 raise Exception('Phrase not set')
 
-            self.private_key = self.thorClient.seed_to_privkey(self.phrase)
+            self.private_key = self.thor_client.seed_to_privkey(self.phrase)
 
         return self.private_key
 
@@ -169,7 +173,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         :raises: Raises if phrase has not been set before. A phrase is needed to create a wallet and to derive an address from it.
         """
         if not self.address:
-            self.address = self.thorClient.privkey_to_address(
+            self.address = self.thor_client.privkey_to_address(
                 self.get_private_key())
             if not self.address:
                 raise Exception(
@@ -186,7 +190,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         """
         if not address:
             address = self.get_address()
-        response = await self.thorClient.get_balance(address)
+        response = await self.thor_client.get_balance(address)
         response = response["result"]
 
         balances = []
@@ -209,7 +213,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         """
 
         try:
-            tx_result = await self.thorClient.txs_hash_get(tx_id)
+            tx_result = await self.thor_client.txs_hash_get(tx_id)
             if not tx_result:
                 raise Exception("transaction not found")
             return tx_result
@@ -222,10 +226,10 @@ class Client(interface.IXChainClient, IThorchainClient):
         :param: amount: 
         :returns: The transaction hash.
         """
-        await self.thorClient.make_transaction(self.get_private_key(), self.get_address(), fee_denom=asset, memo=memo)
-        self.thorClient.add_transfer(recipient, amount, denom=asset)
-        Msg = self.thorClient.get_pushable()
-        return await self.thorClient.do_transfer(Msg)
+        await self.thor_client.make_transaction(self.get_private_key(), self.get_address(), fee_denom=asset, memo=memo)
+        self.thor_client.add_transfer(recipient, amount, denom=asset)
+        Msg = self.thor_client.get_pushable()
+        return await self.thor_client.do_transfer(Msg)
 
     async def get_fees(self):
         """Get the current fees
