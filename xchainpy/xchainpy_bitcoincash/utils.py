@@ -65,8 +65,8 @@ def parse_tx(tx : Transaction):
     :returns: The transaction parsed from the binance tx
     """
     asset = Asset.from_str(f'{BITCOINCASH}.BCH')
-    tx_from = [tx_types.TxFrom(i.address, i.value) for i in tx.inputs]
-    tx_to = [tx_types.TxTo(i.address, i.value) for i in tx.outputs]
+    tx_from = [tx_types.TxFrom(i.address, i.value * 10 ** -8) for i in tx.inputs]
+    tx_to = [tx_types.TxTo(i.address, i.value * 10 ** -8) for i in tx.outputs]
     tx_date = datetime.datetime.fromtimestamp(tx.time)
     tx_type = 'transfer'
     tx_hash = tx.txid

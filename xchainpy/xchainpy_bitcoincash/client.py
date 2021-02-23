@@ -159,21 +159,13 @@ class Client(IBitcoinCashClient , IXChainClient):
         :returns: The BCH balance of the address
         :raises: "Invalid address" if the given address is an invalid address
         """
-        try:
-            
-            #TODO: test this library
-            # key = Key.from_hex(self.get_private_key(self.phrase))
-            # balance = key.balance
-            # return balance
-            
-            # or use haskoin api
+        try:            
             account = await get_account(self.get_client_url() , address or self.get_address())
             if not account:
                 raise Exception("Invalid Address")
             
-            balance = Balance(Asset.from_str("BCH.BCH"), account.confirmed)
+            balance = Balance(Asset.from_str("BCH.BCH"), account.confirmed * 10 ** -8)
             return balance
-
                 
         except Exception as err:
             raise Exception(str(err))
