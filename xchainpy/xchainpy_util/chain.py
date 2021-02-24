@@ -10,11 +10,12 @@ COSMOSCHAIN = "GAIA"
 
 POLKADOTCHAIN = "POLKA"
 
-chains = ["BNB", "BTC", "ETH", "THOR", "GAIA", "POLKA"]
+BITCOINCASH = "BCH"
+
+chains = ["BNB", "BTC", "ETH", "THOR", "GAIA", "POLKA", "BCH"]
 
 def is_chain(chain):
     """Is the argument a chain or not
-
     :returns: True of False
     """
     return True if chain in chains else False
