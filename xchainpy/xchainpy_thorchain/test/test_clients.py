@@ -80,7 +80,6 @@ class TestClient:
         before_balance = await self.client.get_balance()
         assert len(before_balance) == 1
         before_balance_amount = before_balance[0]['amount']
-        print(before_balance_amount)
         await self.client.transfer(amount=self.transfer_amount, recipient=self.testnetTransfer, asset=self.rune_asset)
         after_balance = await self.client.get_balance()
         after_balance_amount = after_balance[0]['amount']
