@@ -1,3 +1,7 @@
+import bitcash
+from bitcash.network.meta import Unspent
+
+
 class AddressBalance:
     def __init__(self , received , utxo , address , txs , unconfirmed , confirmed):
         self._received = received
@@ -290,6 +294,93 @@ class Transaction:
     @rbf.setter
     def rbf(self, rbf):
         self._rbf = rbf
+
+    @property
+    def txid(self):
+        return self._txid
+
+    @txid.setter
+    def txid(self, txid):
+        self._txid = txid
+
+class Block:
+    def __init__(self , height , position):
+        self._height = height
+        self._position = position
+    
+    @property
+    def height(self):
+        return self._height
+
+    @height.setter
+    def height(self, height):
+        self._height = height
+
+    @property
+    def position(self):
+        return self._position
+
+    @position.setter
+    def position(self, position):
+        self._position = position
+
+class TxUnspent:
+    def __init__(self , pkscript , value , address , block : Block , index , txid):
+        self._pkscript = pkscript
+        self._value = value
+        self._address = address
+        self._block = block
+        self._index = index
+        self._txid = txid
+
+    @classmethod
+    def unspent_from_object(cls , unspent):
+        address = unspent['address']
+        txid = unspent['txid']
+        output_index = unspent['index']
+        script = bytes.fromhex(unspent['pkscript'])
+        satoshis = unspent['value']
+        return Unspent(satoshis ,0,script,txid,output_index )
+
+    @property
+    def pkscript(self):
+        return self._pkscript
+
+    @pkscript.setter
+    def pkscript(self, pkscript):
+        self._pkscript = pkscript
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+
+    @property
+    def address(self):
+        return self._address
+
+    @address.setter
+    def address(self, address):
+        self._address = address
+
+    @property
+    def block(self):
+        return self._block
+
+    @block.setter
+    def block(self, block):
+        self._block = block
+
+    @property
+    def index(self):
+        return self._index
+
+    @index.setter
+    def index(self, index):
+        self._index = index
 
     @property
     def txid(self):

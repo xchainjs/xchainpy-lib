@@ -7,7 +7,7 @@ from cashaddress.convert import Address
 from xchainpy.xchainpy_bitcoincash.crypto import mnemonic_to_private_key, private_key_to_address
 from mnemonic.mnemonic import Mnemonic
 from xchainpy.xchainpy_crypto.crypto import validate_phrase
-from xchainpy.xchainpy_bitcoincash.utils import ClientUrl, get_derive_path, parse_tx, calc_fee
+from xchainpy.xchainpy_bitcoincash.utils import ClientUrl, build_tx, get_derive_path, parse_tx, calc_fee
 from xchainpy.xchainpy_client.interface import IXChainClient
 
 
@@ -249,4 +249,9 @@ class Client(IBitcoinCashClient , IXChainClient):
             raise Exception(str(err))
     
     async def transfer(self, amount, recipient, memo: str = None, fee_rate=None) -> str:
-        fee_rate = fee_rate or (await self.get_fee_rates()).fast
+        try:
+            fee_rate = fee_rate or (await self.get_fee_rates())['fast']
+            tx = build_tx(amount , recipient , memo , fee_rate , self.get_address(),self.get_network(), self.get_client_url())
+            #TODO: to be continued
+        except:
+            print('An exception occurred')

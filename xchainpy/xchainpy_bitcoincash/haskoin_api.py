@@ -1,5 +1,6 @@
+from typing import List
 from xchainpy.xchainpy_bitcoincash.utils import DEFAULT_SUGGESTED_TRANSACTION_FEE
-from xchainpy.xchainpy_bitcoincash.models.api_types import AddressBalance, Transaction, TransactionInput, TransactionOutput
+from xchainpy.xchainpy_bitcoincash.models.api_types import AddressBalance, Block, Transaction, TransactionInput, TransactionOutput, TxUnspent
 import http3
 import json
 import xchainpy.xchainpy_bitcoincash.models
@@ -88,3 +89,25 @@ async def get_suggested_tx_fee():
     except Exception as err:
         # raise Exception(str(err))
         return DEFAULT_SUGGESTED_TRANSACTION_FEE
+
+async def get_unspent_transactions(client_url , address) -> List[TxUnspent]:
+    try:
+        account = await get_account(client_url , address)
+
+        api_url = f'{client_url}/address/{address}/unspent?limit={account.txs}'
+
+        client = http3.AsyncClient()
+        response = await client.get(api_url)
+
+        if response.status_code == 200:
+            tx_response = json.loads(response.content.decode('utf-8'))
+            result = [TxUnspent(i['pkscript'],i['value'],i['address'],Block(i['block']['height'] , i['block']['position']) ,i['index'],i['txid']) for i in tx_response]
+            return result
+        else:
+            tx_response = json.loads(response.content.decode('utf-8'))
+            if "error" in tx_response:
+                raise Exception(f'Error is : {tx_response["error"]}')
+            else:
+                return None
+    except:
+      print('An exception occurred')

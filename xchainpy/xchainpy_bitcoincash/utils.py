@@ -1,8 +1,12 @@
 import datetime
+import bitcash
+
+from cashaddress import convert
+from xchainpy.xchainpy_bitcoincash.haskoin_api import get_account, get_unspent_transactions
 
 # import bitcash
 from bitcash import transaction, PrivateKey
-from xchainpy.xchainpy_bitcoincash.models.api_types import Transaction
+from xchainpy.xchainpy_bitcoincash.models.api_types import Transaction, TxUnspent
 from xchainpy.xchainpy_util.asset import Asset
 from xchainpy.xchainpy_util.chain import BITCOINCASH
 from xchainpy.xchainpy_client.models import tx_types
@@ -99,3 +103,55 @@ def calc_fee(fee_rate , memo=None , utxos=None):
 
     calculated_fee = transaction.estimate_tx_fee(utxos_len, num_outputs, fee_rate, False, total_op_return_size)
     return calculated_fee
+
+async def scan_UTXOs(client_url, address):
+    """Scan UTXOs from sochain
+
+    :param network: testnet or mainnet
+    :type network: str
+    :param address: address
+    :type address: str
+    :returns: The UTXOs of the given address
+    """
+    unspents = await get_unspent_transactions(client_url, address)
+    utxos = list(map(TxUnspent.unspent_from_object, unspents))
+    return utxos
+
+def validate_address(address):
+    return convert.is_valid(address)
+
+async def build_tx(amount, recipient, memo, fee_rate, sender, network , client_url):
+    """Build transcation
+
+    :param amount: amount of BTC to transfer
+    :type amount: int
+    :param recipient: destination address
+    :type recipient: str
+    :param memo: optional memo for transaction
+    :type memo: str
+    :param fee_rate: fee rates for transaction
+    :type fee_rate: int
+    :param sender: sender's address
+    :type sender: str
+    :param network: testnet or mainnet
+    :type network: str
+    :returns: transaction
+    """
+    try:
+        utxos = await scan_UTXOs(network, sender)
+        if len(utxos) == 0:
+            raise Exception("No utxos to send")
+
+        balance = (await get_account(client_url , sender)).confirmed
+
+        if not balance:
+            raise Exception("No BCH balance found")
+
+        if not validate_address(recipient):
+            raise Exception('Invalid address')
+
+        #TODO: to be continued
+        # tx = transaction.create_p2pkh_transaction
+
+    except Exception as err:
+        raise Exception(str(err))
