@@ -16,6 +16,8 @@ class TestClient:
     testnetaddressForTx = 'tthor103nyx8erew2tc5knfcj7se5hsvvmr4ew7fpn4t'
     testnetTransfer = 'tthor1pttyuys2muhj674xpr9vutsqcxj9hepy4ddueq'
 
+    sampleTX = '8A2EC1EE711D1057594FAA9F7F82B6E0D726745F4E88372F6FFACC38C36D234B'
+
     transfer_amount = 0.01
     single_tx_fee = 10000000
     transfer_fee = {'average': single_tx_fee, 'fast': single_tx_fee, 'fastest': single_tx_fee }
@@ -112,32 +114,11 @@ class TestClient:
     def test_validate_address_false_prefix(self, client):
         assert self.client.validate_address(self.testnetaddress, 'thor') == False
 
-    # @pytest.mark.asyncio
-    # async def test_search_transactions(self, client):
-    #     self.client.set_network('testnet')
-    #     transactions = await self.client.search_transactions({'address': self.testnetaddress})
-    #     assert transactions
-    #     if transactions['total'] > 0:
-    #         assert isinstance(transactions['tx'][0], tx_types.TX)
-
-    # @pytest.mark.asyncio
-    # async def test_get_transactions(self, client):
-    #     self.client.set_network('testnet')
-    #     params = tx_types.TxHistoryParams(address=self.testnetaddressForTx, limit=1)
-    #     transactions = await self.client.get_transactions(params)
-    #     assert transactions
-    #     assert len(transactions['tx']) == 1 or 0
-    #     if transactions['total'] > 0:
-    #         assert isinstance(transactions['tx'][0], tx_types.TX)
-
-    # @pytest.mark.asyncio
-    # async def test_get_transaction_data(self, client):
-    #     self.client.set_network('testnet')
-    #     try:
-    #         params = tx_types.TxHistoryParams(address=self.testnetaddressForTx, limit=1)
-    #         transactions = await self.client.get_transactions(params)
-    #         transaction = await self.client.get_transaction_data(transactions['tx'][0].tx_hash)
-    #         assert transaction
-    #         assert isinstance(transaction, tx_types.TX)
-    #     except Exception as err:
-    #         assert str(err) == 'list index out of range' # there is not any transaction in the last 3 months for this address
+    @pytest.mark.asyncio
+    async def test_get_transaction_data(self, client):
+        self.client.set_network('testnet')
+        try:
+            transaction = await self.client.get_transaction_data(self.sampleTX)
+            assert transaction
+        except Exception as err:
+            assert str(err) == 'transaction not found' # no transaction found
