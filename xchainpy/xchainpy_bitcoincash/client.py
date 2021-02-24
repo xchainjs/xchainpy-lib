@@ -7,9 +7,9 @@ from cashaddress.convert import Address
 from xchainpy.xchainpy_bitcoincash.crypto import mnemonic_to_private_key, private_key_to_address
 from mnemonic.mnemonic import Mnemonic
 from xchainpy.xchainpy_crypto.crypto import validate_phrase
-from xchainpy.xchainpy_bitcoincash.utils import ClientUrl, build_tx, get_derive_path, parse_tx, calc_fee
+from xchainpy.xchainpy_bitcoincash import utils
 from xchainpy.xchainpy_client.interface import IXChainClient
-
+from bitcash import transaction, PrivateKey, PrivateKeyTestnet, network
 
 class IBitcoinCashClient():
     def derive_path(self) -> str :
@@ -22,17 +22,17 @@ class IBitcoinCashClient():
         pass
 
 class Client(IBitcoinCashClient , IXChainClient):
-    def __init__(self, phrase:str, network='testnet', client_url:ClientUrl=None):
+    def __init__(self, phrase:str, network='testnet', client_url:utils.ClientUrl=None):
         self.set_network(network)
         self.client_url = client_url if client_url else self.get_default_client_url()
         self.set_phrase(phrase)
 
-    def get_default_client_url(self) -> ClientUrl:
+    def get_default_client_url(self) -> utils.ClientUrl:
         """Get default ClientURL based on the network
 
         :returns: the transaction hash
         """
-        return ClientUrl("https://api.haskoin.com/bchtest" ,"https://api.haskoin.com/bch")
+        return utils.ClientUrl("https://api.haskoin.com/bchtest" ,"https://api.haskoin.com/bch")
 
     def set_phrase(self, phrase: str):
         """Set/update a new phrase
@@ -62,11 +62,11 @@ class Client(IBitcoinCashClient , IXChainClient):
                 address = private_key_to_address(priv_key, self.network)
                 return str(address)
             except:
-                print('Address not defined')
+                raise Exception("Address not defined")
         else:
             raise Exception("Phrase must be provided")
 
-    def get_private_key(self , phrase : str):
+    def get_private_key(self , phrase:str=None):
         """Get private key
 
         :param phrase: The phrase to be used for generating privkey
@@ -74,7 +74,7 @@ class Client(IBitcoinCashClient , IXChainClient):
         :returns: The privkey generated from the given phrase
         """
         try:
-            privKey = mnemonic_to_private_key(phrase,self.network)
+            privKey = mnemonic_to_private_key(phrase or self.phrase, self.network)
             return privKey
         except:
             raise Exception("Invalid Phrase")
@@ -85,7 +85,7 @@ class Client(IBitcoinCashClient , IXChainClient):
 
         :returns: The bitcoin cash derivation path based on the network
         """
-        return get_derive_path().testnet if self.network == 'testnet' else get_derive_path().mainnet
+        return utils.get_derive_path().testnet if self.network == 'testnet' else utils.get_derive_path().mainnet
 
     def purge_client(self):
         """Purge client
@@ -114,7 +114,7 @@ class Client(IBitcoinCashClient , IXChainClient):
         else:
             self.network = network
 
-    def set_client_url(self , url : ClientUrl):
+    def set_client_url(self , url : utils.ClientUrl):
         """Set/Update the node url
 
         :param url: The new node url
@@ -184,7 +184,7 @@ class Client(IBitcoinCashClient , IXChainClient):
             if not tx:
                 raise Exception("Invalid tx_id")
 
-            data = parse_tx(tx)
+            data = utils.parse_tx(tx)
             return data
 
         except Exception as err:
@@ -205,9 +205,9 @@ class Client(IBitcoinCashClient , IXChainClient):
             'average': next_block_fee_rates * 0.5
         }
         fees = {
-            'fastest': calc_fee(rates['fastest'], memo),
-            'fast': calc_fee(rates['fast'], memo),
-            'average': calc_fee(rates['average'], memo)
+            'fastest': utils.calc_fee(rates['fastest'], memo),
+            'fast': utils.calc_fee(rates['fast'], memo),
+            'average': utils.calc_fee(rates['average'], memo)
         }
         return {
             'rates': rates,
@@ -251,10 +251,31 @@ class Client(IBitcoinCashClient , IXChainClient):
         except Exception as err:
             raise Exception(str(err))
     
+
     async def transfer(self, amount, recipient, memo: str = None, fee_rate=None) -> str:
+        """Transfer BCH
+
+        :param amount: amount of BTC to transfer (don't multiply by 10**8)
+        :type amount: int, float, decimal
+        :param recipient: destination address
+        :type recipient: str
+        :param memo: optional memo for transaction
+        :type memo: str
+        :param fee_rate: fee rates for transaction
+        :type fee_rate: int
+        :returns: The transaction hash
+        """
         try:
             fee_rate = fee_rate or (await self.get_fee_rates())['fast']
-            tx = build_tx(amount , recipient , memo , fee_rate , self.get_address(),self.get_network(), self.get_client_url())
-            #TODO: to be continued
-        except:
-            print('An exception occurred')
+
+            KeyClass = PrivateKeyTestnet if self.get_network() == "testnet" else PrivateKey
+            key = KeyClass.from_hex(self.get_private_key())
+
+            tx_hex = await utils.build_tx(amount , recipient , memo , fee_rate , self.get_address(),self.get_network(), self.get_client_url(), key)
+            
+            network.NetworkAPI.broadcast_tx_testnet(tx_hex)
+            return transaction.calc_txid(tx_hex)
+            
+
+        except Exception as err:
+            raise Exception(str(err))

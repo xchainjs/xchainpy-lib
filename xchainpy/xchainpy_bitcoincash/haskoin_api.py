@@ -1,5 +1,5 @@
 from typing import List
-from xchainpy.xchainpy_bitcoincash.utils import DEFAULT_SUGGESTED_TRANSACTION_FEE
+from xchainpy.xchainpy_bitcoincash import utils
 from xchainpy.xchainpy_bitcoincash.models.api_types import AddressBalance, Block, Transaction, TransactionInput, TransactionOutput, TxUnspent
 import http3
 import json
@@ -97,9 +97,9 @@ async def get_suggested_tx_fee():
             if "error" in fee_response:
                 raise Exception(f'Error is : {fee_response["error"]}')
 
-            return DEFAULT_SUGGESTED_TRANSACTION_FEE
+            return utils.DEFAULT_SUGGESTED_TRANSACTION_FEE
     except:
-        return DEFAULT_SUGGESTED_TRANSACTION_FEE
+        return utils.DEFAULT_SUGGESTED_TRANSACTION_FEE
 
 async def get_unspent_transactions(client_url , address) -> List[TxUnspent]:
     """Get unspent transactions
@@ -127,3 +127,27 @@ async def get_unspent_transactions(client_url , address) -> List[TxUnspent]:
             raise Exception('failed to query unspent transactions')
     except Exception as err:
       raise Exception(str(err))
+
+# async def broadcast_tx(client_url, tx_hex):
+#     """Broadcast transaction
+#     https://sochain.com/api#send-transaction
+
+#     :param client_url: The haskoin API url
+#     :type client_url: str
+#     :param tx_hex: tranaction hex
+#     :type tx_hex: str
+#     :returns: Transaction ID
+#     """
+#     try:
+#         api_url = f'{client_url}/transactions'
+
+#         client = http3.AsyncClient()
+#         response = await client.post(url=api_url, data=tx_hex)
+
+#         if response.status_code == 200:
+#             res = json.loads(response.content.decode('utf-8'))['data']
+#             return res['txid']
+#         else:
+#             return json.loads(response.content.decode('utf-8'))['data']
+#     except Exception as err:
+#         raise Exception(str(err))

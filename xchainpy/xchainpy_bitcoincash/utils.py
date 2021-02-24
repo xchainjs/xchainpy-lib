@@ -4,8 +4,7 @@ import bitcash
 from cashaddress import convert
 from xchainpy.xchainpy_bitcoincash import haskoin_api
 
-# import bitcash
-from bitcash import transaction, PrivateKey
+from bitcash import transaction, PrivateKey, PrivateKeyTestnet
 from xchainpy.xchainpy_bitcoincash.models.api_types import Transaction, TxUnspent
 from xchainpy.xchainpy_util.asset import Asset
 from xchainpy.xchainpy_util.chain import BITCOINCASH
@@ -130,7 +129,7 @@ async def scan_UTXOs(client_url, address):
 def validate_address(address):
     return convert.is_valid(address)
 
-async def build_tx(amount, recipient, memo, fee_rate, sender, network , client_url):
+async def build_tx(amount, recipient, memo, fee_rate, sender, network , client_url, key):
     """Build transcation
 
     :param amount: amount of BTC to transfer
@@ -145,10 +144,14 @@ async def build_tx(amount, recipient, memo, fee_rate, sender, network , client_u
     :type sender: str
     :param network: testnet or mainnet
     :type network: str
+    :param client_url: The haskoin API url
+    :type client_url: str
+    :param key: bitcash object
+    :type key: object
     :returns: transaction
     """
     try:
-        utxos = await scan_UTXOs(network, sender)
+        utxos = await scan_UTXOs(client_url, sender)
         if len(utxos) == 0:
             raise Exception("No utxos to send")
 
@@ -160,8 +163,10 @@ async def build_tx(amount, recipient, memo, fee_rate, sender, network , client_u
         if not validate_address(recipient):
             raise Exception('Invalid address')
 
-        #TODO: to be continued
-        # tx = transaction.create_p2pkh_transaction
+        outputs = [(recipient, amount, 'bch')]
+
+        tx = key.create_transaction(outputs=outputs, fee=int(fee_rate), message=memo, unspents=key.get_unspents(), leftover=sender)
+        return tx
 
     except Exception as err:
         raise Exception(str(err))

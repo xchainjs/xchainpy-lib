@@ -335,12 +335,11 @@ class TxUnspent:
 
     @classmethod
     def unspent_from_object(cls , unspent):
-        address = unspent['address']
-        txid = unspent['txid']
-        output_index = unspent['index']
-        script = bytes.fromhex(unspent['pkscript'])
-        satoshis = unspent['value']
-        return Unspent(satoshis ,0,script,txid,output_index )
+        txid = unspent.txid
+        output_index = unspent.index
+        script = bytes.fromhex(unspent.pkscript)
+        satoshis = unspent.value
+        return Unspent(satoshis , 0, script,txid,output_index)
 
     @property
     def pkscript(self):
