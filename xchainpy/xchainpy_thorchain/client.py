@@ -218,7 +218,6 @@ class Client(interface.IXChainClient, IThorchainClient):
             address = self.get_address()
         response = await self.thor_client.get_balance(address)
         response = response["result"]
-        print(response)
 
         balances = []
         for balance in response:
@@ -279,8 +278,8 @@ class Client(interface.IXChainClient, IThorchainClient):
                 'input asset amout is higher than current (asset balance - transfer fee)')
 
         try:
-            await self.thor_client.make_transaction(self.get_private_key(), self.get_address(), fee_denom=asset.symbol, memo=memo)
-            self.thor_client.add_transfer(recipient, amount, denom=asset.symbol)
+            await self.thor_client.make_transaction(self.get_private_key(), self.get_address(), fee_denom=asset['symbol'].lower(), memo=memo)
+            self.thor_client.add_transfer(recipient, amount, denom=asset['symbol'].lower())
             Msg = self.thor_client.get_pushable()
             return await self.thor_client.do_transfer(Msg)
         except Exception as err:

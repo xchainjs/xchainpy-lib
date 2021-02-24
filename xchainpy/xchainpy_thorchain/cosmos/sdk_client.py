@@ -9,12 +9,13 @@ import http3
 import json
 import base64
 
+from xchainpy.xchainpy_thorchain import utils
 class CosmosSDKClient:
     server = chain_id = prefix = derive_path = ''
 
     _account_num = None
 
-    def __init__(self, server, prefix: str = 'cosmos', derive_path: str = "44'/118'/0'/0/0", chain_id: str = "thorchain") -> None:
+    def __init__(self, server, prefix: str = 'cosmos', derive_path: str = "m/44'/118'/0'/0/0", chain_id: str = "thorchain") -> None:
         self.prefix = prefix
         self.derive_path = derive_path
         self.server = server
@@ -110,7 +111,6 @@ class CosmosSDKClient:
     async def make_transaction(self, privkey: bytes, from_address: str, fee_denom: str = "rune", memo: str = "", sync_mode: str = "block") -> None:
         if not self._account_num:
             account = await self.account_address_get(address=from_address)
-            print(account)
             self._account_num = account['result']['value']['account_number']
             self._sequence = account['result']['value']['sequence']
 
@@ -130,7 +130,7 @@ class CosmosSDKClient:
             "value": {
                 "from_address": self.privkey_to_address(self._privkey),
                 "to_address": recipient,
-                "amount": [{"denom": denom, "amount": str(amount*(10**8))}],
+                "amount": [{"denom": denom, "amount": utils.cnv_big_number(amount, utils.DECIMAL)}],
             },
         }
         self._msgs.append(transfer)

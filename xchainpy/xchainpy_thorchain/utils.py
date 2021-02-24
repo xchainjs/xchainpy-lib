@@ -11,3 +11,10 @@ def base_amount(value: str and int, decimal: int = DECIMAL) -> str:
         return str(value / 10**decimal)
     else:
         return str(int(value) / 10**decimal)
+
+def cnv_big_number(value: float and int and str, decimal: int = DECIMAL) -> str:
+    if type(value) == float or type(value) == int:
+        return str(round(float(value) * (10**decimal)))
+    elif type(value) == str:
+        return str(round(float(value) * (10**decimal)))
+    
