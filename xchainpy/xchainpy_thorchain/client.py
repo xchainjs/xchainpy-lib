@@ -8,7 +8,7 @@ from xchainpy.xchainpy_client import interface
 from xchainpy.xchainpy_client.models import tx_types
 from xchainpy.xchainpy_crypto import crypto as xchainpy_crypto
 from xchainpy.xchainpy_util.asset import Asset
-from xchainpy_thorchain import utils
+from xchainpy.xchainpy_thorchain import utils
 
 from xchainpy.xchainpy_thorchain.cosmos.sdk_client import CosmosSDKClient
 import electrumsv_secp256k1
@@ -218,12 +218,13 @@ class Client(interface.IXChainClient, IThorchainClient):
             address = self.get_address()
         response = await self.thor_client.get_balance(address)
         response = response["result"]
+        print(response)
 
         balances = []
         for balance in response:
             if not asset or str(balance['denom']) == str(asset):
                 balances.append(
-                    {"asset": balance['denom'], "amount": balance['amount']})
+                    {"asset": balance['denom'], "amount": utils.base_amount(balance['amount'], utils.DECIMAL) })
 
         return balances
 
@@ -246,7 +247,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         except Exception as err:
             raise Exception(err)
 
-    async def transfer(self, amount: int, recipient: str, asset: str = "rune", memo: str = "") -> dict:
+    async def transfer(self, amount: int, recipient: str, asset = {"symbol": "rune"}, memo: str = "") -> dict:
         """Transfer balances with MsgSend
 
         :param amount: amount which you want to send
@@ -260,10 +261,30 @@ class Client(interface.IXChainClient, IThorchainClient):
         :returns: The transaction hash
         :rtype: object
         """
-        await self.thor_client.make_transaction(self.get_private_key(), self.get_address(), fee_denom=asset, memo=memo)
-        self.thor_client.add_transfer(recipient, amount, denom=asset)
-        Msg = self.thor_client.get_pushable()
-        return await self.thor_client.do_transfer(Msg)
+        if not asset:
+            raise Exception('Asset must be provided')
+        if not amount:
+            raise Exception('Amount must be provided')
+        if not recipient:
+            raise Exception('Destination address must be provided')
+
+        before_balance = await self.get_balance()
+        if len(before_balance) == 0:
+            raise Exception('No balance in this wallet')
+        before_balance_amount = before_balance[0]['amount']
+        fee = await self.get_fees()
+        fee = float(utils.base_amount(fee['average'], utils.DECIMAL))
+        if (amount + fee) > float(before_balance_amount):
+            raise Exception(
+                'input asset amout is higher than current (asset balance - transfer fee)')
+
+        try:
+            await self.thor_client.make_transaction(self.get_private_key(), self.get_address(), fee_denom=asset.symbol, memo=memo)
+            self.thor_client.add_transfer(recipient, amount, denom=asset.symbol)
+            Msg = self.thor_client.get_pushable()
+            return await self.thor_client.do_transfer(Msg)
+        except Exception as err:
+            raise Exception(err)
 
     async def get_fees(self) -> dict:
         """Get the current fees

@@ -14,7 +14,7 @@ class CosmosSDKClient:
 
     _account_num = None
 
-    def __init__(self, server, prefix: str = 'cosmos', derive_path="44'/118'/0'/0/0", chain_id="thorchain"):
+    def __init__(self, server, prefix: str = 'cosmos', derive_path: str = "44'/118'/0'/0/0", chain_id: str = "thorchain") -> None:
         self.prefix = prefix
         self.derive_path = derive_path
         self.server = server
@@ -33,7 +33,7 @@ class CosmosSDKClient:
         # that the same exception type is also in the `cosmospy` namespace).
         derived_privkey = hd_wallet.get_privkey_from_path(self.derive_path)
 
-        self.privkey = derived_privkey
+        self._privkey = derived_privkey
 
         return derived_privkey
 
@@ -57,7 +57,7 @@ class CosmosSDKClient:
         pubkey = self.privkey_to_pubkey(privkey)
         return self.pubkey_to_address(pubkey)
 
-    async def get_balance(self, address):
+    async def get_balance(self, address:str):
         try:
             api_url = f'{self.server}/bank/balances/{address}'
 
@@ -72,7 +72,7 @@ class CosmosSDKClient:
         except Exception as err:
             raise Exception(err)
 
-    async def txs_hash_get(self, tx_id):
+    async def txs_hash_get(self, tx_id: str):
         try:
             api_url = f'{self.server}/txs/{tx_id}'
 
@@ -87,7 +87,7 @@ class CosmosSDKClient:
         except Exception as err:
             raise Exception(err)
 
-    async def account_address_get(self, address):
+    async def account_address_get(self, address: str):
         try:
             if not address:
                 raise Exception('address is expected!')
@@ -107,7 +107,7 @@ class CosmosSDKClient:
         except Exception as err:
             raise Exception(err)
 
-    async def make_transaction(self, privkey: bytes, from_address: str, fee_denom: str = "rune", memo: str = "", sync_mode: str = "block"):
+    async def make_transaction(self, privkey: bytes, from_address: str, fee_denom: str = "rune", memo: str = "", sync_mode: str = "block") -> None:
         if not self._account_num:
             account = await self.account_address_get(address=from_address)
             print(account)
@@ -116,7 +116,7 @@ class CosmosSDKClient:
 
         self._gas = "10000000"
         self._fee = "10000000"
-        self._privkey = self.privkey
+        self._privkey = privkey
         self._fee_denom = fee_denom
         self._memo = memo
         self._chain_id = self.chain_id
