@@ -2,7 +2,7 @@ import datetime
 import bitcash
 
 from cashaddress import convert
-from xchainpy.xchainpy_bitcoincash.haskoin_api import get_account, get_unspent_transactions
+from xchainpy.xchainpy_bitcoincash import haskoin_api
 
 # import bitcash
 from bitcash import transaction, PrivateKey
@@ -113,7 +113,7 @@ async def scan_UTXOs(client_url, address):
     :type address: str
     :returns: The UTXOs of the given address
     """
-    unspents = await get_unspent_transactions(client_url, address)
+    unspents = await haskoin_api.get_unspent_transactions(client_url, address)
     utxos = list(map(TxUnspent.unspent_from_object, unspents))
     return utxos
 
@@ -142,7 +142,7 @@ async def build_tx(amount, recipient, memo, fee_rate, sender, network , client_u
         if len(utxos) == 0:
             raise Exception("No utxos to send")
 
-        balance = (await get_account(client_url , sender)).confirmed
+        balance = (await haskoin_api.get_account(client_url , sender)).confirmed
 
         if not balance:
             raise Exception("No BCH balance found")

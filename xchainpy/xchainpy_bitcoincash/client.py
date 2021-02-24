@@ -1,6 +1,6 @@
 from xchainpy.xchainpy_util.asset import Asset
 from xchainpy.xchainpy_client.models.balance import Balance
-from xchainpy.xchainpy_bitcoincash.haskoin_api import get_account, get_suggested_tx_fee, get_transaction
+from xchainpy.xchainpy_bitcoincash import haskoin_api
 from bitcash.wallet import Key, PrivateKeyTestnet
 from cashaddress import convert
 from cashaddress.convert import Address
@@ -160,7 +160,7 @@ class Client(IBitcoinCashClient , IXChainClient):
         :raises: "Invalid address" if the given address is an invalid address
         """
         try:            
-            account = await get_account(self.get_client_url() , address or self.get_address())
+            account = await haskoin_api.get_account(self.get_client_url() , address or self.get_address())
             if not account:
                 raise Exception("Invalid Address")
             
@@ -176,7 +176,7 @@ class Client(IBitcoinCashClient , IXChainClient):
             if not txId:
                 raise Exception("TxID must be provided")
             else:
-                tx = await get_transaction(self.get_client_url() , txId)
+                tx = await haskoin_api.get_transaction(self.get_client_url() , txId)
 
             if not tx:
                 raise Exception("Invalid TxId")
@@ -194,7 +194,7 @@ class Client(IBitcoinCashClient , IXChainClient):
         :type memo: str
         :returns: The fees and rates
         """
-        next_block_fee_rates = await get_suggested_tx_fee()
+        next_block_fee_rates = await haskoin_api.get_suggested_tx_fee()
 
         rates = {
             'fastest': next_block_fee_rates * 5,
