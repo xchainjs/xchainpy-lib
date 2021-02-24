@@ -154,6 +154,16 @@ class Client(interface.IXChainClient, IThorchainClient):
         """
         return 'https://testnet.thorchain.net' if self.network == 'testnet' else 'https://thorchain.net'
 
+    def get_explorer_tx_url(tx_id: str) -> str:
+        """Get the explorer url for the given transaction id.
+   
+        :param tx_id: network
+        :type tx_id: string
+        :returns: The explorer url for the given transaction id.
+        :rtype: string
+        """
+        return f'{self.get_default_explorer_url()}/txs/${tx_id}'
+
     def get_prefix(self, netowrk: str = None) -> str:
         """Get address prefix based on the network.
 
