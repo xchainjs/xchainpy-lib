@@ -9,6 +9,7 @@ from xchainpy.xchainpy_client.models import tx_types
 from xchainpy.xchainpy_crypto import crypto as xchainpy_crypto
 from xchainpy.xchainpy_util.asset import Asset
 from xchainpy.xchainpy_thorchain import utils
+from xchainpy.xchainpy_thorchain import crypto
 
 from xchainpy.xchainpy_thorchain.cosmos.sdk_client import CosmosSDKClient
 import electrumsv_secp256k1
@@ -116,6 +117,17 @@ class Client(interface.IXChainClient, IThorchainClient):
         """
         self.client_url = client_url
         self.thor_client = self.get_new_thor_client()
+
+    def validate_address(self, address: str, prefix: str):
+        """Validate the given address
+
+        :param address: address
+        :type address: str
+        :param prefix: bnb or tbnb
+        :type prefix: str
+        :returns: True or False
+        """
+        return True if crypto.check_address(address, prefix) else False
 
     def get_default_client_url(self) -> object:
         """Get the client url.

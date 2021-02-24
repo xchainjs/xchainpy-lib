@@ -95,22 +95,22 @@ class TestClient:
             assert await self.client.transfer(amount=send_amount, recipient=self.testnetaddressForTx, asset=self.rune_asset)
         assert str(err.value) == "input asset amout is higher than current (asset balance - transfer fee)"
 
-    # @pytest.mark.asyncio
-    # async def test_get_transfer_fees(self, client):
-    #     self.client.set_network('testnet')
-    #     fee = await self.client.get_fees()
-    #     assert fee['average'] == self.transfer_fee['average'] * 10**-8
-    #     assert fee['fast'] == self.transfer_fee['fast'] * 10**-8
-    #     assert fee['fastest'] == self.transfer_fee['fastest'] * 10**-8
+    @pytest.mark.asyncio
+    async def test_get_transfer_fees(self, client):
+        self.client.set_network('testnet')
+        fee = await self.client.get_fees()
+        assert fee['average'] == str(self.transfer_fee['average'])
+        assert fee['fast'] == str(self.transfer_fee['fast'])
+        assert fee['fastest'] == str(self.transfer_fee['fastest'])
 
-    # def test_validate_address(self, client):
-    #     assert self.client.validate_address(self.testnetaddress, 'tbnb') == True
+    def test_validate_address(self, client):
+        assert self.client.validate_address(self.testnetaddress, 'tthor') == True
 
-    # def test_validate_address_false_address(self, client):
-    #     assert self.client.validate_address(self.testnetaddress + '1', 'tbnb') == False
+    def test_validate_address_false_address(self, client):
+        assert self.client.validate_address(self.testnetaddress + '1', 'tthor') == False
 
-    # def test_validate_address_false_prefix(self, client):
-    #     assert self.client.validate_address(self.testnetaddress, 'bnb') == False
+    def test_validate_address_false_prefix(self, client):
+        assert self.client.validate_address(self.testnetaddress, 'thor') == False
 
     # @pytest.mark.asyncio
     # async def test_search_transactions(self, client):
