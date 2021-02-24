@@ -170,16 +170,19 @@ class Client(IBitcoinCashClient , IXChainClient):
         except Exception as err:
             raise Exception(str(err))
 
-    async def get_transaction_data(self, txId: str):
-        pass 
+    async def get_transaction_data(self, tx_id: str):
+        """Get the transaction details of a given transaction id
+
+        :param tx_id: The transaction id
+        :type str: str
+        :returns: The transaction details of the given transaction id
+        :raises: "Invalid address" if the given transaction id is an invalid one
+        """
         try:
-            if not txId:
-                raise Exception("TxID must be provided")
-            else:
-                tx = await haskoin_api.get_transaction(self.get_client_url() , txId)
+            tx = await haskoin_api.get_transaction(self.get_client_url() , tx_id)
 
             if not tx:
-                raise Exception("Invalid TxId")
+                raise Exception("Invalid tx_id")
 
             data = parse_tx(tx)
             return data
