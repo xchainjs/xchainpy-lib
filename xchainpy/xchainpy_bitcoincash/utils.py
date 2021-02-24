@@ -80,6 +80,16 @@ def parse_tx(tx : Transaction):
     return tx
 
 def calc_fee(fee_rate , memo=None , utxos=None):
+    """Calculate fees based on fee rate and memo
+
+    :param fee_rate: fee rates
+    :type fee_rate: str
+    :param memo: memo (optional)
+    :type memo: str
+    :param utxos: A list of utxos (optional)
+    :type utxos: str
+    :returns: The calculated fees based on fee rate and the memo
+    """
     # key = PrivateKey()
     # random_address = key.address
 
