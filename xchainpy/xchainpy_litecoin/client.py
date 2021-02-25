@@ -25,6 +25,9 @@ class ILiteCoinClient():
 
 class Client(ILiteCoinClient, IXChainClient):
 
+    node_url = node_api_key = phrase = net = address = ''
+    wallet = None
+
     def __init__(self, phrase: str, network='testnet', sochain_url=None, bitaps_url=None):
         self.set_network(network)
         self.set_sochain_url(sochain_url or self.get_default_sochain_url())
@@ -34,17 +37,21 @@ class Client(ILiteCoinClient, IXChainClient):
     def set_network(self, network: str):
         """Set/update the current network
 
-        :param network: mainnet or testnet
+        :param network: "mainnet" or "testnet"
         :type network: str
-        :raises: Network must be provided if network has not been set before
+        :returns: the client
+        :raises: raises if network not provided
         :raises: `Invalid network' if the given network is invalid
         """
         if not network:
             raise Exception("Network must be provided")
-        if not network in ['testnet', 'mainnet']:
-            raise Exception('Invalid network')
         else:
-            self.network = 'litecoin_testnet' if network == 'testnet' else 'litecoin'
+            if not network in ['testnet', 'mainnet']:
+                raise Exception('Invalid network')
+            else:
+                self.net = network
+                if self.phrase:
+                    self.set_wallet(self.phrase)
 
     def set_wallet(self, phrase):
         """Set/update the current wallet
@@ -53,7 +60,6 @@ class Client(ILiteCoinClient, IXChainClient):
         :type phrase: str
         :returns: the wallet
         """
-        # self.wallet = Wallet("Wallet")
         wallet_delete_if_exists('Wallet', force=True)
         self.wallet = Wallet.create(
             "Wallet", keys=self.phrase, witness_type='segwit', network=utils.network_to_bitcoinlib_format(self.get_network()))
@@ -117,7 +123,7 @@ class Client(ILiteCoinClient, IXChainClient):
         raise Exception('Phrase must be provided')
 
     def set_phrase(self, phrase: str):
-        """Set/update a new phrase
+        """Set/Update a new phrase
 
         :param phrase: A new phrase
         :type phrase: str
@@ -126,21 +132,29 @@ class Client(ILiteCoinClient, IXChainClient):
         """
         if validate_phrase(phrase):
             self.phrase = phrase
-            self.address = self.get_address()
-            return self.address
+            self.set_wallet(self.phrase)
+            address = self.get_address()
+            return address
         else:
             raise Exception("Invalid Phrase")
+        raise Exception('Phrase must be provided')
 
     def purge_client(self):
         """Purge client
         """
         self.phrase = ''
 
+    def get_network(self):
+        """Get the current network
+        :returns: the current network. (`mainnet` or `testnet`)
+        """
+        return self.net
+
     def derive_path(self):
         return utils.get_derive_path().testnet if self.net == 'testnet' else utils.get_derive_path().mainnet
 
 
-    async def get_balance(self, address:str =None):
+    async def get_balance(self, address:str=None):
         """Get the LTC balance of a given address
 
         :param address: By default, it will return the balance of the current wallet. (optional)
@@ -149,6 +163,8 @@ class Client(ILiteCoinClient, IXChainClient):
         """
         try:
             amount = await sochain_api.get_balance(self.sochain_url, self.net, address or self.get_address())
+            if amount == None:
+                raise Exception("Invalid Address")
             balance = Balance(Asset.from_str('LTC.LTC'), amount)
             return balance
         except Exception as err:
@@ -170,7 +186,7 @@ class Client(ILiteCoinClient, IXChainClient):
             transactions['txs'] = transactions['txs'][offset:limit]
             txs = []
             for tx in transactions['txs']:
-                tx = await sochain_api.get_tx(self.net, tx['txid'])
+                tx = await sochain_api.get_tx(self.sochain_url, self.net, tx['txid'])
                 tx = utils.parse_tx(tx)
                 txs.append(tx)
 

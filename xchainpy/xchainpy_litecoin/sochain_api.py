@@ -96,7 +96,7 @@ async def get_suggested_tx_fee():
         response = await client.get(api_url)
 
         if response.status_code == 200:
-            return json.loads(response.content.decode('utf-8'))['fastestFee']
+            return json.loads(response.content.decode('utf-8'))['feePerKb'] / 1000 # feePerKb to feePerByte
         else:
             return None
     except Exception as err:

@@ -6,6 +6,9 @@ from bitcoinlib.transactions import Transaction
 from xchainpy.xchainpy_client.models import tx_types
 from xchainpy.xchainpy_litecoin.models.common import DerivePath, UTXO
 from xchainpy.xchainpy_litecoin import sochain_api
+from xchainpy.xchainpy_util.asset import Asset
+from xchainpy.xchainpy_util.chain import LTCCHAIN
+import datetime
 
 
 TX_EMPTY_SIZE = 4 + 1 + 1 + 4  # 10
@@ -16,6 +19,24 @@ TX_OUTPUT_PUBKEYHASH = 25
 DUST_THRESHOLD = 1000
 
 MIN_TX_FEE = 1000
+
+def parse_tx(tx):
+    """Parse tx
+
+    :param tx: The transaction to be parsed
+    :type tx: str
+    :returns: The transaction parsed from the binance tx
+    """
+    asset = Asset.from_str(f'{LTCCHAIN}.LTC')
+    tx_from = [tx_types.TxFrom(i['address'], i['value']) for i in tx['inputs']]
+    tx_to = [tx_types.TxTo(i['address'], i['value']) for i in tx['outputs']]
+    tx_date = datetime.datetime.fromtimestamp(tx['time'])
+    tx_type = 'transfer'
+    tx_hash = tx['txid']
+
+    tx = tx_types.TX(asset, tx_from, tx_to, tx_date, tx_type, tx_hash)
+    return tx
+
 
 def get_derive_path(index:int=0):
     return DerivePath(index=index)
@@ -132,7 +153,7 @@ async def get_change(sochain_url, value_out, network, address):
     :returns: The UTXOs of the given address
     """
     try:
-        balance = await sochain_api.get_balance(network, address)
+        balance = await sochain_api.get_balance(sochain_url, network, address)
         balance = balance * 10 ** 8
         change = 0
         if balance - value_out > DUST_THRESHOLD:
@@ -169,7 +190,7 @@ async def build_tx(amount, recipient, memo, fee_rate, sender, network, sochain_u
         if not validate_address(network, recipient):
             raise Exception('Invalid address')
 
-        fee_rate_whole = int(fee_rate)
+        fee_rate_whole = fee_rate
 
         compiled_memo = None
         if memo:
@@ -180,7 +201,7 @@ async def build_tx(amount, recipient, memo, fee_rate, sender, network, sochain_u
         if fee + amount > balance * 10 ** 8:
             raise Exception('Balance insufficient for transaction')
 
-        t = Transaction(network=network, witness_type='segwit')
+        t = Transaction(network=network_to_bitcoinlib_format(network), witness_type='segwit')
 
         for i in utxos:
             t.add_input(prev_txid=i.hash, output_n=i.index,
