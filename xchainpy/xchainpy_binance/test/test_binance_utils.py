@@ -2,7 +2,7 @@ import pytest
 from xchainpy.xchainpy_binance import utils
 
 
-class TestUtils:
+class TestBinanceUtils:
 
     def test_get_prefix_testnet(self):
         assert utils.get_prefix('testnet') == 'tbnb'
