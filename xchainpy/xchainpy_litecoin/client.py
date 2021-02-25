@@ -4,6 +4,7 @@ from xchainpy.xchainpy_litecoin import utils
 from xchainpy.xchainpy_litecoin import sochain_api
 from xchainpy.xchainpy_client.models.balance import Balance
 from xchainpy.xchainpy_util.asset import Asset
+from xchainpy.xchainpy_client.models import tx_types
 
 from bitcoinlib.wallets import Wallet, wallet_delete_if_exists
 
@@ -150,6 +151,33 @@ class Client(ILiteCoinClient, IXChainClient):
             amount = await sochain_api.get_balance(self.sochain_url, self.net, address or self.get_address())
             balance = Balance(Asset.from_str('LTC.LTC'), amount)
             return balance
+        except Exception as err:
+            raise Exception(str(err))
+
+    async def get_transactions(self, params: tx_types.TxHistoryParams):
+        """Get transaction history of a given address with pagination options
+        By default it will return the transaction history of the current wallet
+
+        :param params: params
+        :type params: tx_types.TxHistoryParams
+        :returns: The transaction history
+        """
+        try:
+            transactions = await sochain_api.get_transactions(self.sochain_url, self.net, self.address)
+            total = transactions['total_txs']
+            offset = params['offset'] if 'offset' in params else 0
+            limit = params['limit'] if 'limit' in params else len(transactions)
+            transactions['txs'] = transactions['txs'][offset:limit]
+            txs = []
+            for tx in transactions['txs']:
+                tx = await sochain_api.get_tx(self.net, tx['txid'])
+                tx = utils.parse_tx(tx)
+                txs.append(tx)
+
+            return {
+                'total': total,
+                'tx': txs
+            }
         except Exception as err:
             raise Exception(str(err))
 

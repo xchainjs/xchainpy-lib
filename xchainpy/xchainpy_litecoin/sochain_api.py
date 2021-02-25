@@ -32,6 +32,29 @@ async def get_balance(sochain_url:str, net:str, address:str):
     except Exception as err:
         raise Exception(str(err))
 
+async def get_transactions(sochain_url:str, net:str, address:str):
+    """Get address information
+    https://sochain.com/api#get-display-data-address
+
+    :param net: mainnet or testnet
+    :type net: str
+    :param address: wallet address
+    :type address: str
+    :returns: The fees with memo
+    """
+    try:
+        api_url = f'{sochain_url}/address/{to_sochain_network(net)}/{address}'
+
+        client = http3.AsyncClient()
+        response = await client.get(api_url)
+
+        if response.status_code == 200:
+            return json.loads(response.content.decode('utf-8'))['data']
+        else:
+            return None
+    except Exception as err:
+        raise Exception(str(err))
+
 
 async def get_tx(sochain_url:str, net: str, hash: str):
     """Get transaction by hash
