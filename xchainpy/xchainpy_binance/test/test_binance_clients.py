@@ -4,7 +4,7 @@ from xchainpy.xchainpy_binance.models.coin import Coin
 from xchainpy.xchainpy_util.asset import Asset
 from xchainpy.xchainpy_client.models import tx_types
 
-class TestClient:
+class TestBinanceClient:
 
     # Note: This phrase is created by https://iancoleman.io/bip39/ and will never been used in a real-world
     phrase = 'rural bright ball negative already grass good grant nation screen model pizza'
