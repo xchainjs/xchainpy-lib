@@ -4,8 +4,8 @@ from xchainpy.xchainpy_crypto.crypto import validate_phrase
 from xchainpy.xchainpy_client.interface import IXChainClient
 from xchainpy.xchainpy_bitcoin import utils
 
-from bitcoinlib.wallets import Wallet
-from bitcoinlib.wallets import *
+from bitcoinlib.wallets import Wallet, wallet_delete_if_exists
+from bitcoinlib.services.services import Service
 from xchainpy.xchainpy_client.models import tx_types
 from xchainpy.xchainpy_bitcoin import sochain_api
 from xchainpy.xchainpy_client.models.balance import Balance
@@ -40,7 +40,6 @@ class Client(IBitcoinClient, IXChainClient):
         """
         self.set_network(network)
         self.set_phrase(phrase)
-        self.service = Service(network=self.get_network())
 
     def set_network(self, network: str):
         """Set/update the current network
