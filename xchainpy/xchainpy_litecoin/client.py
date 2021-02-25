@@ -1,18 +1,15 @@
-
-import asyncio
-from xchainpy.xchainpy_crypto.crypto import validate_phrase
 from xchainpy.xchainpy_client.interface import IXChainClient
-from xchainpy.xchainpy_bitcoin import utils
-
-from bitcoinlib.wallets import Wallet, wallet_delete_if_exists
-from bitcoinlib.services.services import Service
-from xchainpy.xchainpy_client.models import tx_types
-from xchainpy.xchainpy_bitcoin import sochain_api
+from xchainpy.xchainpy_crypto.crypto import validate_phrase
+from xchainpy.xchainpy_litecoin import utils
+from xchainpy.xchainpy_litecoin import sochain_api
 from xchainpy.xchainpy_client.models.balance import Balance
 from xchainpy.xchainpy_util.asset import Asset
+from xchainpy.xchainpy_client.models import tx_types
+
+from bitcoinlib.wallets import Wallet, wallet_delete_if_exists
 
 
-class IBitcoinClient():
+class ILiteCoinClient():
     def derive_path(self):
         pass
 
@@ -26,19 +23,15 @@ class IBitcoinClient():
         pass
 
 
-class Client(IBitcoinClient, IXChainClient):
+class Client(ILiteCoinClient, IXChainClient):
 
     node_url = node_api_key = phrase = net = address = ''
     wallet = None
 
-    def __init__(self, phrase, network='testnet'):
-        """
-        :param phrase: a phrase (mnemonic)
-        :type phrase: str
-        :param network: testnet or mainnet
-        :type network: str
-        """
+    def __init__(self, phrase: str, network='testnet', sochain_url=None, bitaps_url=None):
         self.set_network(network)
+        self.set_sochain_url(sochain_url or self.get_default_sochain_url())
+        self.set_bitaps_url(bitaps_url or self.get_default_bitaps_url())
         self.set_phrase(phrase)
 
     def set_network(self, network: str):
@@ -67,12 +60,67 @@ class Client(IBitcoinClient, IXChainClient):
         :type phrase: str
         :returns: the wallet
         """
-        # self.wallet = Wallet("Wallet")
         wallet_delete_if_exists('Wallet', force=True)
         self.wallet = Wallet.create(
-            "Wallet", keys=self.phrase, witness_type='segwit', network=self.get_network())
+            "Wallet", keys=self.phrase, witness_type='segwit', network=utils.network_to_bitcoinlib_format(self.get_network()))
         self.get_address()
         return self.wallet
+
+    def get_default_sochain_url(self):
+        """Get the default sochain url
+
+        :returns: the default sochain url
+        """
+        return "https://sochain.com/api/v2"
+
+    def set_sochain_url(self, url):
+        """Set/Update the sochain url
+
+        :param url: The new sochain url
+        :type url: str
+        """
+        self.sochain_url = url
+
+    def get_default_bitaps_url(self):
+        """Get the default bitaps url
+
+        :returns: the default bitaps url
+        """
+        return "https://api.bitaps.com"
+
+    def set_bitaps_url(self, url):
+        """Set/Update the bitaps url
+
+        :param url: The new bitaps url
+        :type url: str
+        """
+        self.bitaps_url = url
+
+    def validate_address(self, network, address):
+        """Validate the given address
+
+        :param network: testnet or mainnet
+        :type network: str
+        :param address: address
+        :type address: str
+        :returns: True or False
+        """
+        return utils.validate_address(network, address)
+
+    def get_address(self):
+        """Get the current address
+
+        :returns: the current address
+        :raises: Raises if phrase has not been set before. A phrase is needed to create a wallet and to derive an address from it.
+        """
+        if self.phrase:
+            self.address = self.wallet.get_key().address
+
+            if not self.address:
+                raise Exception('Address not defined')
+
+            return self.address
+        raise Exception('Phrase must be provided')
 
     def set_phrase(self, phrase: str):
         """Set/Update a new phrase
@@ -100,38 +148,24 @@ class Client(IBitcoinClient, IXChainClient):
         """Get the current network
         :returns: the current network. (`mainnet` or `testnet`)
         """
-        return self.net if self.net == 'testnet' else 'bitcoin'
+        return self.net
 
     def derive_path(self):
         return utils.get_derive_path().testnet if self.net == 'testnet' else utils.get_derive_path().mainnet
 
-    def get_address(self):
-        """Get the current address
 
-        :returns: the current address
-        :raises: Raises if phrase has not been set before. A phrase is needed to create a wallet and to derive an address from it.
-        """
-        if self.phrase:
-            self.address = self.wallet.get_key().address
-
-            if not self.address:
-                raise Exception('Address not defined')
-
-            return self.address
-        raise Exception('Phrase must be provided')
-
-    async def get_balance(self, address: str = None):
-        """Get the BTC balance of a given address
+    async def get_balance(self, address:str=None):
+        """Get the LTC balance of a given address
 
         :param address: By default, it will return the balance of the current wallet. (optional)
         :type address: str
         :returns: The BTC balance of the address.
         """
         try:
-            amount = await sochain_api.get_balance(self.net, address or self.get_address())
+            amount = await sochain_api.get_balance(self.sochain_url, self.net, address or self.get_address())
             if amount == None:
                 raise Exception("Invalid Address")
-            balance = Balance(Asset.from_str('BTC.BTC'), amount)
+            balance = Balance(Asset.from_str('LTC.LTC'), amount)
             return balance
         except Exception as err:
             raise Exception(str(err))
@@ -145,14 +179,14 @@ class Client(IBitcoinClient, IXChainClient):
         :returns: The transaction history
         """
         try:
-            transactions = await sochain_api.get_transactions(self.net, self.address)
+            transactions = await sochain_api.get_transactions(self.sochain_url, self.net, self.address)
             total = transactions['total_txs']
             offset = params['offset'] if 'offset' in params else 0
             limit = params['limit'] if 'limit' in params else len(transactions)
             transactions['txs'] = transactions['txs'][offset:limit]
             txs = []
             for tx in transactions['txs']:
-                tx = await sochain_api.get_tx(self.net, tx['txid'])
+                tx = await sochain_api.get_tx(self.sochain_url, self.net, tx['txid'])
                 tx = utils.parse_tx(tx)
                 txs.append(tx)
 
@@ -163,7 +197,8 @@ class Client(IBitcoinClient, IXChainClient):
         except Exception as err:
             raise Exception(str(err))
 
-    async def get_transaction_data(self, tx_id: str):
+
+    async def get_transaction_data(self, tx_id:str):
         """Get the transaction details of a given transaction id
 
         if you want to give a hash that is for mainnet and the current self.net is 'testnet',
@@ -174,7 +209,7 @@ class Client(IBitcoinClient, IXChainClient):
         :returns: The transaction details of the given transaction id
         """
         try:
-            tx = await sochain_api.get_tx(self.net, tx_id)
+            tx = await sochain_api.get_tx(self.sochain_url, self.net, tx_id)
             tx = utils.parse_tx(tx)
             return tx
         except Exception as err:
@@ -241,21 +276,11 @@ class Client(IBitcoinClient, IXChainClient):
         except Exception as err:
             raise Exception(str(err))
 
-    def validate_address(self, network, address):
-        """Validate the given address
-
-        :param network: testnet or mainnet
-        :type network: str
-        :param address: address
-        :type address: str
-        :returns: True or False
-        """
-        return utils.validate_address(network, address)
 
     async def transfer(self, amount, recipient, memo: str = None, fee_rate=None):
-        """Transfer BTC
+        """Transfer LTC
 
-        :param amount: amount of BTC to transfer (don't multiply by 10**8)
+        :param amount: amount of LTC to transfer (don't multiply by 10**8)
         :type amount: int, float, decimal
         :param recipient: destination address
         :type recipient: str
@@ -270,9 +295,9 @@ class Client(IBitcoinClient, IXChainClient):
             fee_rate = fee_rates['fast']
 
         t, utxos = await utils.build_tx(amount=int(amount*10**8), recipient=recipient, memo=memo, fee_rate=fee_rate,
-                                        sender=self.get_address(), network=self.net)
+                                        sender=self.get_address(), network=self.net, sochain_url=self.sochain_url)
 
         hdkey = self.wallet.get_key().key()
         t.sign(hdkey.private_byte)
 
-        return await utils.broadcast_tx(self.net, t.raw_hex())
+        return await utils.broadcast_tx(self.sochain_url, self.net, t.raw_hex())

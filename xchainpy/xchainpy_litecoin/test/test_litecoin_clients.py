@@ -1,25 +1,23 @@
 import pytest
-from xchainpy.xchainpy_bitcoin.client import Client
+from xchainpy.xchainpy_litecoin.client import Client
 from xchainpy.xchainpy_util.asset import Asset
 from xchainpy.xchainpy_client.models import tx_types
-from xchainpy.xchainpy_bitcoin.const import *
+from xchainpy.xchainpy_litecoin.utils import MIN_TX_FEE
 
+class TestLiteCoinClient:
 
-class TestBitcoinClient:
-
-    # please don't touch the tBTC in these
     phrase = 'atom green various power must another rent imitate gadget creek fat then'
-    testnetaddress = 'tb1q2pkall6rf6v6j0cvpady05xhy37erndvku08wp'
-    btc_asset = Asset('BTC', 'BTC')
-    memo = 'SWAP:THOR.RUNE'
+    phrase_one = 'atom green various power must another rent imitate gadget creek fat then'
+    testnetaddress = 'tltc1q2pkall6rf6v6j0cvpady05xhy37erndv05de7g'
+    ltc_asset = Asset('LTC', 'LTC')
+    memo = 'SWAP:THOR.RUNE' 
 
-    phrase_for_tx1 = 'caution pear excite vicious exotic slow elite marble attend science strategy rude'
-    testnetaddress_for_tx1 = 'tb1qxe0e8793v3z0v0h2l3nglzg85k2jdx04vx088z'
+    # phraseTwo = 'green atom various power must another rent imitate gadget creek fat then'
+    address_two = 'tltc1ql68zjjdjx37499luueaw09avednqtge4u23q36'
 
-    phrase_for_tx2 = 'theme neither sun invite illness chat project enough answer spray visual zoo'
-    testnetaddress_for_tx2 = 'tb1qymzatfxg22vg8adxlnxt3hkfmzl2rpuzpk8kcf'
-
-    address_for_transactions = 'tb1q04y2lnt0ausy07vq9dg5w2rnn9yjl3rzgjhra4'
+    # Third ones is used only for balance verification
+    phrase_three = 'quantum vehicle print stairs canvas kid erode grass baby orbit lake remove'
+    address_three = 'tltc1q04y2lnt0ausy07vq9dg5w2rnn9yjl3rz364adu'
 
     @pytest.fixture
     def client(self):
@@ -59,16 +57,14 @@ class TestBitcoinClient:
         assert balance1.amount == balance2.amount
 
     @pytest.mark.asyncio
-    async def test_transfer_with_memo_and_fee_rate(self):
-        self.client = Client(self.phrase_for_tx1, network='testnet')
+    async def test_transfer_with_memo_and_fee_rate(self, client):
         fee_rates = await self.client.get_fee_rates()
         fee_rate = fee_rates['fast']
         balance = await self.client.get_balance()
         if balance.amount > 0:
             amount = 0.0000001
-            tx_id = await self.client.transfer(amount, self.testnetaddress_for_tx2, self.memo, fee_rate)
+            tx_id = await self.client.transfer(amount, self.address_two, self.memo, fee_rate)
             assert tx_id
-        self.client.purge_client()
 
     @pytest.mark.asyncio
     async def test_purge_client_should_purge_phrase_and_utxos(self):
@@ -85,9 +81,9 @@ class TestBitcoinClient:
     async def test_should_prevent_tx_when_fees_and_valueOut_exceed_balance(self, client):
         balance = await self.client.get_balance()
         if balance.amount > 0:
-            amount = balance.amount + 1000  # BTC
+            amount = balance.amount + 1000  # LTC
             with pytest.raises(Exception) as err:
-                await self.client.transfer(amount, self.testnetaddress_for_tx2)
+                await self.client.transfer(amount, self.address_two)
             assert str(err.value) == "Balance insufficient for transaction"
 
     @pytest.mark.asyncio
@@ -132,13 +128,6 @@ class TestBitcoinClient:
             assert vault_tx['average'] == MIN_TX_FEE
 
     @pytest.mark.asyncio
-    async def test_different_fees_normal_tx(self, client):
-        fees = await self.client.get_fees()
-
-        assert fees['fastest'] > fees['fast']
-        assert fees['fast'] > fees['average']
-
-    @pytest.mark.asyncio
     async def test_has_balances_invalid_address(self, client):
         with pytest.raises(Exception) as err:
             await self.client.get_balance(address='invalid address')
@@ -155,11 +144,11 @@ class TestBitcoinClient:
 
     @pytest.mark.asyncio
     async def test_get_transactions(self, client):
-        txs = await self.client.get_transactions({'address': self.address_for_transactions, 'limit': 4})
+        txs = await self.client.get_transactions({'address': self.address_three, 'limit': 4})
         assert txs
         if txs['total'] > 0:
             tx = txs['tx'][0]
-            assert tx.asset == self.btc_asset
+            assert tx.asset == self.ltc_asset
             assert tx.tx_date
             assert tx.tx_hash
             assert tx.tx_type == 'transfer'
@@ -168,20 +157,20 @@ class TestBitcoinClient:
 
     @pytest.mark.asyncio
     async def test_get_transactions_limit_should_work(self, client):
-        txs = await self.client.get_transactions({'address': self.address_for_transactions, 'limit': 1})
+        txs = await self.client.get_transactions({'address': self.address_three, 'limit': 1})
         assert len(txs['tx']) == 1    
 
     @pytest.mark.asyncio
     async def test_get_transaction_with_hash(self, client):
-        tx_data = await self.client.get_transaction_data('b660ee07167cfa32681e2623f3a29dc64a089cabd9a3a07dd17f9028ac956eb8')
-        assert tx_data.tx_hash == 'b660ee07167cfa32681e2623f3a29dc64a089cabd9a3a07dd17f9028ac956eb8'
+        tx_data = await self.client.get_transaction_data('b0422e9a4222f0f2b030088ee5ccd33ac0d3c59e7178bf3f4626de71b0e376d3')
+        assert tx_data.tx_hash == 'b0422e9a4222f0f2b030088ee5ccd33ac0d3c59e7178bf3f4626de71b0e376d3'
         assert len(tx_data.tx_from) == 1
-        assert tx_data.tx_from[0].address == '2N4nhhJpjauDekVUVgA1T51M5gVg4vzLzNC'
-        assert tx_data.tx_from[0].amount == '0.08898697'
+        assert tx_data.tx_from[0].address == 'tltc1q2pkall6rf6v6j0cvpady05xhy37erndv05de7g'
+        assert tx_data.tx_from[0].amount == '8.60368562'
 
         assert len(tx_data.tx_to) == 2
-        assert tx_data.tx_to[0].address == 'tb1q3a00snh7erczk94k48fe9q5z0fldgnh4twsh29'
-        assert tx_data.tx_to[0].amount == '0.00100000'
+        assert tx_data.tx_to[0].address == 'tltc1q04y2lnt0ausy07vq9dg5w2rnn9yjl3rz364adu'
+        assert tx_data.tx_to[0].amount == '0.00002223'
 
-        assert tx_data.tx_to[1].address == 'tb1qxx4azx0lw4tc6ylurc55ak5hl7u2ws0w9kw9h3'
-        assert tx_data.tx_to[1].amount == '0.08798533'
+        assert tx_data.tx_to[1].address == 'tltc1q2pkall6rf6v6j0cvpady05xhy37erndv05de7g'
+        assert tx_data.tx_to[1].amount == '8.60365339'
