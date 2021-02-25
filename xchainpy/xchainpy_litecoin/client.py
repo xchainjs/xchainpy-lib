@@ -1,6 +1,9 @@
 from xchainpy.xchainpy_client.interface import IXChainClient
 from xchainpy.xchainpy_crypto.crypto import validate_phrase
 from xchainpy.xchainpy_litecoin import utils
+from xchainpy.xchainpy_litecoin import sochain_api
+from xchainpy.xchainpy_client.models.balance import Balance
+from xchainpy.xchainpy_util.asset import Asset
 
 from bitcoinlib.wallets import Wallet, wallet_delete_if_exists
 
@@ -131,3 +134,100 @@ class Client(ILiteCoinClient, IXChainClient):
         """Purge client
         """
         self.phrase = ''
+
+    def derive_path(self):
+        return utils.get_derive_path().testnet if self.net == 'testnet' else utils.get_derive_path().mainnet
+
+
+    async def get_balance(self, address:str =None):
+        """Get the LTC balance of a given address
+
+        :param address: By default, it will return the balance of the current wallet. (optional)
+        :type address: str
+        :returns: The BTC balance of the address.
+        """
+        try:
+            amount = await sochain_api.get_balance(self.sochain_url, self.net, address or self.get_address())
+            balance = Balance(Asset.from_str('LTC.LTC'), amount)
+            return balance
+        except Exception as err:
+            raise Exception(str(err))
+
+
+    async def get_transaction_data(self, tx_id:str):
+        """Get the transaction details of a given transaction id
+
+        if you want to give a hash that is for mainnet and the current self.net is 'testnet',
+        you should call self.set_network('mainnet') (and vice versa) and then call this method.
+
+        :param tx_id: The transaction id
+        :type tx_id: str
+        :returns: The transaction details of the given transaction id
+        """
+        try:
+            tx = await sochain_api.get_tx(self.sochain_url, self.net, tx_id)
+            tx = utils.parse_tx(tx)
+            return tx
+        except Exception as err:
+            raise Exception(str(err))
+
+    async def get_fees_with_rates(self, memo: str = ''):
+        """Get the rates and fees
+
+        :param memo: The memo to be used for fee calculation (optional)
+        :type memo: str
+        :returns: The fees and rates
+        """
+        tx_fee = await sochain_api.get_suggested_tx_fee()
+
+        rates = {
+            'fastest': tx_fee * 5,
+            'fast': tx_fee * 1,
+            'average': tx_fee * 0.5
+        }
+        fees = {
+            'fastest': utils.calc_fee(rates['fastest'], memo),
+            'fast': utils.calc_fee(rates['fast'], memo),
+            'average': utils.calc_fee(rates['average'], memo)
+        }
+        return {
+            'rates': rates,
+            'fees': fees
+        }
+
+    async def get_fees(self):
+        """Get the current fees
+
+        :returns: The fees without memo
+        """
+        try:
+            fees = (await self.get_fees_with_rates())['fees']
+            return fees
+        except Exception as err:
+            raise Exception(str(err))
+
+    async def get_fees_with_memo(self, memo: str):
+        """Get the fees for transactions with memo
+        If you want to get `fees` and `fee_rates` at once, use `get_fees_with_rates` method
+
+        :param memo: The memo to be used for fee calculation (optional)
+        :type memo: str
+        :returns: The fees with memo
+        """
+        try:
+            fees = (await self.get_fees_with_rates(memo))['fees']
+            return fees
+        except Exception as err:
+            raise Exception(str(err))
+
+    async def get_fee_rates(self):
+        """Get the fee rates for transactions without a memo
+        If you want to get `fees` and `fee_rates` at once, use `get_fees_with_rates` method
+
+        :returns: The fee rate
+        """
+        try:
+            rates = (await self.get_fees_with_rates())['rates']
+            return rates
+        except Exception as err:
+            raise Exception(str(err))
