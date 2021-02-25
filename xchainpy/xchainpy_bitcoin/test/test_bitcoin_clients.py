@@ -142,7 +142,7 @@ class TestBitcoinClient:
     async def test_has_balances_invalid_address(self, client):
         with pytest.raises(Exception) as err:
             await self.client.get_balance(address='invalid address')
-        assert str(err.value) == "Invalid address"
+        assert str(err.value) == "Invalid Address"
 
     @pytest.mark.asyncio
     async def test_transfer_invalid_address(self, client):

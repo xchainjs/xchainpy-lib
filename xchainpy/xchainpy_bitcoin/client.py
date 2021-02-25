@@ -129,6 +129,8 @@ class Client(IBitcoinClient, IXChainClient):
         """
         try:
             amount = await sochain_api.get_balance(self.net, address or self.get_address())
+            if amount == None:
+                raise Exception("Invalid Address")
             balance = Balance(Asset.from_str('BTC.BTC'), amount)
             return balance
         except Exception as err:
