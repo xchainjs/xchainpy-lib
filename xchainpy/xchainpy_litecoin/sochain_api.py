@@ -78,3 +78,49 @@ async def get_suggested_tx_fee():
             return None
     except Exception as err:
         raise Exception(str(err))
+
+async def get_unspent_txs(sochain_url, network, address):
+    """Get address balance
+    https://sochain.com/api#get-unspent-tx
+
+    :param network: testnet or mainnet
+    :type network: str
+    :param address: address
+    :type address: str
+    :returns: A list of utxo's
+    """
+    try:
+        api_url = f'{sochain_url}/get_tx_unspent/{to_sochain_network(network)}/{address}'
+
+        client = http3.AsyncClient()
+        response = await client.get(api_url)
+
+        if response.status_code == 200:
+            txs = json.loads(response.content.decode('utf-8'))['data']['txs']
+            return txs
+    except Exception as err:
+        raise Exception(str(err))
+
+async def broadcast_tx(sochain_url, network, tx_hex):
+    """Broadcast transaction
+    https://sochain.com/api#send-transaction
+
+    :param network: testnet or mainnet
+    :type network: str
+    :param tx_hex: tranaction hex
+    :type tx_hex: str
+    :returns: Transaction ID
+    """
+    try:
+        api_url = f'{sochain_url}/send_tx/{to_sochain_network(network)}'
+
+        client = http3.AsyncClient()
+        response = await client.post(url=api_url, data={'tx_hex': tx_hex})
+
+        if response.status_code == 200:
+            res = json.loads(response.content.decode('utf-8'))['data']
+            return res['txid']
+        else:
+            return json.loads(response.content.decode('utf-8'))['data']
+    except Exception as err:
+        raise Exception(str(err))

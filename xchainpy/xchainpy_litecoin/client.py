@@ -231,3 +231,29 @@ class Client(ILiteCoinClient, IXChainClient):
             return rates
         except Exception as err:
             raise Exception(str(err))
+
+
+    async def transfer(self, amount, recipient, memo: str = None, fee_rate=None):
+        """Transfer LTC
+
+        :param amount: amount of LTC to transfer (don't multiply by 10**8)
+        :type amount: int, float, decimal
+        :param recipient: destination address
+        :type recipient: str
+        :param memo: optional memo for transaction
+        :type memo: str
+        :param fee_rate: fee rates for transaction
+        :type fee_rate: int
+        :returns: the transaction hash
+        """
+        if not fee_rate:
+            fee_rates = await self.get_fee_rates()
+            fee_rate = fee_rates['fast']
+
+        t, utxos = await utils.build_tx(amount=int(amount*10**8), recipient=recipient, memo=memo, fee_rate=fee_rate,
+                                        sender=self.get_address(), network=self.net, sochain_url=self.sochain_url)
+
+        hdkey = self.wallet.get_key().key()
+        t.sign(hdkey.private_byte)
+
+        return await utils.broadcast_tx(self.sochain_url, self.net, t.raw_hex())
