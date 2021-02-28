@@ -6,3 +6,4 @@ mnemonic==0.19
 pytest==6.1.2
 binance_chain==1.0.0
 pycryptodome==3.10.1
+cosmospy==5.1.1
