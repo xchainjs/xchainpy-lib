@@ -39,21 +39,23 @@ class TestClient:
         assert self.client.is_connected()
 
     def test_get_abi(self):
-        assert self.client.get_abi(self.thor_router_address) == self.router_abi
-        assert self.client.get_abi(self.thor_token_address) == self.token_abi
+        assert str(self.client.get_abi(self.thor_router_address)) == str(self.router_abi)
+        assert str(self.client.get_abi(self.thor_token_address)) == str(self.token_abi)
         self.client.ether_api = None
-        assert self.client.get_abi(self.thor_router_address) == self.router_abi
-        assert self.client.get_abi(self.thor_token_address) == self.token_abi
+        assert str(self.client.get_abi(self.thor_router_address)) == str(self.router_abi)
+        assert str(self.client.get_abi(self.thor_token_address)) == str(self.token_abi)
 
     def test_get_contract(self):
-        router_contract = self.client.get_contract(self.thor_router_address)
-        print(router_contract.all_functions())
+        router_contract = self.client.get_contract(self.thor_router_address, erc20=False)
         assert router_contract.functions.RUNE().call() == self.thor_token_address
-        token_contract = self.client.get_contract(self.thor_token_address)
-        print(token_contract.all_functions())
+        token_contract = self.client.get_contract(self.thor_token_address, erc20=True)
         decimal_place = token_contract.functions.decimals().call()
         assert token_contract.functions.symbol().call() == 'RUNE'
+        token_contract = self.client.get_contract(self.thor_token_address, erc20=False)
         assert token_contract.functions.maxSupply().call()/10**decimal_place == 500000000.0
+
+    def test_read_contract(self):
+        assert self.client.read_contract(self.thor_router_address, "RUNE", False) == self.thor_token_address
 
     def test_get_balance(self):
         balance = self.client.get_balance()
@@ -97,7 +99,7 @@ class TestClient:
 
     def test_transfer_rune(self):
         self.client.set_gas_strategy("fast")
-        dest_addr = '0x81941E3DeEeA41b6309045ECbAFd919Db5aF6147'
+        dest_addr = self.client.w3.toChecksumAddress('0x5039c76445efcfa78d91b8974c100151634cbf2d')
         rune_balance = self.client.get_balance(contract_address=self.thor_token_address)
         assert rune_balance > 1
         receipt = self.client.transfer(dest_addr, 1, contract_address=self.thor_token_address)
@@ -105,21 +107,10 @@ class TestClient:
         amount = self.client.w3.toInt(hexstr=value)
         assert amount/10**18 == 1
 
-    # def test_write_contract(self):
-    #     old_balance = self.client.get_balance(asset='RUNE', contract_abi=self.token_abi,
-    #                                           contract_address=self.thor_token_address)
-    #     print(old_balance)
-    #     token_contract = self.client.get_contract(self.token_abi, self.thor_token_address)
-    #     print(token_contract.all_functions())
-    #     tx = {
-    #         'nonce': self.client.w3.eth.getTransactionCount(self.client.get_address()),
-    #         'value': self.client.w3.toWei(0, 'ether'),
-    #         'gas': 2000000,
-    #         'gasPrice': self.client.w3.toWei('50', 'gwei'),
-    #     }
-    #     raw_tx = token_contract.functions.giveMeRUNE().buildTransaction(tx)
-    #     print(raw_tx)
-    #     signed_tx = self.client.account.sign_transaction(raw_tx)
-    #     tx_hash = self.client.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
-    #     print(tx_hash)
-    #     pass
+    def test_write_contract(self):
+        old_balance = self.client.get_balance(contract_address=self.thor_token_address)
+        func_to_call = "giveMeRUNE"
+        self.client.set_gas_strategy("fast")
+        tx_receipt = self.client.write_contract(self.thor_token_address, func_to_call, erc20=False)
+        new_balance = self.client.get_balance(contract_address=self.thor_token_address)
+        assert new_balance > old_balance

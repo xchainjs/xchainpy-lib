@@ -13,10 +13,10 @@ class IEthereumClient:
     def get_abi(self, contract_address):
         pass
 
-    def get_contract(self, contract_address):
+    def get_contract(self, contract_address, erc20):
         pass
 
-    def write_contract(self, contract_address, function_index):
+    def write_contract(self, gas_limit, gas_price, contract_address, func_name, **kwargs):
         pass
 
     def set_gas_strategy(self, gas_strategy):
@@ -33,15 +33,18 @@ class IEthereumClient:
 
 
 class Client(IEthereumClient, IXChainClient):
+    script_dir = os.path.dirname(__file__)
+    with open(os.path.join(script_dir, "resources/ERC20"), 'r') as f:
+        erc20_abi = json.loads(f.read())["abi"]
     network = network_type = ether_api = ''
     gas_strategy = "medium"
     gas_price = None
     w3 = account = None
 
     def __init__(self,  phrase: str, network: str, network_type: str = "ropsten", ether_api: str = None) -> None:
-        """ Constructor
+        """Constructor
 
-        Client has to be initialised with mnemonic phrase, network (infura_api), network_type ("mainnet" or "ropsten")
+        Client has to be initialised with mnemonic phrase, network (infura_api token), network_type ("mainnet" or "ropsten")
         It will throw an error if an invalid phrase or network has been passed.
 
         Args:
@@ -62,7 +65,7 @@ class Client(IEthereumClient, IXChainClient):
         print(f'connected to wallet address{self.account.address}')
 
     def purge_client(self) -> None:
-        """ Purge Client
+        """Purge Client
 
         Returns:
             void
@@ -71,7 +74,7 @@ class Client(IEthereumClient, IXChainClient):
         self.w3 = self.account = None
 
     def is_connected(self) -> bool:
-        """ Check Web3 connectivity
+        """Check Web3 connectivity
 
         Returns:
             bool
@@ -80,7 +83,7 @@ class Client(IEthereumClient, IXChainClient):
         return self.w3.isConnected()
 
     def set_network(self, network: str) -> None:
-        """ Set/update the current network
+        """Set/update the current network
 
         It will throw an error if an invalid phrase or network has been passed.
 
@@ -100,7 +103,7 @@ class Client(IEthereumClient, IXChainClient):
             raise Exception("Infura API error")
 
     def get_network(self) -> str:
-        """ Get the current network
+        """Get the current network
 
         Returns:
             infura websocket api
@@ -109,7 +112,7 @@ class Client(IEthereumClient, IXChainClient):
         return self.network
 
     def validate_address(self, address: str) -> bool:
-        """ Check address validity
+        """Check address validity
 
         Args:
             address: ethereum address
@@ -121,7 +124,7 @@ class Client(IEthereumClient, IXChainClient):
         return self.w3.isAddress(address)
 
     def get_address(self) -> str:
-        """ Get current wallet address
+        """Get current wallet address
 
         Returns:
             current wallet address
@@ -130,7 +133,7 @@ class Client(IEthereumClient, IXChainClient):
         return self.account.address
 
     def set_phrase(self, phrase: str) -> str:
-        """ Set/Update a new phrase
+        """Set/Update a new phrase
 
         Args:
             phrase: A new phrase
@@ -149,18 +152,19 @@ class Client(IEthereumClient, IXChainClient):
         return self.get_address()
 
     def get_abi(self, contract_address):
-        """ Get abi description of a given contract
+        """Get abi description of a non ERC-20 contract
 
         Args:
             contract_address: contract address
 
         Returns:
-            abi description
+            abi description[json]
 
         """
-        path = f'resources/{self.network_type}/{contract_address}'
+        path = os.path.join(self.script_dir, f'resources/{self.network_type}/{contract_address}')
         if os.path.exists(path):
-            return json.loads(open(path, 'r').readline())
+            with open(path, 'r') as f:
+                return json.loads(f.read())
         else:
             if not self.ether_api:
                 raise Exception("undefined ether api token")
@@ -171,23 +175,27 @@ class Client(IEthereumClient, IXChainClient):
             r = json.loads(requests.get2json(url))
             if r["status"] != '1':
                 raise Exception("error getting abi file")
-            open(path, 'w+').write(r["result"])
-            return r["result"]
+            with open(path, 'w+') as o:
+                o.write(r["result"])
+            return json.loads(r["result"])
 
-    def get_contract(self, contract_address):
-        """ Get Contract object of given address
+    def get_contract(self, contract_address, erc20=True):
+        """Get Contract object of given address
 
         Args:
             contract_address: ethereum contract address
+            erc20: True if contract = ERC-20, False otherwise
 
         Returns:
             web3 contract object
 
         """
-        return self.w3.eth.contract(abi=self.get_abi(contract_address), address=contract_address)
+        if not erc20:
+            return self.w3.eth.contract(abi=self.get_abi(contract_address), address=contract_address)
+        return self.w3.eth.contract(abi=self.erc20_abi, address=contract_address)
 
     def get_balance(self, address=None, contract_address=None) -> float:
-        """ Get the balance of a given address
+        """Get the balance of a erc-20 token
 
         Args:
             address: By default, it will return the balance of the current wallet. (optional)
@@ -209,8 +217,8 @@ class Client(IEthereumClient, IXChainClient):
             return token_contract.functions.balanceOf(self.get_address()).call() / 10**decimal
         return self.w3.fromWei(self.w3.eth.get_balance(self.get_address()), 'ether')
 
-    def set_gas_strategy(self, gas_strategy):
-        """ Set Gas fee calculation parameter
+    def set_gas_strategy(self, gas_strategy) -> None:
+        """Set Gas fee calculation parameter
 
         fast: transaction mined within 60 seconds
         medium: transaction mined within 5 minutes
@@ -233,7 +241,7 @@ class Client(IEthereumClient, IXChainClient):
         self.gas_price = self.w3.eth.generateGasPrice()
 
     def get_fees(self):
-        """ Return Gas price using gas_strategy
+        """Return Gas price using gas_strategy
 
         Returns:
             gas price in Wei
@@ -242,7 +250,7 @@ class Client(IEthereumClient, IXChainClient):
         return self.gas_price
 
     def transfer(self, dest_addr, quantity, gas_limit=1000000, gas_price=None, contract_address=None):
-        """Transfer Asset with previous configured gas_price
+        """Transfer ERC20 token with previous configured gas_price
 
         Args:
             dest_addr: recipient address
@@ -285,8 +293,39 @@ class Client(IEthereumClient, IXChainClient):
             receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
             return receipt
 
-    def write_contract(self, contract_address, function_index):
-        pass
+    def read_contract(self, contract_address, func_to_call, erc20=True, **kwargs):
+        contract = self.get_contract(contract_address=contract_address, erc20=erc20)
+        return contract.functions[func_to_call](**kwargs).call()
+
+    def write_contract(self, contract_address, func_to_call, erc20=True, gas_limit=1000000, gas_price=None, **kwargs):
+        """Write to any contract with any argument, specify whether it's ERC20
+
+        Args:
+            contract_address: contract address to interact with
+            func_to_call: name of contract function to call
+            erc20: True if contract = ERC-20, False otherwise
+            gas_limit: 1000000 by default
+            gas_price: gas price
+            **kwargs: arguments for func_to_call
+
+        Returns:
+
+        """
+        nonce = self.w3.eth.getTransactionCount(self.get_address())
+        if not gas_price:
+            gas_price = self.gas_price
+        tx = {
+            'nonce': nonce,
+            'gas': gas_limit,
+            'gasPrice': gas_price,
+        }
+        smart_contract = self.get_contract(contract_address=contract_address, erc20=erc20)
+        contract_func = smart_contract.functions[func_to_call]
+        raw_tx = contract_func(**kwargs).buildTransaction(tx)
+        signed_tx = self.account.sign_transaction(raw_tx)
+        tx_hash = self.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
+        receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
+        return receipt
 
     def get_transaction_data(self, tx_id):
         return self.w3.eth.get_transaction(tx_id)
