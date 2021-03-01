@@ -1,4 +1,4 @@
-# `xchainpy/xchain-binance`
+# `xchainpy/xchainpy_binance`
 
 Binance Module for XChainPy Clients
 
