@@ -1,4 +1,4 @@
-# `xchainpy/xchain-bitcoin`
+# `xchainpy/xchainpy_bitcoin`
 
 Bitcoin Module for XChainPy Clients
 
