@@ -44,13 +44,15 @@ class Client(IEthereumClient, IXChainClient):
     def __init__(self,  phrase: str, network: str, network_type: str = "ropsten", ether_api: str = None) -> None:
         """Constructor
 
-        Client has to be initialised with mnemonic phrase, network (infura_api token), network_type ("mainnet" or "ropsten")
+        Client has to be initialised with mnemonic phrase, network (infura_api token), network_type ("mainnet" or "ropsten"),
+        ether_api: etherscan api token.
         It will throw an error if an invalid phrase or network has been passed.
 
         Args:
             phrase: phrase of wallet (mnemonic) will be set to the Class
             network: infura websocket api endpoint of the selected network_type
             network_type: network type can either be `mainnet` or 'ropsten'
+            ether_api: etherscan API token, used for downloading non ERC20 contract ABI
 
         Returns:
             void
@@ -62,7 +64,6 @@ class Client(IEthereumClient, IXChainClient):
         self.network_type = network_type
         self.set_network(network)
         self.set_phrase(phrase)
-        print(f'connected to wallet address{self.account.address}')
 
     def purge_client(self) -> None:
         """Purge Client
@@ -98,6 +99,8 @@ class Client(IEthereumClient, IXChainClient):
 
         """
         self.network = network
+        if self.network_type not in network:
+            raise Exception("invalid network type")
         self.w3 = Web3(WebsocketProvider(network))
         if not self.is_connected():
             raise Exception("Infura API error")
@@ -297,7 +300,7 @@ class Client(IEthereumClient, IXChainClient):
         contract = self.get_contract(contract_address=contract_address, erc20=erc20)
         return contract.functions[func_to_call](**kwargs).call()
 
-    def write_contract(self, contract_address, func_to_call, erc20=True, gas_limit=1000000, gas_price=None, **kwargs):
+    def write_contract(self, contract_address, func_to_call, *args, erc20=True, gas_limit=1000000, gas_price=None, nonce=None):
         """Write to any contract with any argument, specify whether it's ERC20
 
         Args:
@@ -307,13 +310,17 @@ class Client(IEthereumClient, IXChainClient):
             gas_limit: 1000000 by default
             gas_price: gas price
             **kwargs: arguments for func_to_call
+            nonce: provide nonce for faster execution
 
         Returns:
 
         """
-        nonce = self.w3.eth.getTransactionCount(self.get_address())
+        if not nonce:
+            nonce = self.w3.eth.getTransactionCount(self.get_address())
         if not gas_price:
             gas_price = self.gas_price
+        if not gas_price:
+            raise Exception("provide gas price or call set_gas_strategy()")
         tx = {
             'nonce': nonce,
             'gas': gas_limit,
@@ -321,11 +328,12 @@ class Client(IEthereumClient, IXChainClient):
         }
         smart_contract = self.get_contract(contract_address=contract_address, erc20=erc20)
         contract_func = smart_contract.functions[func_to_call]
-        raw_tx = contract_func(**kwargs).buildTransaction(tx)
+        raw_tx = contract_func(*args).buildTransaction(tx)
         signed_tx = self.account.sign_transaction(raw_tx)
         tx_hash = self.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
         receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
         return receipt
+        # return tx_hash
 
     def get_transaction_data(self, tx_id):
         return self.w3.eth.get_transaction(tx_id)
