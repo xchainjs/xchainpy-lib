@@ -1,5 +1,4 @@
 from mnemonic import Mnemonic
-from xchainpy.xchainpy_crypto.crypto import validate_phrase
 
 
 def generate_mnemonic(language, filename):
@@ -12,8 +11,10 @@ def generate_mnemonic(language, filename):
     :returns: test_suite
     """
     words = Mnemonic(language).generate(strength=256)
-    output = open(filename, "w")
+    output = open(filename, "w+")
     output.write(words)
     output.close()
     return words
 
+
+generate_mnemonic("english", "resources/mainnet/mnemonic")

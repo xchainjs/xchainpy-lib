@@ -100,7 +100,7 @@ class TestClient:
                                                        contract_address=self.thor_token_address)
         assert rune_balance == rune_balance_address
 
-    # def test_get_fees(self):
+    # def test_get_fees(self, test_init):
     #     self.client.set_gas_strategy("fast")
     #     fast_fee = self.client.get_fees()
     #     self.client.set_gas_strategy("medium")
@@ -108,50 +108,52 @@ class TestClient:
     #     self.client.set_gas_strategy("slow")
     #     slow_fee = self.client.get_fees()
     #     assert fast_fee >= medium_fee >= slow_fee
-    #
-    # def test_get_transaction_data(self):
-    #     data = self.client.get_transaction_data(self.test_hash)
-    #     tx_hash = self.client.w3.toHex(data["hash"])
-    #     from_addr = data["from"]
-    #     value = data["value"]
-    #     assert tx_hash == self.test_hash
-    #     assert from_addr == self.client_address
-    #     assert self.client.w3.fromWei(value, 'ether') == 3
-    #
-    # def test_get_transaction_receipt(self):
-    #     data = self.client.get_transaction_receipt(self.test_rune_transfer_hash)
-    #     value = data['logs'][0]['data']
-    #     amount = self.client.w3.toInt(hexstr=value)
-    #     assert amount/10**18 == 1
-    #
-    # def test_transfer_ethereum(self):
-    #     self.client.set_gas_strategy("fast")
-    #     assert self.client.get_balance() > 0.0001
-    #     tx_hash = self.client.transfer('0x81941E3DeEeA41b6309045ECbAFd919Db5aF6147', 0.0001)
-    #     data = self.client.get_transaction_data(tx_hash)
-    #     assert float(self.client.w3.fromWei(data["value"], 'ether')) == 0.0001
-    #
-    # def test_transfer_rune(self):
-    #     self.client.set_gas_strategy("fast")
-    #     dest_addr = self.client.w3.toChecksumAddress('0x5039c76445efcfa78d91b8974c100151634cbf2d')
-    #     rune_balance = self.client.get_balance(contract_address=self.thor_token_address)
-    #     assert rune_balance > 1
-    #     receipt = self.client.transfer(dest_addr, 1, contract_address=self.thor_token_address)
-    #     value = receipt['logs'][0]['data']
-    #     amount = self.client.w3.toInt(hexstr=value)
-    #     assert amount/10**18 == 1
-    #
-    # def test_read_contract(self):
-    #     assert self.client.read_contract(self.thor_router_address, "RUNE", False) == self.thor_token_address
-    #
-    # def test_write_contract_token(self):
+
+    def test_get_transaction_data(self, test_init):
+        data = self.client.get_transaction_data(self.test_hash)
+        tx_hash = self.client.w3.toHex(data["hash"])
+        from_addr = data["from"]
+        value = data["value"]
+        assert tx_hash == self.test_hash
+        assert from_addr == self.test_address
+        assert self.client.w3.fromWei(value, 'ether') == 3
+
+    def test_get_transaction_receipt(self, test_init):
+        data = self.client.get_transaction_receipt(self.test_rune_transfer_hash)
+        value = data['logs'][0]['data']
+        amount = self.client.w3.toInt(hexstr=value)
+        assert amount/10**18 == 1
+
+    def test_transfer_rune(self, test_init):
+        self.client.set_gas_strategy("fast")
+        dest_addr = self.client.w3.toChecksumAddress('0x5039c76445efcfa78d91b8974c100151634cbf2d')
+        rune_balance = self.client.get_balance(contract_address=self.thor_token_address)
+        assert rune_balance > 1
+        receipt = self.client.transfer(dest_addr, 1, contract_address=self.thor_token_address)
+        value = receipt['logs'][0]['data']
+        amount = self.client.w3.toInt(hexstr=value)
+        assert amount/10**18 == 1
+
+    def test_transfer_ethereum(self, test_init):
+        self.client.set_gas_strategy("fast")
+        assert self.client.get_balance() > 0.0001
+        tx_hash = self.client.transfer('0x81941E3DeEeA41b6309045ECbAFd919Db5aF6147', 0.0001)
+        data = self.client.get_transaction_data(tx_hash)
+        assert float(self.client.w3.fromWei(data["value"], 'ether')) == 0.0001
+
+    def test_read_contract(self, test_init):
+        assert self.client.read_contract(self.thor_token_address, "balanceOf", self.client.get_address()) / 10**18 \
+               == self.client.get_balance(contract_address=self.thor_token_address)
+        assert self.client.read_contract(self.thor_router_address, "RUNE", erc20=False) == self.thor_token_address
+
+    # def test_write_contract_token(self, test_init):
     #     old_balance = self.client.get_balance(contract_address=self.thor_token_address)
     #     func_to_call = "giveMeRUNE"
     #     self.client.set_gas_strategy("fast")
     #     tx_receipt = self.client.write_contract(self.thor_token_address, func_to_call, erc20=False)
     #     new_balance = self.client.get_balance(contract_address=self.thor_token_address)
     #     assert new_balance > old_balance
-    #
+
     # def test_write_contract_router(self):
     #     old_balance = self.client.get_balance(contract_address=self.thor_token_address)
     #     func_to_call = "deposit"

@@ -13,16 +13,19 @@ class IEthereumClient:
     def get_abi(self, contract_address):
         pass
 
-    def get_contract(self, contract_address, erc20):
+    def get_contract(self, contract_address, erc20=True):
         pass
 
-    def write_contract(self, gas_limit, gas_price, contract_address, func_name, **kwargs):
+    def read_contract(self, contract_address, func_to_call, *args, erc20=True):
+        pass
+
+    def write_contract(self, contract_address, func_to_call, *args, erc20=True, gas_limit=1000000, gas_price=None, nonce=None):
         pass
 
     def set_gas_strategy(self, gas_strategy):
         pass
 
-    def transfer(self, dest_addr, quantity, gas_limit, contract_address):
+    def transfer(self, dest_addr, quantity, gas_limit=1000000, gas_price=None, contract_address=None):
         pass
 
     def get_transaction_data(self, tx_id):
@@ -296,9 +299,9 @@ class Client(IEthereumClient, IXChainClient):
             receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
             return receipt
 
-    def read_contract(self, contract_address, func_to_call, erc20=True, **kwargs):
+    def read_contract(self, contract_address, func_to_call, *args, erc20=True):
         contract = self.get_contract(contract_address=contract_address, erc20=erc20)
-        return contract.functions[func_to_call](**kwargs).call()
+        return contract.functions[func_to_call](*args).call()
 
     def write_contract(self, contract_address, func_to_call, *args, erc20=True, gas_limit=1000000, gas_price=None, nonce=None):
         """Write to any contract with any argument, specify whether it's ERC20
