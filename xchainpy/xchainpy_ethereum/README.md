@@ -9,7 +9,9 @@ Ethereum Module for XChainPy Clients
 Following dependencies have to be installed into your project
 
 ```
-ethereum-lib
+faster-than-requests==20.10.19
+web3==5.16.0
+websockets==8.1
 ```
 
 ## Service Providers
