@@ -70,7 +70,7 @@ get_balance(address : str = None, asset: str = None) -> Balance
 
 Example of third-party service queries to get balances:
 ```
-https://api.blockchair.com/bitcoin/addresses/balances?addresses=34xp4vRoCGJym3xR7yCVPFHoCNxv4Twseo
+https://sochain.com/api/v2/get_address_balance/BTCTEST/tb1q2pkall6rf6v6j0cvpady05xhy37erndvku08wp
 https://api.ethplorer.io/getAddressInfo/0xb00E81207bcDA63c9E290E0b748252418818c869?apiKey=freekey
 https://dex.binance.org/api/v1/account/bnb1jxfh2g85q3v0tdq56fnevx6xcxtcnhtsmcu64m
 ```
@@ -143,9 +143,9 @@ get_transactions(params: TxHistoryParams):{total : str , tx:list}
 Example of third party services to help:
 ```
 // get UTXOS for address
-https://api.blockchair.com/bitcoin/outputs?recipient=34xp4vRoCGJym3xR7yCVPFHoCNxv4Twseo
-// get tx details for each UTXO
-https://api.blockchair.com/bitcoin/dashboards/transactions/ff0bd969cce99b8d8086e452d7b63167fc178680fee796fc742cb14a9a6ef929
+https://sochain.com/api/v2/get_tx_unspent/BTC/34xp4vRoCGJym3xR7yCVPFHoCNxv4Twseo
+// get tx details
+https://sochain.com/api/v2/get_tx/BTC/ff0bd969cce99b8d8086e452d7b63167fc178680fee796fc742cb14a9a6ef929
 
 https://api.ethplorer.io/getAddressTransactions/0xb297cacf0f91c86dd9d2fb47c6d12783121ab780?apiKey=freekey
 https://dex.binance.org/api/v1/transactions?address=bnb1jxfh2g85q3v0tdq56fnevx6xcxtcnhtsmcu64m
@@ -197,8 +197,9 @@ The fastest fee rate should be guaranteed next block (1.5x Fast), fast should be
 * Average (target of 2-3 blocks)
 
 Third party services:
-Bitcoin - returns next block feeRate (fast). Use multiples of this to extrapolate to Fastest/Average.
-https://api.blockchair.com/bitcoin/stats 
+https://bitcoinfees.earn.com/api/v1/fees/recommended
+for more information about it go to https://bitcoinfees.earn.com/api
+
 
 Ethereum - returns fastest/fast/average
 https://ethgasstation.info/api/ethgasAPI.json?api-key=XXAPI_Key_HereXXX
@@ -218,7 +219,9 @@ The fee should always be *rate*, which is units per transaction size. The size s
 
 **Broadcast URLs**
 ```
-https://api.blockchair.com/{:chain}/push/transaction
+https://sochain.com/api/v2/send_tx/BTC
+with body : `tx_hex:<TX_HEX>`
+
 https://dex.binance.org/api/v1/broadcast
 ```
 
