@@ -64,6 +64,40 @@ Returns the balance of an address.
 * Optional asset can be passed, in which the query will be specific to that asset, such as ERC-20 token. 
 * Returns an array of assets and amounts, with assets in chain notation `CHAIN.SYMBOL-ID`
 
+Balance model :
+```python
+# Defined in xchainpy-client/models/tx_types.ts
+class Balance:
+    _asset = None # Asset
+    _amount = 0
+
+    def __init__(self, asset, amount):
+        """
+        :param asset: asset type
+        :type asset: Asset
+        :param amount: amount 
+        :type amount: str
+        """
+        self._asset = asset
+        self._amount = amount
+
+    @property
+    def asset(self):
+        return self._asset
+
+    @asset.setter
+    def asset(self, asset):
+        self._asset = asset
+
+    @property
+    def amount(self):
+        return self._amount
+
+    @amount.setter
+    def amount(self, amount):
+        self._amount = amount
+```
+
 ```python
 get_balance(address : str = None, asset: str = None) -> Balance
 ```
@@ -182,6 +216,119 @@ Example of return:
 ---- 
 
 # Transactions
+
+##models
+All models defined in xchainpy-client/models/tx_types.ts
+
+TX model:
+```python
+class TX:
+    def __init__(self, asset: Asset, tx_froms, tx_tos, tx_date, tx_type:str, tx_hash:str):
+        self._asset = asset
+        self._tx_from = tx_froms # list of "to" txs. BNC will have one `TxFrom` only, `BTC` might have many transactions going "in" (based on UTXO)
+        self._tx_to = tx_tos # list of "to" transactions. BNC will have one `TxTo` only, `BTC` might have many transactions going "out" (based on UTXO)
+        self._tx_date = tx_date
+        self._tx_type = tx_type
+        self._tx_hash = tx_hash
+
+    @property
+    def asset(self):
+        return self._asset
+
+    @asset.setter
+    def asset(self, asset):
+        self._asset = asset
+
+    @property
+    def tx_from(self):
+        return self._tx_from
+
+    @tx_from.setter
+    def tx_from(self, tx_from):
+        self._tx_from = tx_from
+
+    @property
+    def tx_to(self):
+        return self._tx_to
+
+    @tx_to.setter
+    def tx_to(self, tx_to):
+        self._tx_to = tx_to
+
+    @property
+    def tx_date(self):
+        return self._tx_date
+
+    @tx_date.setter
+    def tx_date(self, tx_date):
+        self._tx_date = tx_date
+
+    @property
+    def tx_type(self):
+        return self._tx_type
+
+    @tx_type.setter
+    def tx_type(self, tx_type):
+        self._tx_type = tx_type
+
+    @property
+    def tx_hash(self):
+        return self._tx_hash
+
+    @tx_hash.setter
+    def tx_hash(self, tx_hash):
+        self._tx_hash = tx_hash
+```
+
+TX_to model : 
+```python
+class TxTo:
+    def __init__(self, address, amount):
+        self._address = address
+        self._amount = amount
+
+    @property
+    def address(self):
+        return self._address
+
+    @address.setter
+    def address(self, address):
+        self._address = address
+
+
+    @property
+    def amount(self):
+        return self._amount
+
+    @amount.setter
+    def amount(self, amount):
+        self._amount = amount
+```
+
+TX_from model:
+```python
+class TxFrom:
+    def __init__(self, address, amount):
+        self._address = address
+        self._amount = amount
+
+    @property
+    def address(self):
+        return self._address
+
+    @address.setter
+    def address(self, address):
+        self._address = address
+
+
+    @property
+    def amount(self):
+        return self._amount
+
+    @amount.setter
+    def amount(self, amount):
+        self._amount = amount
+```
 
 ## Get Fees
 This function calculates and returns the fee object in a generalised way for a simple transfer function. 
