@@ -66,7 +66,7 @@ Returns the balance of an address.
 
 Balance model :
 ```python
-# Defined in xchainpy-client/models/tx_types.ts
+# Defined in xchainpy-client/models/balance.py
 class Balance:
     _asset = None # Asset
     _amount = 0
@@ -121,7 +121,7 @@ Example of returned array:
 ## Get Transactions
 Gets a simplied array of recent transactions for an address. 
 ```python
-# Defined in xchainpy-client/models/tx_types.ts
+# Defined in xchainpy-client/models/tx_types.py
  class TxHistoryParams:
     def __init__(self, address:str, offset:int=None, limit:int=None, start_time=None, asset:Asset=None):
         self._address = address
@@ -217,8 +217,7 @@ Example of return:
 
 # Transactions
 
-##models
-All models defined in xchainpy-client/models/tx_types.ts
+All models defined in xchainpy-client/models/tx_types.py
 
 TX model:
 ```python
@@ -367,7 +366,7 @@ The fee should always be *rate*, which is units per transaction size. The size s
 **Broadcast URLs**
 ```
 https://sochain.com/api/v2/send_tx/BTC
-with body : `tx_hex:<TX_HEX>`
+with body : {"tx_hex":"<TX_HEX>"}
 
 https://dex.binance.org/api/v1/broadcast
 ```
