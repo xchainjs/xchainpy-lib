@@ -10,7 +10,7 @@ setup(
     packages=['xchainpy_litecoin'],
     version='0.1',
     license='MIT',
-    description='XCHAIN-CRYPTO encrypts a master phrase to a keystore',
+    description='Litecoin Module for XChainPy Clients',
     author='THORChain',
     author_email='',
     url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_litecoin',
