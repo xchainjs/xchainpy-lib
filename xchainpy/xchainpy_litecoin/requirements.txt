@@ -1,0 +1,3 @@
+http3==0.6.7
+bitcoinlib==0.5.2
+pytest==6.2.2
