@@ -2,6 +2,9 @@ from setuptools import setup
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+
 setup(
     name='xchainpy_client',
     packages=['xchainpy_client'],
@@ -14,7 +17,7 @@ setup(
     author_email='',
     url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_client',
     keywords=["THORChain", "XChainpy","xchainpy_client"],
-    install_requires=[],
+    install_requires=required,
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',
