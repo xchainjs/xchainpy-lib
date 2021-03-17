@@ -1,5 +1,5 @@
-from xchainpy.xchainpy_crypto.models.KdfParams import KdfParams
-from xchainpy.xchainpy_crypto.models.CipherParams import CipherParams
+from .KdfParams import KdfParams
+from .CipherParams import CipherParams
 
 
 class CryptoStruct:

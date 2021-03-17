@@ -1,15 +1,15 @@
 from typing import Counter
-from xchainpy.xchainpy_crypto.models.Keystore import Keystore
-from xchainpy.xchainpy_crypto.models.KdfParams import KdfParams
+from .models.Keystore import Keystore
+from .models.KdfParams import KdfParams
 from bip_utils import Bip39MnemonicValidator
 from Crypto.Random import get_random_bytes
 from Crypto.Hash import SHA256
 from Crypto.Hash import BLAKE2b
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
-from xchainpy.xchainpy_crypto.models.CryptoStruct import CryptoStruct
-from xchainpy.xchainpy_crypto.models.CipherParams import CipherParams
-import xchainpy.xchainpy_crypto.utils as utils
+from .models.CryptoStruct import CryptoStruct
+from .models.CipherParams import CipherParams
+from . import utils
 import uuid
 
 CIPHER = AES.MODE_CTR

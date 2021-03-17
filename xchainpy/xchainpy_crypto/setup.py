@@ -3,6 +3,9 @@ from setuptools import setup
 with open('requirements.txt') as f:
     required = f.read().splitlines()
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 
 setup(
     name='xchainpy_crypto',
@@ -11,9 +14,9 @@ setup(
     license='MIT',
     description='XCHAIN-CRYPTO encrypts a master phrase to a keystore',
     author='THORChain',
-    author_email='',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url='https://github.com/xchainjs/xchainpy-lib',
-    download_url='https://github.com/xchainjs/xchainpy-lib/archive/v_01.tar.gz',
     keywords=["THORChain", "XChainpy","XChainpy_crypto"],
     install_requires=required,
     classifiers=[

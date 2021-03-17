@@ -1,4 +1,4 @@
-from xchainpy.xchainpy_crypto.models.CryptoStruct import CryptoStruct
+from .CryptoStruct import CryptoStruct
 import json
 
 
