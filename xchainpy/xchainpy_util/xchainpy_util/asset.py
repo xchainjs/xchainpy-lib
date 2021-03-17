@@ -1,4 +1,4 @@
-from xchainpy.xchainpy_util.chain import is_chain
+from  .chain import is_chain
 
 class Asset:
     _chain = None # "BNB" | "BTC" | "ETH" | "THOR" | "GAIA" | "POLKA"
