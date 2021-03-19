@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name='xchainpy',
+    name='xchainpy_binance',
     packages=['xchainpy_binance'],
     version='0.1',
     license='MIT',

@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='xchainpy_util',
     packages=['xchainpy_util'],
-    version='0.1.2',
+    version='0.1.3',
     license='MIT',
     description='Utitity helpers for XChain clients',
     long_description=long_description,
