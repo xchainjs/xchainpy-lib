@@ -1,6 +1,6 @@
-from xchainpy.xchainpy_util.asset import Asset
-from xchainpy.xchainpy_client.models.balance import Balance
-from xchainpy.xchainpy_util.chain import BNBCHAIN
+from xhchainpy-util import Asset
+from xchainpy-client.models.balance import Balance
+from xchainpy-util.chain import BNBCHAIN
 
 class BinanceBalance(Balance):
 
