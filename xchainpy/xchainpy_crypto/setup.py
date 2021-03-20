@@ -16,7 +16,7 @@ setup(
     author='THORChain',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url='https://github.com/xchainjs/xchainpy-lib',
+    url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_crypto',
     keywords=["THORChain", "XChainpy","XChainpy_crypto"],
     install_requires=required,
     classifiers=[
