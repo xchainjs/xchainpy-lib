@@ -10,13 +10,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='xchainpy_crypto',
     packages=['xchainpy_crypto'],
-    version='0.1',
+    version='0.1.1',
     license='MIT',
     description='XCHAIN-CRYPTO encrypts a master phrase to a keystore',
     author='THORChain',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url='https://github.com/xchainjs/xchainpy-lib',
+    url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_crypto',
     keywords=["THORChain", "XChainpy","XChainpy_crypto"],
     install_requires=required,
     classifiers=[

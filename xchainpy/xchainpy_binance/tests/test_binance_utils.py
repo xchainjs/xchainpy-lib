@@ -1,5 +1,5 @@
 import pytest
-from xchainpy.xchainpy_binance import utils
+from xchainpy_binance import utils
 
 
 class TestBinanceUtils:

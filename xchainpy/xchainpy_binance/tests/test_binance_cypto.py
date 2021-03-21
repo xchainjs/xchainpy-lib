@@ -1,5 +1,5 @@
 import pytest
-from xchainpy.xchainpy_binance import crypto
+from xchainpy_binance import crypto
 
 class TestBinanceCrypto:
 

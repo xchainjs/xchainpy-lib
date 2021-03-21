@@ -4,3 +4,6 @@ mnemonic==0.19
 python_binance_chain==0.1.20
 pywallet==0.1.0
 binance_chain==1.0.0
+xchainpy_util==0.1.4
+xchainpy_client==0.1
+xchainpy_crypto==.0.1.1

@@ -1,6 +1,6 @@
 from Crypto.Cipher import AES
 import pytest
-from xchainpy.xchainpy_crypto import crypto
+from xchainpy_crypto import crypto
 
 
 class TestCrypto:
