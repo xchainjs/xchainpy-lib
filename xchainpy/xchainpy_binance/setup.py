@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open('requirements.txt') as f:
     required = f.read().splitlines()
@@ -8,11 +8,12 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='xchainpy_binance',
-    packages=['xchainpy_binance'],
-    version='0.1',
+    packages=find_packages(),
+    version='0.1.1',
     license='MIT',
     description='Custom Binance client and utilities used by XChainJS clients',
     author='THORChain',
+    author_email='',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_binance',
