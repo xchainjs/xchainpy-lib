@@ -1,6 +1,6 @@
 import pytest
-from xchainpy.xchainpy_bitcoin import utils
-from xchainpy.xchainpy_bitcoin.models import common
+from xchainpy_bitcoin import utils
+from xchainpy_bitcoin.models import common
 
 
 class TestBitcoinUtils:
