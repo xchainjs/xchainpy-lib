@@ -3,18 +3,21 @@ from setuptools import setup
 with open('requirements.txt') as f:
     required = f.read().splitlines()
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
 
 setup(
     name='xchainpy_bitcoin',
-    packages=['xchainpy_biction'],
-    version='0.1',
+    packages=['xchainpy_bitcoin'],
+    version='0.1.1',
     license='MIT',
     description='Bitcoin Module for XChainPy Clients',
     author='THORChain',
     author_email='',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url='https://github.com/xchainjs/xchainpy-lib',
-    download_url='https://github.com/xchainjs/xchainpy-lib/archive/v_01.tar.gz',
-    keywords=["THORChain", "XChainpy","XChainpy_bitcoin"],
+    keywords=["THORChain", "XChainpy","XChainpy_bitcoin","BTC","Bitcoin"],
     install_requires=required,
     classifiers=[
         'Intended Audience :: Developers',

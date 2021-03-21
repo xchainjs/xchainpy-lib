@@ -1,14 +1,14 @@
 from bitcoinlib.keys import Address
 from typing import List, Optional, Union
 import asyncio
-from xchainpy.xchainpy_bitcoin.const import MIN_TX_FEE
-from xchainpy.xchainpy_bitcoin.models.common import DerivePath, UTXO
+from .const import MIN_TX_FEE
+from .models.common import DerivePath, UTXO
 from bitcoinlib.services.services import *
-from xchainpy.xchainpy_util.asset import Asset
-from xchainpy.xchainpy_client.models.balance import Balance
-from xchainpy.xchainpy_util.chain import BTCCHAIN
-from xchainpy.xchainpy_client.models import tx_types
-from xchainpy.xchainpy_bitcoin import sochain_api
+from xchainpy_util.asset import Asset
+from xchainpy_client.models.balance import Balance
+from xchainpy_util.chain import BTCCHAIN
+from xchainpy_client.models import tx_types
+from . import sochain_api
 import datetime
 import binascii
 

@@ -1,15 +1,15 @@
 
 import asyncio
-from xchainpy.xchainpy_crypto.crypto import validate_phrase
-from xchainpy.xchainpy_client.interface import IXChainClient
-from xchainpy.xchainpy_bitcoin import utils
+from xchainpy_crypto.crypto import validate_phrase
+from xchainpy_client.interface import IXChainClient
+from . import utils
 
 from bitcoinlib.wallets import Wallet, wallet_delete_if_exists
 from bitcoinlib.services.services import Service
-from xchainpy.xchainpy_client.models import tx_types
-from xchainpy.xchainpy_bitcoin import sochain_api
-from xchainpy.xchainpy_client.models.balance import Balance
-from xchainpy.xchainpy_util.asset import Asset
+from xchainpy_client.models import tx_types
+from . import sochain_api
+from xchainpy_client.models.balance import Balance
+from xchainpy_util.asset import Asset
 
 
 class IBitcoinClient():
