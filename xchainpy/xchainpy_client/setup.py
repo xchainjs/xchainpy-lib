@@ -1,4 +1,5 @@
-from setuptools import setup
+from setuptools import setup, find_packages
+
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
@@ -8,7 +9,7 @@ with open('requirements.txt') as f:
 setup(
     name='xchainpy_client',
     packages=['xchainpy_client'],
-    version='0.1',
+    version='0.1.1',
     license='MIT',
     description='A specification for a generalised interface for crypto wallets clients, to be used by XChainPY implementations. The client should not have any functionality to generate a key, instead, the `asgardex-crypto` library should be used to ensure cross-chain com',
     long_description=long_description,
