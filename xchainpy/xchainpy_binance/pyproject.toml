@@ -1,0 +1,13 @@
+[build-system]
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "xchainpy_binance"
+dist-name = "xchainpy_binance"
+author = "THORChain"
+home-page = "https://github.com/xchainjs/xchainpy-lib"
+classifiers = [ "License :: OSI Approved :: MIT License",]
+description-file = "README.md"
+requires = [
+]
