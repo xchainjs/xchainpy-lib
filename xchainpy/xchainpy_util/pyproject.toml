@@ -1,12 +1,6 @@
 [build-system]
-requires = ["flit_core >=2,<4"]
-build-backend = "flit_core.buildapi"
-
-[tool.flit.metadata]
-module = "xchainpy_util"
-dist-name = "xchainpy_util"
-author = "THORchain"
-home-page = "https://github.com/xchainjs/xchainpy-lib"
-classifiers = [ "License :: OSI Approved :: MIT License",]
-description-file = "README.md"
-
+requires = [
+    "setuptools>=42",
+    "wheel"
+]
+build-backend = "setuptools.build_meta" 
