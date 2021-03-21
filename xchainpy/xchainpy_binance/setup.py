@@ -11,7 +11,7 @@ setup(
     packages=find_packages(),
     version='0.1.1',
     license='MIT',
-    description='Custom Binance client and utilities used by XChainJS clients',
+    description='Custom Binance client and utilities used by XChainPY clients',
     author='THORChain',
     author_email='',
     long_description=long_description,
