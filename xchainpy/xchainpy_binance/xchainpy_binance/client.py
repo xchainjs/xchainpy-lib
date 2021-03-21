@@ -8,14 +8,14 @@ from typing import Optional
 from datetime import datetime
 import time
 
-from xchainpy.xchainpy_client import interface
-from xchainpy.xchainpy_client.models import tx_types
-from xchainpy.xchainpy_crypto import crypto as xchainpy_crypto
-from xchainpy.xchainpy_binance import crypto
-from xchainpy.xchainpy_binance import utils
-from xchainpy.xchainpy_util.asset import Asset
-from xchainpy.xchainpy_binance.models.balance import BinanceBalance
-from xchainpy.xchainpy_binance.models.coin import Coin
+from xchainpy_client import interface
+from xchainpy_client.models import tx_types
+from xchainpy_crypto import crypto as xchainpy_crypto
+from xchainpy_binance import crypto
+from xchainpy_binance import utils
+from xchainpy_util.asset import Asset
+from xchainpy_binance.models.balance import BinanceBalance
+from xchainpy_binance.models.coin import Coin
 from binance_chain.constants import TransactionSide, TransactionType
 
 class IBinanceClient():
@@ -253,7 +253,7 @@ class Client(interface.IXChainClient, IBinanceClient):
         """
         try:
             transfer_fee = await self.get_transfer_fee()
-            single_tx_fee = transfer_fee['fixed_fee_params']['fee'] * 10 ** -8
+            single_tx_fee = round(transfer_fee['fixed_fee_params']['fee'] * 10 ** -8, 8)
             return {
                 'fast': single_tx_fee,
                 'fastest': single_tx_fee,
