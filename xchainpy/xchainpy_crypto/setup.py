@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open('requirements.txt') as f:
     required = f.read().splitlines()
@@ -9,8 +9,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='xchainpy_crypto',
-    packages=['xchainpy_crypto'],
-    version='0.1.1',
+    packages=find_packages(),
+    version='0.1.2',
     license='MIT',
     description='XCHAIN-CRYPTO encrypts a master phrase to a keystore',
     author='THORChain',
