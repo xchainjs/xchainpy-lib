@@ -1,8 +1,8 @@
 import pytest
-from xchainpy.xchainpy_bitcoin.client import Client
-from xchainpy.xchainpy_util.asset import Asset
-from xchainpy.xchainpy_client.models import tx_types
-from xchainpy.xchainpy_bitcoin.const import *
+from xchainpy_bitcoin.client import Client
+from xchainpy_util.asset import Asset
+from xchainpy_client.models import tx_types
+from xchainpy_bitcoin.const import *
 
 
 class TestBitcoinClient:

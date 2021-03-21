@@ -11,7 +11,7 @@ Bitcoin Module for XChainPy Clients
 Following dependencies have to be installed into your project
 
 ```
-bitcoinlib
+bitcoinlib , http3 , xchainpy_client , xchainpy_crypto , xchainpy_util
 ```
 
 ## Service Providers
@@ -40,6 +40,6 @@ These packages needed to run tests:
 How to run test ?
 
 ```bash
-$ python -m pytest xchainpy/xchainpy_bitcoin/test/test_bitcoin_clients.py
+$ python -m pytest xchainpy/xchainpy_bitcoin/tests/test_bitcoin_clients.py
 ```
 
