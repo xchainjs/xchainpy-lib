@@ -2,13 +2,13 @@ import datetime
 import bitcash
 
 from cashaddress import convert
-from xchainpy.xchainpy_bitcoincash import haskoin_api
+from . import haskoin_api
 
 from bitcash import transaction, PrivateKey, PrivateKeyTestnet
-from xchainpy.xchainpy_bitcoincash.models.api_types import Transaction, TxUnspent
-from xchainpy.xchainpy_util.asset import Asset
-from xchainpy.xchainpy_util.chain import BITCOINCASH
-from xchainpy.xchainpy_client.models import tx_types
+from .models.api_types import Transaction, TxUnspent
+from xchainpy_util.asset import Asset
+from xchainpy_util.chain import BITCOINCASH
+from xchainpy_client.models import tx_types
 
 
 BCH_DECIMAL = 8

@@ -1,9 +1,8 @@
 from typing import List
-from xchainpy.xchainpy_bitcoincash import utils
-from xchainpy.xchainpy_bitcoincash.models.api_types import AddressBalance, Block, Transaction, TransactionInput, TransactionOutput, TxUnspent
+from . import utils
+from .models.api_types import AddressBalance, Block, Transaction, TransactionInput, TransactionOutput, TxUnspent
 import http3
 import json
-import xchainpy.xchainpy_bitcoincash.models
 
 
 async def get_account(client_url: str, address: str) -> AddressBalance:
