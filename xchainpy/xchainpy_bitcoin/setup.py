@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open('requirements.txt') as f:
     required = f.read().splitlines()
@@ -8,8 +8,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='xchainpy_bitcoin',
-    packages=['xchainpy_bitcoin'],
-    version='0.1.1',
+    packages=find_packages(),
+    version='0.1.2',
     license='MIT',
     description='Bitcoin Module for XChainPy Clients',
     author='THORChain',
