@@ -1,12 +1,8 @@
-# from bitcash.format import bytes_to_wif
-# from bitcash.wallet import wif_to_key
-# from bitcoinlib.wallets import Wallet
-from xchainpy.xchainpy_bitcoincash.utils import get_derive_path
+from .utils import get_derive_path
 from mnemonic.mnemonic import Mnemonic
 import binascii
 from bip_utils import Bip32, Bip32Utils
 
-# from pywallet.utils.bip32 import Wallet as Bip32Wallet
 from bitcash import Key, PrivateKeyTestnet
 
 def mnemonic_to_seed(mnemonic, pass_phrase = ''):

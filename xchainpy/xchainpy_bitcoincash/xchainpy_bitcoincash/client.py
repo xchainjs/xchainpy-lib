@@ -1,14 +1,14 @@
-from xchainpy.xchainpy_util.asset import Asset
-from xchainpy.xchainpy_client.models.balance import Balance
-from xchainpy.xchainpy_bitcoincash import haskoin_api
+from xchainpy_util.asset import Asset
+from xchainpy_client.models.balance import Balance
+from . import haskoin_api
 from bitcash.wallet import Key, PrivateKeyTestnet
 from cashaddress import convert
 from cashaddress.convert import Address
-from xchainpy.xchainpy_bitcoincash.crypto import mnemonic_to_private_key, private_key_to_address
+from .crypto import mnemonic_to_private_key, private_key_to_address
 from mnemonic.mnemonic import Mnemonic
-from xchainpy.xchainpy_crypto.crypto import validate_phrase
-from xchainpy.xchainpy_bitcoincash import utils
-from xchainpy.xchainpy_client.interface import IXChainClient
+from xchainpy_crypto.crypto import validate_phrase
+from . import utils
+from xchainpy_client.interface import IXChainClient
 from bitcash import transaction, PrivateKey, PrivateKeyTestnet, network
 
 class IBitcoinCashClient():

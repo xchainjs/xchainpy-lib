@@ -1,6 +1,6 @@
 import pytest
-from xchainpy.xchainpy_bitcoincash.client import Client
-from xchainpy.xchainpy_util.asset import Asset
+from xchainpy_bitcoincash.client import Client
+from xchainpy_util.asset import Asset
 
 
 class TestBitcoincashClient:

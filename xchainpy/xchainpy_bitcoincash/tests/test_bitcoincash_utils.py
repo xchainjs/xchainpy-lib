@@ -1,5 +1,5 @@
 import pytest
-from xchainpy.xchainpy_bitcoincash import utils
+from xchainpy_bitcoincash import utils
 
 class TestBitcoinCashUtils:
     memo = 'SWAP:THOR.RUNE'

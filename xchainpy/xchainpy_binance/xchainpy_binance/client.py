@@ -11,11 +11,11 @@ import time
 from xchainpy_client import interface
 from xchainpy_client.models import tx_types
 from xchainpy_crypto import crypto as xchainpy_crypto
-from xchainpy_binance import crypto
-from xchainpy_binance import utils
+from . import crypto
+from . import utils
 from xchainpy_util.asset import Asset
-from xchainpy_binance.models.balance import BinanceBalance
-from xchainpy_binance.models.coin import Coin
+from .models.balance import BinanceBalance
+from .models.coin import Coin
 from binance_chain.constants import TransactionSide, TransactionType
 
 class IBinanceClient():
