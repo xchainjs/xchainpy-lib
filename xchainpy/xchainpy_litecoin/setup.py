@@ -1,20 +1,22 @@
-  
-from setuptools import setup
+from setuptools import setup , find_packages
 
 with open('requirements.txt') as f:
     required = f.read().splitlines()
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
 
 setup(
     name='xchainpy_litecoin',
-    packages=['xchainpy_litecoin'],
+    packages=find_packages(),
     version='0.1',
     license='MIT',
     description='Litecoin Module for XChainPy Clients',
     author='THORChain',
     author_email='',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_litecoin',
-    download_url='https://github.com/xchainjs/xchainpy-lib/archive/v_01.tar.gz',
     keywords=["THORChain", "XChainpy","xchainpy_litecoin"],
     install_requires=required,
     classifiers=[

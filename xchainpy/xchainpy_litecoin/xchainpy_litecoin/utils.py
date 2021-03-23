@@ -3,11 +3,11 @@ import binascii
 from typing import List, Optional, Union
 from bitcoinlib.transactions import Transaction
 
-from xchainpy.xchainpy_client.models import tx_types
-from xchainpy.xchainpy_litecoin.models.common import DerivePath, UTXO
-from xchainpy.xchainpy_litecoin import sochain_api
-from xchainpy.xchainpy_util.asset import Asset
-from xchainpy.xchainpy_util.chain import LTCCHAIN
+from xchainpy_client.models import tx_types
+from .models.common import DerivePath, UTXO
+from . import sochain_api
+from xchainpy_util.asset import Asset
+from xchainpy_util.chain import LTCCHAIN
 import datetime
 
 

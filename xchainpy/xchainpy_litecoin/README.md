@@ -11,7 +11,7 @@ Litecoin Module for XChainPy Clients
 Following dependencies have to be installed into your project
 
 ```
-bitcoinlib
+bitcoinlib , xchainpy_client , xchainpy_crypto , xchainpy_util , http3
 ```
 
 ## Service Providers
@@ -42,6 +42,6 @@ These packages needed to run tests:
 How to run test ?
 
 ```bash
-$ python -m pytest xchainpy/xchainpy_litecoin/test/test_litecoin_clients.py
+$ python -m pytest xchainpy/xchainpy_litecoin/tests/test_litecoin_clients.py
 ```
 
