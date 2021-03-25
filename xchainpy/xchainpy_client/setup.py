@@ -9,7 +9,7 @@ with open('requirements.txt') as f:
 setup(
     name='xchainpy_client',
     packages=find_packages(),
-    version='0.1.2',
+    version='0.1.3',
     license='MIT',
     description='A specification for a generalised interface for crypto wallets clients, to be used by XChainPY implementations. The client should not have any functionality to generate a key, instead, the `asgardex-crypto` library should be used to ensure cross-chain com',
     long_description=long_description,
