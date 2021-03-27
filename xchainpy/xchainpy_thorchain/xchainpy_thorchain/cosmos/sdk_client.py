@@ -9,7 +9,7 @@ import http3
 import json
 import base64
 
-from xchainpy.xchainpy_thorchain import utils
+from .. import utils
 class CosmosSDKClient:
     server = chain_id = prefix = derive_path = ''
 

@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='xchainpy_litecoin',
     packages=find_packages(),
-    version='0.1',
+    version='0.1.1',
     license='MIT',
     description='Litecoin Module for XChainPy Clients',
     author='THORChain',

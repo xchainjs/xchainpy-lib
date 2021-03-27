@@ -4,15 +4,14 @@ from typing import Optional
 from datetime import datetime
 import time
 
-from xchainpy.xchainpy_client import interface
-from xchainpy.xchainpy_client.models import tx_types
-from xchainpy.xchainpy_crypto import crypto as xchainpy_crypto
-from xchainpy.xchainpy_util.asset import Asset
-from xchainpy.xchainpy_thorchain import utils
-from xchainpy.xchainpy_thorchain import crypto
+from xchainpy_client import interface
+from xchainpy_client.models import tx_types
+from xchainpy_crypto import crypto as xchainpy_crypto
+from xchainpy_util.asset import Asset
+from . import utils
+from . import crypto
 
-from xchainpy.xchainpy_thorchain.cosmos.sdk_client import CosmosSDKClient
-import electrumsv_secp256k1
+from .cosmos.sdk_client import CosmosSDKClient
 
 
 class IThorchainClient():
