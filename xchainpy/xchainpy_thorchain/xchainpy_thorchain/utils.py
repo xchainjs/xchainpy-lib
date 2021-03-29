@@ -1,7 +1,7 @@
-from xchainpy.xchainpy_util.asset import Asset
-from xchainpy.xchainpy_client.models.balance import Balance
-from xchainpy.xchainpy_util.chain import THORCHAIN
-from xchainpy.xchainpy_client.models import tx_types
+from xchainpy_util.asset import Asset
+from xchainpy_client.models.balance import Balance
+from xchainpy_util.chain import THORCHAIN
+from xchainpy_client.models import tx_types
 
 DECIMAL = 8
 DEFAULT_GAS_VALUE = '10000000'
