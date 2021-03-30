@@ -1,5 +1,6 @@
 import pytest
 from xchainpy_binance import crypto
+from py_binance_chain.environment import BinanceEnvironment
 
 class TestBinanceCrypto:
 
@@ -9,12 +10,13 @@ class TestBinanceCrypto:
     private_key = 'f995100f54f43f8e7b5e4e64ccc797df7d05db16ee76a39df38d5d5f2c526226'
     public_key = b'\x03>\x98\xf7\xfd\xc3\x0c\x89r&\xec\xd1\x05\xc6\xe4\xe6i\xbb\xe9-L\x83O\x0b\x84\x04\xe7\xea\xd6\x156\x16\xbc'
     testnetaddress = 'tbnb1zd87q9dywg3nu7z38mxdcxpw8hssrfp9htcrvj'
+    env = BinanceEnvironment.get_testnet_env()
 
     def test_mnemonic_to_seed(self):
         assert crypto.mnemonic_to_seed(self.phrase) == self.seed
 
     def test_mnemonic_to_private_key(self):
-        assert crypto.mnemonic_to_private_key(self.phrase) == self.private_key
+        assert crypto.mnemonic_to_private_key(self.phrase, self.env) == self.private_key
 
     def test_private_key_to_public_key(self):
         assert crypto.private_key_to_public_key(self.private_key) == self.public_key
