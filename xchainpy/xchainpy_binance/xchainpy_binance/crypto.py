@@ -1,9 +1,9 @@
 from secp256k1 import PrivateKey
 from mnemonic import Mnemonic
 # from pywallet.utils.bip32 import Wallet as Bip32Wallet
-from binance_chain.utils.segwit_addr import address_from_public_key, decode_address, bech32_decode
-from binance_chain.environment import BinanceEnvironment
-from binance_chain.wallet import Wallet
+from py_binance_chain.utils.segwit_addr import address_from_public_key, decode_address, bech32_decode
+from py_binance_chain.environment import BinanceEnvironment
+from py_binance_chain.wallet import Wallet
 
 HD_PATH = "44'/714'/0'/0/0"
 DECODED_ADDRESS_LEN = 20
@@ -33,7 +33,7 @@ def mnemonic_to_private_key(mnemonic, env, pass_phrase = ''):
     wallet = Wallet.create_wallet_from_mnemonic(mnemonic, env)
     private_key = wallet.private_key
     return private_key
-    
+
 def private_key_to_public_key(private_key):
     """Convert a private key to a public key
 

@@ -1,6 +1,6 @@
 import pytest
 from xchainpy_binance import crypto
-from binance_chain.environment import BinanceEnvironment
+from py_binance_chain.environment import BinanceEnvironment
 
 class TestBinanceCrypto:
 

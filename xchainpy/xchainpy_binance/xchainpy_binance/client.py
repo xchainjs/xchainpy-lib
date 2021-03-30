@@ -1,9 +1,9 @@
 import asyncio
-from binance_chain.http import AsyncHttpApiClient
-from binance_chain.constants import KlineInterval
-from binance_chain.environment import BinanceEnvironment
-from binance_chain.messages import TransferMsg, Transfer, MultiTransferMsg
-from binance_chain.wallet import Wallet
+from py_binance_chain.http import AsyncHttpApiClient
+from py_binance_chain.constants import KlineInterval
+from py_binance_chain.environment import BinanceEnvironment
+from py_binance_chain.messages import TransferMsg, Transfer, MultiTransferMsg
+from py_binance_chain.wallet import Wallet
 from typing import Optional
 from datetime import datetime
 import time
@@ -16,7 +16,7 @@ from . import utils
 from xchainpy_util.asset import Asset
 from .models.balance import BinanceBalance
 from .models.coin import Coin
-from binance_chain.constants import TransactionSide, TransactionType
+from py_binance_chain.constants import TransactionSide, TransactionType
 
 class IBinanceClient():
 
