@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='xchainpy_bitcoincash',
     packages=find_packages(),
-    version='0.1',
+    version='0.1.1',
     license='MIT',
     description='Bitcoincash Module for XChainPy Clients',
     long_description=long_description,
