@@ -65,8 +65,7 @@ class Client(interface.IXChainClient, IBinanceClient):
             if not self.phrase:
                 raise Exception('Phrase not set')
 
-            self.private_key = crypto.mnemonic_to_private_key(
-                self.phrase)  # passPhrase ?
+            self.private_key = crypto.mnemonic_to_private_key(self.phrase, self.env)  # passPhrase ?
         return self.private_key
 
     def get_address(self):
