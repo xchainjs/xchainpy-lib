@@ -153,7 +153,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         """
         return 'https://testnet.thorchain.net' if self.network == 'testnet' else 'https://thorchain.net'
 
-    def get_explorer_tx_url(tx_id: str) -> str:
+    def get_explorer_tx_url(self , tx_id: str) -> str:
         """Get the explorer url for the given transaction id.
    
         :param tx_id: network
