@@ -1,23 +1,23 @@
 from setuptools import setup, find_packages
 
-with open('requirements.txt') as f:
-    required = f.read().splitlines()
-
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+
 setup(
-    name='xchainpy_binance',
+    name='xchainpy_client',
     packages=find_packages(),
     version='0.1.3',
     license='MIT',
-    description='Custom Binance client and utilities used by XChainPY clients',
-    author='THORChain',
-    author_email='',
+    description='A specification for a generalised interface for crypto wallets clients, to be used by XChainPY implementations. The client should not have any functionality to generate a key, instead, the `asgardex-crypto` library should be used to ensure cross-chain com',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_binance',
-    keywords=["BNB", "Binance", "XChainpy_binance","THORChain"],
+    author='THORChain',
+    author_email='',
+    url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_client',
+    keywords=["THORChain", "XChainpy","xchainpy_client"],
     install_requires=required,
     classifiers=[
         'Intended Audience :: Developers',

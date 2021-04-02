@@ -1,24 +1,19 @@
-from setuptools import setup, find_packages
-
-with open('requirements.txt') as f:
-    required = f.read().splitlines()
-
+from setuptools import setup
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name='xchainpy_binance',
-    packages=find_packages(),
-    version='0.1.3',
+    name='xchainpy_util',
+    packages=['xchainpy_util'],
+    version='0.1.5',
     license='MIT',
-    description='Custom Binance client and utilities used by XChainPY clients',
-    author='THORChain',
-    author_email='',
+    description='Utility helpers for XChain clients',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_binance',
-    keywords=["BNB", "Binance", "XChainpy_binance","THORChain"],
-    install_requires=required,
+    author='THORChain',
+    author_email='',
+    url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_util',
+    keywords=["THORChain", "XChainpy","xchainpy_util"],
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',

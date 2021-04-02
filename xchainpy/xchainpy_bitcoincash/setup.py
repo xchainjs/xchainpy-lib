@@ -7,17 +7,17 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name='xchainpy_binance',
+    name='xchainpy_bitcoincash',
     packages=find_packages(),
-    version='0.1.3',
+    version='0.1.1',
     license='MIT',
-    description='Custom Binance client and utilities used by XChainPY clients',
-    author='THORChain',
-    author_email='',
+    description='Bitcoincash Module for XChainPy Clients',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_binance',
-    keywords=["BNB", "Binance", "XChainpy_binance","THORChain"],
+    author='THORChain',
+    author_email='',
+    url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_bitcoincash',
+    keywords=["THORChain", "XChainpy","XChainpy_bitcoincash"],
     install_requires=required,
     classifiers=[
         'Intended Audience :: Developers',

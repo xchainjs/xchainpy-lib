@@ -6,18 +6,18 @@ with open('requirements.txt') as f:
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
+
 setup(
-    name='xchainpy_binance',
+    name='xchainpy_crypto',
     packages=find_packages(),
     version='0.1.3',
     license='MIT',
-    description='Custom Binance client and utilities used by XChainPY clients',
+    description='XCHAIN-CRYPTO encrypts a master phrase to a keystore',
     author='THORChain',
-    author_email='',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_binance',
-    keywords=["BNB", "Binance", "XChainpy_binance","THORChain"],
+    url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_crypto',
+    keywords=["THORChain", "XChainpy","XChainpy_crypto"],
     install_requires=required,
     classifiers=[
         'Intended Audience :: Developers',
