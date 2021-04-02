@@ -1,0 +1,14 @@
+README.md
+setup.cfg
+setup.py
+tests/__init__.py
+tests/test_mainnet_client.py
+tests/test_ropsten_client.py
+xchainpy_ethereum/__init__.py
+xchainpy_ethereum/client.py
+xchainpy_ethereum/crypto.py
+xchainpy_ethereum.egg-info/PKG-INFO
+xchainpy_ethereum.egg-info/SOURCES.txt
+xchainpy_ethereum.egg-info/dependency_links.txt
+xchainpy_ethereum.egg-info/requires.txt
+xchainpy_ethereum.egg-info/top_level.txt

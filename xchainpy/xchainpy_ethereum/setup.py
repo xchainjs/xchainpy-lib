@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='xchainpy_ethereum',
     packages=find_packages(),
-    version='0.1.0',
+    version='0.1.1',
     license='MIT',
     description='Custom Ethereum client and utilities used by XChainPY clients',
     author='THORChain',
@@ -18,7 +18,13 @@ setup(
     long_description_content_type="text/markdown",
     url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_ethereum',
     keywords=["ETH", "Ethereum", "XChainpy_ethereum","THORChain", "web3"],
-    install_requires=required,
+    install_requires=[
+        'faster-than-requests>=20.10.19',
+        'web3>=5.16.0',
+        'websockets>=8.12',
+        'xchainpy_client>=0.1.3',
+        'xchainpy_crypto>=0.1.3'
+    ],
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',
