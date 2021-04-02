@@ -1,31 +1,35 @@
-from xchainpy.xchainpy_client.interface import IXChainClient
-from xchainpy.xchainpy_crypto import crypto
-from web3 import Web3, WebsocketProvider, HTTPProvider, Account
-from web3.gas_strategies.time_based import medium_gas_price_strategy, fast_gas_price_strategy, slow_gas_price_strategy
-import json, os, asyncio
+import asyncio
+import json
+import os
 import faster_than_requests as requests
+from web3 import Web3, WebsocketProvider, Account
+from web3.gas_strategies.time_based import slow_gas_price_strategy,medium_gas_price_strategy, fast_gas_price_strategy
+
+from xchainpy_client import interface
+from xchainpy_crypto import crypto
 
 
 class IEthereumClient:
     def is_connected(self):
         pass
 
-    def get_abi(self, contract_address):
+    async def get_abi(self, contract_address):
         pass
 
-    def get_contract(self, contract_address, erc20=True):
+    async def get_contract(self, contract_address, erc20=True):
         pass
 
-    def read_contract(self, contract_address, func_to_call, *args, erc20=True):
+    async def read_contract(self, contract_address, func_to_call, *args, erc20=True):
         pass
 
-    def write_contract(self, contract_address, func_to_call, *args, erc20=True, gas_limit=1000000, gas_price=None, nonce=None):
+    async def write_contract(self, contract_address, func_to_call, *args, erc20=True,
+                       gas_limit=1000000, gas_price=None, nonce=None):
         pass
 
     def set_gas_strategy(self, gas_strategy):
         pass
 
-    def transfer(self, dest_addr, quantity, gas_limit=1000000, gas_price=None, contract_address=None):
+    async def transfer(self, dest_addr, quantity, gas_limit=1000000, gas_price=None, contract_address=None):
         pass
 
     def get_transaction_data(self, tx_id):
@@ -35,7 +39,7 @@ class IEthereumClient:
         pass
 
 
-class Client(IEthereumClient, IXChainClient):
+class Client(interface.IXChainClient, IEthereumClient):
     script_dir = os.path.dirname(__file__)
     with open(os.path.join(script_dir, "resources/ERC20"), 'r') as f:
         erc20_abi = json.loads(f.read())["abi"]
@@ -44,7 +48,7 @@ class Client(IEthereumClient, IXChainClient):
     gas_price = None
     w3 = account = None
 
-    def __init__(self,  phrase: str, network: str, network_type: str = "ropsten", ether_api: str = None) -> None:
+    def __init__(self,  phrase: str, network: str, network_type: str = "ropsten", ether_api: str = None):
         """Constructor
 
         Client has to be initialised with mnemonic phrase, network (infura_api token), network_type ("mainnet" or "ropsten"),
@@ -68,8 +72,10 @@ class Client(IEthereumClient, IXChainClient):
         self.set_network(network)
         self.set_phrase(phrase)
 
-    def purge_client(self) -> None:
+    def purge_client(self):
         """Purge Client
+
+        Delete Account
 
         Returns:
             void
@@ -77,7 +83,7 @@ class Client(IEthereumClient, IXChainClient):
         """
         self.w3 = self.account = None
 
-    def is_connected(self) -> bool:
+    def is_connected(self):
         """Check Web3 connectivity
 
         Returns:
@@ -86,7 +92,7 @@ class Client(IEthereumClient, IXChainClient):
         """
         return self.w3.isConnected()
 
-    def set_network(self, network: str) -> None:
+    def set_network(self, network: str):
         """Set/update the current network
 
         It will throw an error if an invalid phrase or network has been passed.
@@ -108,7 +114,7 @@ class Client(IEthereumClient, IXChainClient):
         if not self.is_connected():
             raise Exception("Infura API error")
 
-    def get_network(self) -> str:
+    def get_network(self):
         """Get the current network
 
         Returns:
@@ -117,7 +123,7 @@ class Client(IEthereumClient, IXChainClient):
         """
         return self.network
 
-    def validate_address(self, address: str) -> bool:
+    def validate_address(self, address: str):
         """Check address validity
 
         Args:
@@ -129,7 +135,7 @@ class Client(IEthereumClient, IXChainClient):
         """
         return self.w3.isAddress(address)
 
-    def get_address(self) -> str:
+    def get_address(self):
         """Get current wallet address
 
         Returns:
@@ -138,7 +144,7 @@ class Client(IEthereumClient, IXChainClient):
         """
         return self.account.address
 
-    def set_phrase(self, phrase: str) -> str:
+    def set_phrase(self, phrase: str):
         """Set/Update a new phrase
 
         Args:
@@ -157,7 +163,7 @@ class Client(IEthereumClient, IXChainClient):
         self.account = self.w3.eth.account.from_mnemonic(mnemonic=phrase)
         return self.get_address()
 
-    def get_abi(self, contract_address):
+    async def get_abi(self, contract_address):
         """Get abi description of a non ERC-20 contract
 
         Args:
@@ -185,7 +191,7 @@ class Client(IEthereumClient, IXChainClient):
                 o.write(r["result"])
             return json.loads(r["result"])
 
-    def get_contract(self, contract_address, erc20=True):
+    async def get_contract(self, contract_address, erc20=True):
         """Get Contract object of given address
 
         Args:
@@ -197,10 +203,12 @@ class Client(IEthereumClient, IXChainClient):
 
         """
         if not erc20:
-            return self.w3.eth.contract(abi=self.get_abi(contract_address), address=contract_address)
-        return self.w3.eth.contract(abi=self.erc20_abi, address=contract_address)
+            contract = await self.get_abi(contract_address)
+        else:
+            contract = self.erc20_abi
+        return self.w3.eth.contract(abi=contract, address=contract_address)
 
-    def get_balance(self, address=None, contract_address=None) -> float:
+    async def get_balance(self, address=None, contract_address=None):
         """Get the balance of a erc-20 token
 
         Args:
@@ -213,12 +221,12 @@ class Client(IEthereumClient, IXChainClient):
         """
         if address:
             if contract_address:
-                token_contract = self.get_contract(contract_address)
+                token_contract = await self.get_contract(contract_address)
                 decimal = token_contract.functions.decimals().call()
                 return token_contract.functions.balanceOf(address).call() / 10**decimal
             return self.w3.fromWei(self.w3.eth.get_balance(address), 'ether')
         elif contract_address:
-            token_contract = self.get_contract(contract_address)
+            token_contract = await self.get_contract(contract_address)
             decimal = token_contract.functions.decimals().call()
             return token_contract.functions.balanceOf(self.get_address()).call() / 10**decimal
         return self.w3.fromWei(self.w3.eth.get_balance(self.get_address()), 'ether')
@@ -255,7 +263,8 @@ class Client(IEthereumClient, IXChainClient):
         """
         return self.gas_price
 
-    def transfer(self, dest_addr, quantity, gas_limit=1000000, gas_price=None, contract_address=None):
+
+    async def transfer(self, dest_addr, quantity, gas_limit=1000000, gas_price=None, contract_address=None):
         """Transfer ERC20 token with previous configured gas_price
 
         Args:
@@ -291,7 +300,7 @@ class Client(IEthereumClient, IXChainClient):
                 'gas': gas_limit,
                 'gasPrice': gas_price,
             }
-            token_contract = self.get_contract(contract_address=contract_address)
+            token_contract = await self.get_contract(contract_address=contract_address)
             decimal = token_contract.functions.decimals().call()
             raw_tx = token_contract.functions.transfer(dest_addr, quantity*10**decimal).buildTransaction(tx)
             signed_tx = self.account.sign_transaction(raw_tx)
@@ -299,11 +308,11 @@ class Client(IEthereumClient, IXChainClient):
             receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
             return receipt
 
-    def read_contract(self, contract_address, func_to_call, *args, erc20=True):
-        contract = self.get_contract(contract_address=contract_address, erc20=erc20)
+    async def read_contract(self, contract_address, func_to_call, *args, erc20=True):
+        contract = await self.get_contract(contract_address=contract_address, erc20=erc20)
         return contract.functions[func_to_call](*args).call()
 
-    def write_contract(self, contract_address, func_to_call, *args, erc20=True, gas_limit=1000000, gas_price=None, nonce=None):
+    async def write_contract(self, contract_address, func_to_call, *args, erc20=True, gas_limit=1000000, gas_price=None, nonce=None):
         """Write to any contract with any argument, specify whether it's ERC20
 
         Args:
@@ -329,14 +338,13 @@ class Client(IEthereumClient, IXChainClient):
             'gas': gas_limit,
             'gasPrice': gas_price,
         }
-        smart_contract = self.get_contract(contract_address=contract_address, erc20=erc20)
+        smart_contract = await self.get_contract(contract_address=contract_address, erc20=erc20)
         contract_func = smart_contract.functions[func_to_call]
         raw_tx = contract_func(*args).buildTransaction(tx)
         signed_tx = self.account.sign_transaction(raw_tx)
         tx_hash = self.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
         receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
         return receipt
-        # return tx_hash
 
     def get_transaction_data(self, tx_id):
         return self.w3.eth.get_transaction(tx_id)
