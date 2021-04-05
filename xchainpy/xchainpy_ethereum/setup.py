@@ -1,15 +1,19 @@
 from setuptools import setup, find_packages
 
-# with open('requirements.txt') as f:
-#     required = f.read().splitlines()
-#
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
     name='xchainpy_ethereum',
     packages=find_packages(),
-    version='0.1.3',
+    package_data={
+        "xchainpy_ethereum": ["resources/*"],
+    },
+    include_package_data=True,
+    version='0.2.0',
     license='MIT',
     description='Custom Ethereum client and utilities used by XChainPY clients',
     author='THORChain',
