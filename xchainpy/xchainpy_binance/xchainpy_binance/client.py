@@ -303,13 +303,13 @@ class Client(interface.IXChainClient, IBinanceClient):
         except Exception as err:
             raise Exception(str(err))
 
-    def purge_client(self):
+    async def purge_client(self):
         """Purge client
         """
         self.phrase = ''
         self.address = ''
         self.private_key = None
-        self.client.session.close()
+        await self.client.session.close()
 
     def validate_address(self, address: str, prefix: str):
         """Validate the given address
