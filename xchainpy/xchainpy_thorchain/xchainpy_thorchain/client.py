@@ -10,6 +10,7 @@ from xchainpy_crypto import crypto as xchainpy_crypto
 from xchainpy_util.asset import Asset
 from . import utils
 from . import crypto
+from .cosmos.models.MsgCoin import MsgCoin
 
 from .cosmos.sdk_client import CosmosSDKClient
 
@@ -140,8 +141,8 @@ class Client(interface.IXChainClient, IThorchainClient):
                 "rpc": 'https://testnet.rpc.thorchain.info',
             },
             "mainnet": {
-                "node": 'http://138.68.125.107:1317',
-                "rpc": 'http://138.68.125.107:26657',
+                "node": 'https://thornode.thorchain.info',
+                "rpc": 'https://rpc.thorchain.info',
             },
         }
 
@@ -319,3 +320,8 @@ class Client(interface.IXChainClient, IThorchainClient):
             "fastest": fee,
             "average": fee,
         }
+
+    async def deposit(self, amount , memo , asset = {"chain" : "THOR", "symbol": "rune" , "ticker" : "RUNE"}):
+        asset_balance = await self.get_balance(self.get_address , asset)
+        signer = self.get_address()
+        # coins = MsgCoin()
