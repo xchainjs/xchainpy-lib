@@ -10,7 +10,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='xchainpy_crypto',
     packages=find_packages(),
-    version='0.1.3',
+    version='0.1.4',
     license='MIT',
     description='XCHAIN-CRYPTO encrypts a master phrase to a keystore',
     author='THORChain',
