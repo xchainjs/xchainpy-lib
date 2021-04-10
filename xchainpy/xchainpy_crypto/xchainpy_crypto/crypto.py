@@ -11,6 +11,8 @@ from .models.CryptoStruct import CryptoStruct
 from .models.CipherParams import CipherParams
 from . import utils
 import uuid
+from mnemonic import Mnemonic
+
 
 CIPHER = AES.MODE_CTR
 NBITS = 128
@@ -33,6 +35,10 @@ def validate_phrase(phrase: str):
     is_valid = Bip39MnemonicValidator(phrase).Validate()
     return is_valid
 
+def generate_mnemonic():
+    mnemo = Mnemonic("english")
+    new_mnemonic = mnemo.generate()
+    return new_mnemonic
 
 async def encrypt_to_keystore(phrase: str, password: str):
     """Get the Keystore from the given phrase and password.
