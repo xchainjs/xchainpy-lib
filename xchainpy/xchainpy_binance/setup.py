@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='xchainpy_binance',
     packages=find_packages(),
-    version='0.1.3',
+    version='0.1.4',
     license='MIT',
     description='Custom Binance client and utilities used by XChainPY clients',
     author='THORChain',
