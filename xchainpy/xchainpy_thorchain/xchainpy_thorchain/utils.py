@@ -17,4 +17,7 @@ def cnv_big_number(value: float and int and str, decimal: int = DECIMAL) -> str:
         return str(round(float(value) * (10**decimal)))
     elif type(value) == str:
         return str(round(float(value) * (10**decimal)))
+
+def getDenomWithChain(asset : Asset) -> str :
+    return f'THOR.{asset.symbol.upper()}'
     

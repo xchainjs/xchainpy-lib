@@ -1,4 +1,6 @@
-class MsgCoin:
+from .Msg import Msg
+
+class MsgCoin(Msg):
     def __init__(self, asset : str , amount : str):
         self._asset = asset
         self._amount = amount

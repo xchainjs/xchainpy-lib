@@ -11,8 +11,11 @@ from xchainpy_util.asset import Asset
 from . import utils
 from . import crypto
 from .cosmos.models.MsgCoin import MsgCoin
+from .cosmos.models.MsgNativeTx import MsgNativeTx
 
 from .cosmos.sdk_client import CosmosSDKClient
+from .cosmos import message
+from .utils import getDenomWithChain
 
 
 class IThorchainClient():
@@ -321,7 +324,13 @@ class Client(interface.IXChainClient, IThorchainClient):
             "average": fee,
         }
 
+    async def build_deposit_tx(self , msg_native_tx : MsgNativeTx) :
+        pass
+        
+
     async def deposit(self, amount , memo , asset = {"chain" : "THOR", "symbol": "rune" , "ticker" : "RUNE"}):
         asset_balance = await self.get_balance(self.get_address , asset)
         signer = self.get_address()
-        # coins = MsgCoin()
+        coins = [MsgCoin(getDenomWithChain(asset) , utils.cnv_big_number(amount, utils.DECIMAL))]
+        msg_native_tx = message.msg_native_tx_from_json(coins , memo , signer)
+        unsigned_std_tx = await self.build_deposit_tx()
