@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import List, Optional, Union
 from .StdSignature import StdSignature
 from .StdTxFee import StdTxFee
 from .AminoWrapping import AminoWrapping
@@ -7,10 +7,10 @@ from .Tx import Tx
 
 
 class StdTx(Tx):
-    def __init__(self, msg : Union[Msg , AminoWrapping] , fee : StdTxFee , signature : Optional[StdSignature] , memo : str):
+    def __init__(self, msg : Union[Msg , AminoWrapping] , fee : StdTxFee , signatures : Optional[List[StdSignature]] , memo : str):
         self._msg = msg
         self._fee = fee
-        self._signature = signature
+        self._signatures = signatures
         self._memo = memo
 
     @property
@@ -31,11 +31,11 @@ class StdTx(Tx):
 
     @property
     def signature(self):
-        return self._signature
+        return self._signatures
 
     @signature.setter
     def signature(self, signature):
-        self._signature = signature
+        self._signatures = signature
 
     @property
     def memo(self):
