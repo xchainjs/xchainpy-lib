@@ -1,5 +1,13 @@
-class StdTx:
-    def __init__(self, msg  , fee , signature , memo):
+from typing import Optional, Union
+from .StdSignature import StdSignature
+from .StdTxFee import StdTxFee
+from .AminoWrapping import AminoWrapping
+from .Msg import Msg
+from .Tx import Tx
+
+
+class StdTx(Tx):
+    def __init__(self, msg : Union[Msg , AminoWrapping] , fee : StdTxFee , signature : Optional[StdSignature] , memo : str):
         self._msg = msg
         self._fee = fee
         self._signature = signature

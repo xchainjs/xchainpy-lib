@@ -167,7 +167,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         """
         return f'{self.get_default_explorer_url()}/txs/${tx_id}'
 
-    def get_prefix(self, netowrk: str = None) -> str:
+    def get_prefix(self, network: str = None) -> str:
         """Get address prefix based on the network.
 
         :param network: network
@@ -175,7 +175,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         :returns: The address prefix based on the network.
         :rtype: string
         """
-        if netowrk:
+        if network:
             return 'tthor' if network == 'testnet' else 'thor'
         else:
             return 'tthor' if self.network == 'testnet' else 'thor'
