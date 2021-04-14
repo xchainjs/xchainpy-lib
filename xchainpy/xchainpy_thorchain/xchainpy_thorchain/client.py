@@ -140,8 +140,8 @@ class Client(interface.IXChainClient, IThorchainClient):
                 "rpc": 'https://testnet.rpc.thorchain.info',
             },
             "mainnet": {
-                "node": 'http://138.68.125.107:1317',
-                "rpc": 'http://138.68.125.107:26657',
+                "node": 'https://thornode.thorchain.info',
+                "rpc": 'https://rpc.thorchain.info',
             },
         }
 
