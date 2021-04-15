@@ -2,6 +2,16 @@
 
 Ethereum Module for XChainPy Clients
 
+## Install
+Python 3.8-3.9 tested
+```angular2html
+python setup.py install
+```
+you might need to include nimble in your path to install faster-than-requests, 
+```angular2html
+export PATH=/home/[username]/.nimble/bin:$PATH
+pip install faster-than-requests --isolated --disable-pip-version-check --no-cache-dir --no-binary :all:
+```
 ## Modules
 
 - `client` - Custom client for communicating with ethereum-lib
@@ -45,13 +55,16 @@ These packages needed to run tests:
 
 How to run test ?
 
+```angular2html
+cd test/
+```
 ``Ropsten``
 ```bash
-$ pytest test/test_ropsten_client.py
+$ pytest test_ropsten_client.py
 ```
 ``Mainnet``
 ```bash
-$ pytest test/test_mainnet_client.py
+$ pytest test_mainnet_client.py
 ```
 
 

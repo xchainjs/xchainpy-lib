@@ -4,7 +4,7 @@ import os
 import faster_than_requests as requests
 from web3 import Web3, WebsocketProvider, Account
 from web3.gas_strategies.time_based import slow_gas_price_strategy,medium_gas_price_strategy, fast_gas_price_strategy
-
+from xchainpy_ethereum.models.asset import Asset
 from xchainpy_client import interface
 from xchainpy_crypto import crypto
 
@@ -22,20 +22,22 @@ class IEthereumClient:
     async def read_contract(self, contract_address, func_to_call, *args, erc20=True):
         pass
 
-    async def write_contract(self, contract_address, func_to_call, *args, erc20=True,
-                       gas_limit=1000000, gas_price=None, nonce=None):
+    async def write_contract(self, contract_address, func_to_call, *args, erc20=True, gas_limit=1000000, gas_price=None, nonce=None):
         pass
 
     def set_gas_strategy(self, gas_strategy):
         pass
 
-    async def transfer(self, dest_addr, quantity, gas_limit=1000000, gas_price=None, contract_address=None):
+    async def transfer(self, asset: Asset, amount, recipient, gas_limit=1000000, gas_price=None):
         pass
 
     def get_transaction_data(self, tx_id):
         pass
 
     def get_transaction_receipt(self, tx_id):
+        pass
+
+    async def get_balance(self, asset: Asset=None, address=None):
         pass
 
 
@@ -69,6 +71,7 @@ class Client(interface.IXChainClient, IEthereumClient):
             raise Exception('Network type has to be ropsten or mainnet')
         self.ether_api = ether_api
         self.network_type = network_type
+        os.makedirs(os.path.join(self.script_dir, f'resources/{network_type}'), exist_ok=True)
         self.set_network(network)
         self.set_phrase(phrase)
 
@@ -178,6 +181,8 @@ class Client(interface.IXChainClient, IEthereumClient):
             with open(path, 'r') as f:
                 return json.loads(f.read())
         else:
+            resource_path = os.path.join(self.script_dir, f'resources/{self.network_type}')
+            os.makedirs(resource_path, exist_ok=True)
             if not self.ether_api:
                 raise Exception("undefined ether api token")
             if self.network_type == 'mainnet':
@@ -208,7 +213,7 @@ class Client(interface.IXChainClient, IEthereumClient):
             contract = self.erc20_abi
         return self.w3.eth.contract(abi=contract, address=contract_address)
 
-    async def get_balance(self, address=None, contract_address=None):
+    async def get_balance(self, asset=None, address=None):
         """Get the balance of a erc-20 token
 
         Args:
@@ -219,17 +224,17 @@ class Client(interface.IXChainClient, IEthereumClient):
             Balance of the address
 
         """
-        if address:
-            if contract_address:
-                token_contract = await self.get_contract(contract_address)
-                decimal = token_contract.functions.decimals().call()
-                return token_contract.functions.balanceOf(address).call() / 10**decimal
-            return self.w3.fromWei(self.w3.eth.get_balance(address), 'ether')
-        elif contract_address:
-            token_contract = await self.get_contract(contract_address)
+        if not asset:
+            if address:
+                return self.w3.fromWei(self.w3.eth.get_balance(address), 'ether')
+            return self.w3.fromWei(self.w3.eth.get_balance(self.get_address()), 'ether')
+        else:
+            assert asset.chain == 'ETH'
+            token_contract = await self.get_contract(asset.ticker)
             decimal = token_contract.functions.decimals().call()
-            return token_contract.functions.balanceOf(self.get_address()).call() / 10**decimal
-        return self.w3.fromWei(self.w3.eth.get_balance(self.get_address()), 'ether')
+            if address:
+                return token_contract.functions.balanceOf(address).call() / 10 ** decimal
+            return token_contract.functions.balanceOf(self.get_address()).call() / 10 ** decimal
 
     def set_gas_strategy(self, gas_strategy) -> None:
         """Set Gas fee calculation parameter
@@ -263,13 +268,12 @@ class Client(interface.IXChainClient, IEthereumClient):
         """
         return self.gas_price
 
-
-    async def transfer(self, dest_addr, quantity, gas_limit=1000000, gas_price=None, contract_address=None):
+    async def transfer(self, asset: Asset, amount, recipient, gas_limit=1000000, gas_price=None):
         """Transfer ERC20 token with previous configured gas_price
 
         Args:
-            dest_addr: recipient address
-            quantity: quantity in ether or in alt coin
+            recipient: recipient address
+            amount: amount in ether or in alt coin
             gas_limit: gas limit using gas price
             gas_price: gas price in wei
             contract_address: for assets other than ether
@@ -283,11 +287,11 @@ class Client(interface.IXChainClient, IEthereumClient):
             if not gas_price:
                 raise Exception("gas_price not set")
         nonce = self.w3.eth.getTransactionCount(self.get_address())
-        if not contract_address:
+        if asset.symbol == 'ETH':
             tx = {
                 'nonce': nonce,
-                'to': dest_addr,
-                'value': self.w3.toWei(quantity, 'ether'),
+                'to': recipient,
+                'value': self.w3.toWei(amount, 'ether'),
                 'gas': gas_limit,
                 'gasPrice': gas_price,
             }
@@ -300,9 +304,9 @@ class Client(interface.IXChainClient, IEthereumClient):
                 'gas': gas_limit,
                 'gasPrice': gas_price,
             }
-            token_contract = await self.get_contract(contract_address=contract_address)
+            token_contract = await self.get_contract(contract_address=asset.ticker)
             decimal = token_contract.functions.decimals().call()
-            raw_tx = token_contract.functions.transfer(dest_addr, quantity*10**decimal).buildTransaction(tx)
+            raw_tx = token_contract.functions.transfer(recipient, amount*10**decimal).buildTransaction(tx)
             signed_tx = self.account.sign_transaction(raw_tx)
             tx_hash = self.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
             receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
@@ -312,7 +316,7 @@ class Client(interface.IXChainClient, IEthereumClient):
         contract = await self.get_contract(contract_address=contract_address, erc20=erc20)
         return contract.functions[func_to_call](*args).call()
 
-    async def write_contract(self, contract_address, func_to_call, *args, erc20=True, gas_limit=1000000, gas_price=None, nonce=None):
+    async def write_contract(self, contract_address, func_to_call, *args, erc20=True, gas_limit=1000000, gas_price=None, nonce=None, eth_to_be_sent=0):
         """Write to any contract with any argument, specify whether it's ERC20
 
         Args:
@@ -323,6 +327,7 @@ class Client(interface.IXChainClient, IEthereumClient):
             gas_price: gas price
             **kwargs: arguments for func_to_call
             nonce: provide nonce for faster execution
+            eth_to_be_sent: in case ethereum needed to be sent
 
         Returns:
 
@@ -333,11 +338,19 @@ class Client(interface.IXChainClient, IEthereumClient):
             gas_price = self.gas_price
         if not gas_price:
             raise Exception("provide gas price or call set_gas_strategy()")
-        tx = {
-            'nonce': nonce,
-            'gas': gas_limit,
-            'gasPrice': gas_price,
-        }
+        if eth_to_be_sent != 0:
+            tx = {
+                'nonce': nonce,
+                'value': self.w3.toWei(eth_to_be_sent, 'ether'),
+                'gas': gas_limit,
+                'gasPrice': gas_price,
+            }
+        else:
+            tx = {
+                'nonce': nonce,
+                'gas': gas_limit,
+                'gasPrice': gas_price,
+            }
         smart_contract = await self.get_contract(contract_address=contract_address, erc20=erc20)
         contract_func = smart_contract.functions[func_to_call]
         raw_tx = contract_func(*args).buildTransaction(tx)
