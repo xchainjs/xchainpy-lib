@@ -13,7 +13,7 @@ setup(
         "xchainpy_ethereum": ["resources/*"],
     },
     include_package_data=True,
-    version='0.2.0',
+    version='0.2.1',
     license='MIT',
     description='Custom Ethereum client and utilities used by XChainPY clients',
     author='THORChain',
