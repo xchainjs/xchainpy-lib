@@ -356,7 +356,7 @@ class Client(interface.IXChainClient, IEthereumClient):
         raw_tx = contract_func(*args).buildTransaction(tx)
         signed_tx = self.account.sign_transaction(raw_tx)
         tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-        receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=600)
+        receipt = self.w3.eth.wait_for_transaction_receipt(transaction_hash=tx_hash, timeout=600)
         return receipt
 
     def get_transaction_data(self, tx_id):

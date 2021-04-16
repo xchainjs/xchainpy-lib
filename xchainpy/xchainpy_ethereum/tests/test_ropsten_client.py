@@ -169,10 +169,12 @@ class TestClient:
 
     @pytest.mark.asyncio
     async def test_write_contract_router(self, test_init):
+        """write to rune router: deposit() with memo for switching eth.rune to thor.rune"""
         old_balance = await self.client.get_balance(asset=ETH_RUNE)
         func_to_call = "deposit"
         asgard_address = self.client.w3.toChecksumAddress("0x8d6690d9068e0da603ada9c26d475f19b1d56c91")
-        amount = 100*10**18
+        amount = 10*10**18
+        assert old_balance > 10
         memo = "switch:tthor1vecuqg5tejlxncykw6dfkj6hgkv49d59lc0z6j"
         router = await self.client.get_contract(contract_address=self.thor_router_address, erc20=False)
         self.client.gas_price = self.client.w3.toWei(10, 'gwei')
