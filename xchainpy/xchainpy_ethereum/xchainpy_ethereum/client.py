@@ -296,7 +296,7 @@ class Client(interface.IXChainClient, IEthereumClient):
                 'gasPrice': gas_price,
             }
             signed_tx = self.account.sign_transaction(tx)
-            tx_hash = self.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
             return tx_hash
         else:
             tx = {
@@ -308,7 +308,7 @@ class Client(interface.IXChainClient, IEthereumClient):
             decimal = token_contract.functions.decimals().call()
             raw_tx = token_contract.functions.transfer(recipient, amount*10**decimal).buildTransaction(tx)
             signed_tx = self.account.sign_transaction(raw_tx)
-            tx_hash = self.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
             receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
             return receipt
 
@@ -355,12 +355,31 @@ class Client(interface.IXChainClient, IEthereumClient):
         contract_func = smart_contract.functions[func_to_call]
         raw_tx = contract_func(*args).buildTransaction(tx)
         signed_tx = self.account.sign_transaction(raw_tx)
-        tx_hash = self.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
-        receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
+        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=600)
         return receipt
 
     def get_transaction_data(self, tx_id):
+        """
+        Args:
+            tx_id:
+
+        Returns:
+        AttributeDict({
+            'blockHash': '0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd',
+            'blockNumber': 46147,
+            'from': '0xA1E4380A3B1f749673E270229993eE55F35663b4',
+            'gas': 21000,
+            'gasPrice': 50000000000000,
+            'hash': '0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060',
+            'input': '0x',
+            'nonce': 0,
+            'to': '0x5DF9B87991262F6BA471F09758CDE1c0FC1De734',
+            'transactionIndex': 0,
+            'value': 31337,
+        })
+        """
         return self.w3.eth.get_transaction(tx_id)
 
     def get_transaction_receipt(self, tx_id):
-        return self.w3.eth.getTransactionReceipt(tx_id)
+        return self.w3.eth.get_transaction_receipt(tx_id)

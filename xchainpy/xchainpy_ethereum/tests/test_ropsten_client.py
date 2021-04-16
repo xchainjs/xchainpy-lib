@@ -163,7 +163,6 @@ class TestClient:
         func_to_call = "giveMeRUNE"
         self.client.gas_price = self.client.w3.toWei(10, 'gwei')
         tx_receipt = await self.client.write_contract(ETH_RUNE.ticker, func_to_call, erc20=False)
-        print(tx_receipt)
         new_balance = await self.client.get_balance(asset=ETH_RUNE)
         time.sleep(1)
         assert new_balance > old_balance
