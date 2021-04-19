@@ -1,4 +1,5 @@
 import hashlib
+from xchainpy.xchainpy_thorchain.xchainpy_thorchain.cosmos.cosmosUtil import set_bech32_prefix
 
 import bech32
 import ecdsa
@@ -197,3 +198,12 @@ class CosmosSDKClient:
             "sequence": str(self._sequence),
             "msgs": self._msgs,
         }
+    
+    def set_prefix(self):
+        set_bech32_prefix(self.prefix , self.prefix + "pub" , self.prefix + "valoper" , self.prefix + "valoperpub" , self.prefix + "valcons" + self.prefix + "valconspub")
+
+    # def sign_and_broadcast(self , unsigned_std_tx , private_key , signer):
+    #     try:
+    #         self.set_prefix()
+    #     except:
+

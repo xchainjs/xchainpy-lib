@@ -16,7 +16,7 @@ from .cosmos.models.MsgCoin import MsgCoin
 from .cosmos.models.MsgNativeTx import MsgNativeTx
 from .cosmos.sdk_client import CosmosSDKClient
 from .cosmos import message
-from .utils import getDenomWithChain
+from .utils import frombech32, getDenomWithChain
 
 
 class IThorchainClient():
@@ -356,8 +356,12 @@ class Client(interface.IXChainClient, IThorchainClient):
         
         
 
-    async def deposit(self, amount , memo , asset = {"chain" : "THOR", "symbol": "rune" , "ticker" : "RUNE"}):
+    async def deposit(self, amount , memo , asset = {"chain" : "THOR", "symbol": "rune" , "ticker" : "RUNE"} , no_retry = 0):
+        MAX_NUMBER_RETRY = 3
         asset_balance = await self.get_balance(self.get_address , asset)
+        if len(asset_balance) == 0 or float(asset_balance[0]['amount']) < (float(amount)+ float(fee.gas)):
+            raise Exception("insufficient funds")
+
         signer = self.get_address()
         coins = [MsgCoin(getDenomWithChain(asset) , utils.cnv_big_number(amount, utils.DECIMAL))]
 
@@ -365,9 +369,13 @@ class Client(interface.IXChainClient, IThorchainClient):
         
         unsigned_std_tx = await self.build_deposit_tx(msg_native_tx)
         fee = unsigned_std_tx.fee
+        private_key = self.get_private_key()
+        acc_address = frombech32(signer)
+        fee.gas = 'auto'
 
-        if len(asset_balance) == 0 or float(asset_balance[0]['amount']) < (float(amount)+ float(fee.gas)):
-            raise Exception("insufficient funds")
+        
+
+
         
         # transfer_result = self.thor_client.sign_and_broadcast
 
