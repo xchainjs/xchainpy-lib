@@ -1,16 +1,18 @@
 import hashlib
-from xchainpy.xchainpy_thorchain.xchainpy_thorchain.cosmos.cosmosUtil import set_bech32_prefix
-
+from .cosmosUtil import set_bech32_prefix
+from .. import utils
 import bech32
 import ecdsa
 import hdwallets
 import mnemonic
-
 import http3
 import json
 import base64
+import re
+from urllib.parse import urlparse , parse_qs , quote
 
-from .. import utils
+BASE_PATH = re.sub(r'\/+$','',"https://api.cosmos.network")
+
 class CosmosSDKClient:
     server = chain_id = prefix = derive_path = ''
 
@@ -202,8 +204,46 @@ class CosmosSDKClient:
     def set_prefix(self):
         set_bech32_prefix(self.prefix , self.prefix + "pub" , self.prefix + "valoper" , self.prefix + "valoperpub" , self.prefix + "valcons" + self.prefix + "valconspub")
 
-    # def sign_and_broadcast(self , unsigned_std_tx , private_key , signer):
-    #     try:
-    #         self.set_prefix()
-    #     except:
+    async def account_address_get(self , address):
+        if not address:
+          raise Exception("address not provided")
+        try:
+            address = utils.tobech32(address)
+            local_var_path = re.sub("{address}", quote(address.encode("utf-8")),"/auth/accounts/{address}")
+            # local_var_url_obj = urlparse(local_var_path) we can add some headers , query
+            # local_var_request_options = {"method" : "GET"} # request options
+            # return {"url" : local_var_path , "options" : local_var_request_options}
+            url = BASE_PATH + local_var_path
+            client = http3.AsyncClient()
+            response = await client.get(url)
+
+            if response.status_code == 200:
+                result = json.loads(response.content.decode('utf-8'))['result']
+                return result
+            else:
+                err_obj = json.loads(response.content.decode('utf-8'))
+                raise Exception(err_obj)
+        except Exception as err:
+                raise Exception(str(err))
+    
+    def sign_std_tx(privkey , unsigned_std_tx , account_number : str, sequence : str):
+            pass
+
+    async def sign_and_broadcast(self , unsigned_std_tx , private_key , signer):
+        try:
+            self.set_prefix()
+            account = await self.account_address_get(signer)
+            if not account["account_number"]:
+                account = {
+                    "address" : utils.frombech32(account["value"]["address"]) if account["value"]["address"] else "",
+                    "public_key" : account["value"]["public_key"] if account["value"]["public_key"] else None,
+                    "coins" : account["value"]["coins"],
+                    "account_number" : account["value"]["account_number"],
+                    "sequence" : account["value"]["sequence"]
+                }
+            
+            signed_std_tx = 
+
+        except Exception as err:
+            raise Exception(str(err))
 

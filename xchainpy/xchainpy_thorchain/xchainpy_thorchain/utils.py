@@ -2,6 +2,7 @@ from xchainpy_util.asset import Asset
 from xchainpy_client.models.balance import Balance
 from xchainpy_util.chain import THORCHAIN
 from xchainpy_client.models import tx_types
+from .cosmos.cosmosUtil import bech32_prefix 
 import bech32
 
 DECIMAL = 8
@@ -26,9 +27,18 @@ def bech32_fromwords(words):
     res = bech32.convertbits(words,5,8,False)
     if res != None:
         return res
+
+def bech32_towords(value_bytes):
+    res = bech32.convertbits(value_bytes , 8 , 5 , False)
+    
+
 def frombech32(address : str):
     (prefix , words) = bech32.bech32_decode(address)
     res = bech32_fromwords(words)
     return res
 
+def tobech32(value):
+    words = bech32_towords(bytes(value))
+    enc = bech32.bech32_encode(bech32_prefix["accAddr"] ,words)
+    return enc
     
