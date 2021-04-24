@@ -1,4 +1,5 @@
 import hashlib
+from xchainpy.xchainpy_thorchain.xchainpy_thorchain.cosmos.models.StdTx import StdTx
 from .cosmosUtil import set_bech32_prefix
 from .. import utils
 import bech32
@@ -14,7 +15,7 @@ from urllib.parse import urlparse , parse_qs , quote
 BASE_PATH = re.sub(r'\/+$','',"https://api.cosmos.network")
 
 class CosmosSDKClient:
-    server = chain_id = prefix = derive_path = ''
+    
 
     _account_num = None
 
@@ -226,8 +227,8 @@ class CosmosSDKClient:
         except Exception as err:
                 raise Exception(str(err))
     
-    def sign_std_tx(privkey , unsigned_std_tx , account_number : str, sequence : str):
-            pass
+    def sign_std_tx(self, privkey , unsigned_std_tx : StdTx, account_number : str, sequence : str):
+            sign_bytes = unsigned_std_tx.get_sign_bytes(self.chain_id)
 
     async def sign_and_broadcast(self , unsigned_std_tx , private_key , signer):
         try:
@@ -242,7 +243,7 @@ class CosmosSDKClient:
                     "sequence" : account["value"]["sequence"]
                 }
             
-            signed_std_tx = 
+            # signed_std_tx = 
 
         except Exception as err:
             raise Exception(str(err))

@@ -1,4 +1,6 @@
+import json
 from typing import List, Optional, Union
+from xchainpy.xchainpy_thorchain.xchainpy_thorchain.utils import sort_dict
 from .StdSignature import StdSignature
 from .StdTxFee import StdTxFee
 from .AminoWrapping import AminoWrapping
@@ -44,3 +46,21 @@ class StdTx(Tx):
     @memo.setter
     def memo(self, memo):
         self._memo = memo
+
+
+    def get_sign_bytes(self , chain_id : str , account_number : str , sequence : str):
+        std_sign_msg = {
+            "account_number" : account_number,
+            "chain_id" : chain_id,
+            "fee" : self._fee,
+            "memo" : self._memo,
+            "msgs" : self._msg,
+            "sequence" : sequence
+        }
+
+        canonicalized = sort_dict(std_sign_msg)
+        json_object = json.dumps(canonicalized)
+        encoded = json_object.encode('utf8')
+        encoded_bytes = bytearray(encoded)
+        
+        return encoded_bytes

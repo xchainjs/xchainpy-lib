@@ -41,4 +41,6 @@ def tobech32(value):
     words = bech32_towords(bytes(value))
     enc = bech32.bech32_encode(bech32_prefix["accAddr"] ,words)
     return enc
-    
+
+def sort_dict(item: dict):
+    return {k: sort_dict(v) if isinstance(v, dict) else v for k, v in sorted(item.items())}    
