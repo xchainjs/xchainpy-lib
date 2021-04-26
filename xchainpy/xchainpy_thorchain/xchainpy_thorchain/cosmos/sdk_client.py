@@ -188,6 +188,17 @@ class CosmosSDKClient:
         signature_base64_str = base64.b64encode(
             signature_compact).decode("utf-8")
         return signature_base64_str
+    
+    def _sign(self , sign_bytes , priv_key) -> str:
+        privkey = ecdsa.SigningKey.from_string(
+            priv_key, curve=ecdsa.SECP256k1)
+        signature_compact = privkey.sign_deterministic(
+            sign_bytes, hashfunc=hashlib.sha256, sigencode=ecdsa.util.sigencode_string_canonize
+        )
+
+        signature_base64_str = base64.b64encode(
+            signature_compact).decode("utf-8")
+        return signature_base64_str
 
     def _get_sign_message(self):
         return {
@@ -228,7 +239,21 @@ class CosmosSDKClient:
                 raise Exception(str(err))
     
     def sign_std_tx(self, privkey , unsigned_std_tx : StdTx, account_number : str, sequence : str):
-            sign_bytes = unsigned_std_tx.get_sign_bytes(self.chain_id)
+        sign_bytes = unsigned_std_tx.get_sign_bytes(self.chain_id ,account_number ,sequence)
+        signature = {
+            "pub_key" : self.privkey_to_pubkey(privkey),
+            "signature" : self._sign(sign_bytes , privkey)
+        }
+        signature_param = None
+        if unsigned_std_tx.signature:
+            signature_param = [{**unsigned_std_tx.signature} , signature]
+        else:
+            signature_param = [signature]
+
+
+        new_std_tx = StdTx(unsigned_std_tx.msg , unsigned_std_tx.fee , signature_param , unsigned_std_tx.memo)
+
+        return new_std_tx
 
     async def sign_and_broadcast(self , unsigned_std_tx , private_key , signer):
         try:
