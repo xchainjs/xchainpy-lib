@@ -47,7 +47,6 @@ class StdTx(Tx):
     def memo(self, memo):
         self._memo = memo
 
-
     def get_sign_bytes(self , chain_id : str , account_number : str , sequence : str):
         std_sign_msg = {
             "account_number" : account_number,
@@ -64,3 +63,6 @@ class StdTx(Tx):
         encoded_bytes = bytearray(encoded)
         
         return encoded_bytes
+    
+    def to_json(self):
+        return json.dumps(self, default=lambda o: {key.lstrip('_'): value for key, value in o.__dict__.items()})

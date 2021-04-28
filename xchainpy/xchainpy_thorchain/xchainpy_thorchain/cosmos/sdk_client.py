@@ -255,6 +255,30 @@ class CosmosSDKClient:
 
         return new_std_tx
 
+    async def tx_post(self , tx : StdTx , mode): # broadcastReq
+        if not tx:
+          raise Exception("tx not provided")
+        
+        try:
+            local_var_path = '/txs'
+            
+
+            api_url = BASE_PATH + local_var_path
+
+            client = http3.AsyncClient()
+            response = await client.post(url=api_url, data={'tx': tx.to_json() , 'mode' : mode})
+
+            if response.status_code == 200:
+                res = json.loads(response.content.decode('utf-8'))['data']
+                return res
+            else:
+                return json.loads(response.content.decode('utf-8'))['data']
+        except Exception as err:
+            raise Exception(str(err))
+
+        
+        
+
     async def sign_and_broadcast(self , unsigned_std_tx , private_key , signer):
         try:
             self.set_prefix()
@@ -268,7 +292,11 @@ class CosmosSDKClient:
                     "sequence" : account["value"]["sequence"]
                 }
             
-            # signed_std_tx = 
+            signed_std_tx = self.sign_std_tx(private_key , unsigned_std_tx , str(account["account_number"]) , str(account["sequence"]))
+
+            result =  await self.tx_post(signed_std_tx , 'block')
+            
+            return result
 
         except Exception as err:
             raise Exception(str(err))

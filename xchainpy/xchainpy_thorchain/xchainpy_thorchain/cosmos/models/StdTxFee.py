@@ -22,3 +22,6 @@ class StdTxFee:
     @amount.setter
     def amount(self, amount):
         self._amount = amount
+
+    def to_json(self):
+        return json.dumps(self, default=lambda o: {key.lstrip('_'): value for key, value in o.__dict__.items()})

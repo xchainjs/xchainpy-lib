@@ -18,3 +18,6 @@ class AminoWrapping:
     @value.setter
     def value(self, value):
         self._value = value
+    
+    def to_json(self):
+        return json.dumps(self, default=lambda o: {key.lstrip('_'): value for key, value in o.__dict__.items()})
