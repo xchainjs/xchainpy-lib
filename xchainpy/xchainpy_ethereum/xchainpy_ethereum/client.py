@@ -1,7 +1,7 @@
 import asyncio
 import json
 import os
-import faster_than_requests as requests
+import requests
 from web3 import Web3, WebsocketProvider, Account
 from web3.gas_strategies.time_based import slow_gas_price_strategy,medium_gas_price_strategy, fast_gas_price_strategy
 from xchainpy_ethereum.models.asset import Asset
@@ -189,7 +189,8 @@ class Client(interface.IXChainClient, IEthereumClient):
                 url = f'https://api.etherscan.io/api?module=contract&action=getabi&address={contract_address}&apikey={self.ether_api}'
             else:
                 url = f'https://api-ropsten.etherscan.io/api?module=contract&action=getabi&address={contract_address}&apikey={self.ether_api}'
-            r = json.loads(requests.get2json(url))
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+            r = requests.get(url, headers=headers).json()
             if r["status"] != '1':
                 raise Exception("error getting abi file")
             with open(path, 'w+') as o:
@@ -250,14 +251,14 @@ class Client(interface.IXChainClient, IEthereumClient):
             void
         """
         if gas_strategy == "fast":
-            self.w3.eth.setGasPriceStrategy(fast_gas_price_strategy)
+            self.w3.eth.set_gas_price_strategy(fast_gas_price_strategy)
         elif gas_strategy == 'medium':
-            self.w3.eth.setGasPriceStrategy(medium_gas_price_strategy)
+            self.w3.eth.set_gas_price_strategy(medium_gas_price_strategy)
         elif gas_strategy == 'slow':
-            self.w3.eth.setGasPriceStrategy(slow_gas_price_strategy)
+            self.w3.eth.set_gas_price_strategy(slow_gas_price_strategy)
         else:
             raise Exception("invalid gas strategy")
-        self.gas_price = self.w3.eth.generateGasPrice()
+        self.gas_price = self.w3.eth.generate_gas_price()
 
     def get_fees(self):
         """Return Gas price using gas_strategy
@@ -286,7 +287,7 @@ class Client(interface.IXChainClient, IEthereumClient):
             gas_price = self.get_fees()
             if not gas_price:
                 raise Exception("gas_price not set")
-        nonce = self.w3.eth.getTransactionCount(self.get_address())
+        nonce = self.w3.eth.get_transaction_count(self.get_address())
         if asset.symbol == 'ETH':
             tx = {
                 'nonce': nonce,
@@ -296,7 +297,7 @@ class Client(interface.IXChainClient, IEthereumClient):
                 'gasPrice': gas_price,
             }
             signed_tx = self.account.sign_transaction(tx)
-            tx_hash = self.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
             return tx_hash
         else:
             tx = {
@@ -308,8 +309,8 @@ class Client(interface.IXChainClient, IEthereumClient):
             decimal = token_contract.functions.decimals().call()
             raw_tx = token_contract.functions.transfer(recipient, amount*10**decimal).buildTransaction(tx)
             signed_tx = self.account.sign_transaction(raw_tx)
-            tx_hash = self.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
-            receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
             return receipt
 
     async def read_contract(self, contract_address, func_to_call, *args, erc20=True):
@@ -333,7 +334,7 @@ class Client(interface.IXChainClient, IEthereumClient):
 
         """
         if not nonce:
-            nonce = self.w3.eth.getTransactionCount(self.get_address())
+            nonce = self.w3.eth.get_transaction_count(self.get_address())
         if not gas_price:
             gas_price = self.gas_price
         if not gas_price:
@@ -355,12 +356,30 @@ class Client(interface.IXChainClient, IEthereumClient):
         contract_func = smart_contract.functions[func_to_call]
         raw_tx = contract_func(*args).buildTransaction(tx)
         signed_tx = self.account.sign_transaction(raw_tx)
-        tx_hash = self.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
-        receipt = self.w3.eth.waitForTransactionReceipt(tx_hash)
+        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        receipt = self.w3.eth.wait_for_transaction_receipt(transaction_hash=tx_hash, timeout=600)
         return receipt
 
     def get_transaction_data(self, tx_id):
+        """
+        Args:
+            tx_id:
+        Returns:
+        AttributeDict({
+            'blockHash': '0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd',
+            'blockNumber': 46147,
+            'from': '0xA1E4380A3B1f749673E270229993eE55F35663b4',
+            'gas': 21000,
+            'gasPrice': 50000000000000,
+            'hash': '0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060',
+            'input': '0x',
+            'nonce': 0,
+            'to': '0x5DF9B87991262F6BA471F09758CDE1c0FC1De734',
+            'transactionIndex': 0,
+            'value': 31337,
+        })
+        """
         return self.w3.eth.get_transaction(tx_id)
 
     def get_transaction_receipt(self, tx_id):
-        return self.w3.eth.getTransactionReceipt(tx_id)
+        return self.w3.eth.get_transaction_receipt(tx_id)
