@@ -32,7 +32,8 @@ def validate_phrase(phrase: str):
     :type phrase: str
     :returns: is the phrase valid or not (true or false)
     """
-    is_valid = Bip39MnemonicValidator(phrase).Validate()
+    #is_valid = Bip39MnemonicValidator(phrase).Validate()
+    is_valid = Bip39MnemonicValidator(phrase).IsValid()
     return is_valid
 
 def generate_mnemonic():
