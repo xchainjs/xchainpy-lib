@@ -39,7 +39,7 @@ class TestClient:
     def test_invalid_set_phrase(self, test_init):
         with pytest.raises(Exception) as err:
             assert self.client.set_phrase(phrase="invalid")
-        assert str(err.value) == "invalid phrase"
+        assert str(err.value) == 'invalid phrase'
 
     def test_is_connected(self, test_init):
         assert self.client.is_connected()
