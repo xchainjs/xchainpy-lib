@@ -7,11 +7,7 @@ Python 3.8-3.9 tested
 ```angular2html
 python setup.py install
 ```
-you might need to include nimble in your path to install faster-than-requests, 
-```angular2html
-export PATH=/home/[username]/.nimble/bin:$PATH
-pip install faster-than-requests --isolated --disable-pip-version-check --no-cache-dir --no-binary :all:
-```
+
 ## Modules
 
 - `client` - Custom client for communicating with ethereum-lib
@@ -19,9 +15,9 @@ pip install faster-than-requests --isolated --disable-pip-version-check --no-cac
 Following dependencies have to be installed into your project
 
 ```
-faster-than-requests==20.10.19
-web3==5.16.0
-websockets==8.1
+web3>=5.16.0
+websockets>=8.1
+requests>=2.25.1
 ```
 
 ## Service Providers
