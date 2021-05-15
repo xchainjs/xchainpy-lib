@@ -386,4 +386,3 @@ class Client(interface.IXChainClient, IThorchainClient):
                 return self.deposit(amount , memo , asset , (no_retry + 1))
             else:
                 raise Exception(str(err))
-
