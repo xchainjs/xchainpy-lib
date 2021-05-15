@@ -387,8 +387,3 @@ class Client(interface.IXChainClient, IThorchainClient):
             else:
                 raise Exception(str(err))
 
-
-
-        
-        # transfer_result = self.thor_client.sign_and_broadcast
-
