@@ -14,6 +14,10 @@ class TestCrypto:
     def test_invalid_phrase(self):
         assert crypto.validate_phrase('invalid phrase') == False
 
+    def test_generate_mnemonic(self):
+        phrase = crypto.generate_mnemonic()
+        assert crypto.validate_phrase(phrase)
+
     @pytest.mark.asyncio
     async def test_export_keystore(self):
         password = 'thorchain'
@@ -31,4 +35,3 @@ class TestCrypto:
         keystore = await crypto.encrypt_to_keystore(self.phrase2 , password)
         decrypted = await crypto.decrypt_from_keystore(keystore , password)
         assert decrypted == self.phrase2
-

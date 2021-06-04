@@ -152,6 +152,8 @@ class Client(interface.IXChainClient, IBinanceClient):
             return balances
 
         except Exception as err:
+            if str(err) == 'Expected String or Unicode':
+                return []
             raise Exception(str(err))
 
     async def transfer(self, asset: Asset, amount, recipient, memo=''):

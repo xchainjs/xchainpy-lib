@@ -13,7 +13,7 @@ setup(
         "xchainpy_ethereum": ["resources/*"],
     },
     include_package_data=True,
-    version='0.2.0',
+    version='0.2.3',
     license='MIT',
     description='Custom Ethereum client and utilities used by XChainPY clients',
     author='THORChain',
@@ -22,13 +22,7 @@ setup(
     long_description_content_type="text/markdown",
     url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_ethereum',
     keywords=["ETH", "Ethereum", "XChainpy_ethereum","THORChain", "web3"],
-    install_requires=[
-        'faster-than-requests>=20.10.19',
-        'web3>=5.16.0',
-        'websockets>=8.1',
-        'xchainpy_client>=0.1.3',
-        'xchainpy_crypto>=0.1.3'
-    ],
+    install_requires=required,
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',

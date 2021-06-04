@@ -1,7 +1,7 @@
 from secp256k1 import PrivateKey
 from mnemonic import Mnemonic
-from binance_chain.utils.segwit_addr import address_from_public_key, decode_address, bech32_decode
-from binance_chain.environment import BinanceEnvironment
+from py_binance_chain.utils.segwit_addr import address_from_public_key, decode_address, bech32_decode
+from py_binance_chain.environment import BinanceEnvironment
 
 HD_PATH = "m/44'/118'/0'/0/0"
 DECODED_ADDRESS_LEN = 20

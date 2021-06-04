@@ -2,6 +2,12 @@
 
 Ethereum Module for XChainPy Clients
 
+## Install
+Python 3.8-3.9 tested
+```angular2html
+python setup.py install
+```
+
 ## Modules
 
 - `client` - Custom client for communicating with ethereum-lib
@@ -9,9 +15,9 @@ Ethereum Module for XChainPy Clients
 Following dependencies have to be installed into your project
 
 ```
-faster-than-requests==20.10.19
-web3==5.16.0
-websockets==8.1
+web3>=5.16.0
+websockets>=8.1
+requests>=2.25.1
 ```
 
 ## Service Providers
@@ -45,13 +51,16 @@ These packages needed to run tests:
 
 How to run test ?
 
+```angular2html
+cd test/
+```
 ``Ropsten``
 ```bash
-$ pytest test/test_ropsten_client.py
+$ pytest test_ropsten_client.py
 ```
 ``Mainnet``
 ```bash
-$ pytest test/test_mainnet_client.py
+$ pytest test_mainnet_client.py
 ```
 
 
