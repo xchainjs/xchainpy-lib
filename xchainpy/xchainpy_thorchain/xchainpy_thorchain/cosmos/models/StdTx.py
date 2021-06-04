@@ -1,6 +1,6 @@
 import json
 from typing import List, Optional, Union
-from xchainpy.xchainpy_thorchain.xchainpy_thorchain.utils import sort_dict
+from ...utils import sort_dict
 from .StdSignature import StdSignature
 from .StdTxFee import StdTxFee
 from .AminoWrapping import AminoWrapping

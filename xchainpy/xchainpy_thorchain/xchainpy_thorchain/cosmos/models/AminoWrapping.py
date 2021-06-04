@@ -1,3 +1,5 @@
+import json
+
 class AminoWrapping:
     def __init__(self, type : str , value):
         self._type = type

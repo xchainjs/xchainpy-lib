@@ -1,5 +1,5 @@
 import hashlib
-from xchainpy.xchainpy_thorchain.xchainpy_thorchain.cosmos.models.StdTx import StdTx
+from ..cosmos.models.StdTx import StdTx
 from .cosmosUtil import set_bech32_prefix
 from .. import utils
 import bech32
