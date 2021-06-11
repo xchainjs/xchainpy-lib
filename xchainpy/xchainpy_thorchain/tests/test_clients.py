@@ -1,5 +1,6 @@
 import pytest
 import requests
+import requests_mock
 
 from xchainpy_thorchain.client import Client
 from xchainpy_util.asset import Asset
@@ -124,27 +125,31 @@ class TestClient:
         except Exception as err:
             assert str(err) == 'transaction not found' # no transaction found
 
-    def mock_accounts_address(self , url : str , address : str , result , requests_mock):
-        requests_mock.get(f'{url}/auth/accounts/{address}', json = result)
+    def mock_accounts_address(self , url : str , address : str , result):
+        with requests_mock.Mocker() as mock_req:
+            mock_req.get(f'{url}/auth/accounts/{address}', json = result)
         # resp = requests.get(f'{url}/bank/balance/{address}')
         # return resp.json()
 
-    def mock_accounts_balance(self , url : str , address : str , result , requests_mock):
-        requests_mock.get(f'{url}/bank/balance/{address}', json = result)
+    def mock_accounts_balance(self , url : str , address : str , result):
+        with requests_mock.Mocker() as mock_req:
+            mock_req.get(f'{url}/bank/balance/{address}', json = result)
 
-    def mock_thorchain_deposit(self , url : str, result , requests_mock):
-        requests_mock.get(f'{url}/thorchain/deposit', json = result)
+    def mock_thorchain_deposit(self , url : str, result):
+        with requests_mock.Mocker() as mock_req:
+            mock_req.get(f'{url}/thorchain/deposit', json = result)
 
     def body_checker(self, request):
         if len(request.json()['tx']['msg']) and request.json()['tx']['memo'] == self.memo_global:
             return True
 
-    def assert_tx_post(self , url : str, memo , result , requests_mock):
-        requests_mock.post(f'{url}/txs', json = result , additional_matcher=self.body_checker)
+    def assert_tx_post(self , url : str, memo , result):
+        with requests_mock.Mocker() as mock_req:
+            mock_req.post(f'{url}/txs', json = result , additional_matcher=self.body_checker)
 
     @pytest.mark.asyncio
     async def test_deposit(self, client):
-        send_amount = 10000000000
+        send_amount = 1000000
         memo = 'swap:BNB.BNB:tbnb1ftzhmpzr4t8ta3etu4x7nwujf9jqckp3th2lh0'
 
         expected_txsPost_result = {

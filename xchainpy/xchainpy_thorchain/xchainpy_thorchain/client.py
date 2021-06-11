@@ -16,7 +16,7 @@ from .cosmos.models.MsgCoin import MsgCoin
 from .cosmos.models.MsgNativeTx import MsgNativeTx
 from .cosmos.sdk_client import CosmosSDKClient
 from .cosmos import message
-from .utils import DEFAULT_GAS_VALUE, frombech32, getDenomWithChain
+from .utils import DEFAULT_GAS_VALUE, asset_to_string, frombech32, getDenomWithChain, get_asset
 
 
 class IThorchainClient():
@@ -231,7 +231,7 @@ class Client(interface.IXChainClient, IThorchainClient):
                     "Address has to be set. Or set a phrase by calling `setPhrase` before to use an address of an imported key.")
         return self.address
 
-    async def get_balance(self, address: str = None, asset: str = None) -> list:
+    async def get_balance(self, address: str = None, assets = None) -> list:
         """
          Get the balance of a given address.
 
@@ -247,10 +247,15 @@ class Client(interface.IXChainClient, IThorchainClient):
 
         balances = []
         for balance in response:
-            if not asset or str(balance['denom']) == str(asset):
-                balances.append(
-                    {"asset": balance['denom'], "amount": utils.base_amount(balance['amount'], utils.DECIMAL) })
-
+            asset = None
+            if balance['denom']:
+                asset = get_asset(balance['denom'])
+            else:
+                asset = {"chain" : "THOR", "symbol": "RUNE" , "ticker" : "RUNE"}
+            amount = balance['amount']
+            balances.append({"asset" : asset,"amount" : amount})
+        if assets:
+            return list(filter(lambda x : any(asset_to_string(x["asset"]) == asset_to_string(element) for element in assets) , balances))
         return balances
 
     async def get_transaction_data(self, tx_id: str) -> object:
@@ -329,15 +334,15 @@ class Client(interface.IXChainClient, IThorchainClient):
         try:
             url = f'{self.get_default_client_url()[self.get_network()]["node"]}/thorchain/deposit'
             client = http3.AsyncClient()
-
-            response = await client.post(url=url , data= {
+            data = {
             "coins" : msg_native_tx.coins,
             "memo" : msg_native_tx.memo,
             "base_req" : {
                 "chain_id" : "thorchain",
                 "from" : msg_native_tx.signer
             }  
-            })
+            }
+            response = await client.post(url=url , data= data)
 
             if response.status_code == 200:
                 if "value" not in response:
@@ -358,12 +363,12 @@ class Client(interface.IXChainClient, IThorchainClient):
 
     async def deposit(self, amount , memo , asset = {"chain" : "THOR", "symbol": "RUNE" , "ticker" : "RUNE"}):
         try:
-            asset_balance = await self.get_balance(self.get_address , asset)
+            asset_balance = await self.get_balance(self.get_address() , [asset])
             if len(asset_balance) == 0 or float(asset_balance[0]['amount']) < (float(amount)+ DEFAULT_GAS_VALUE):
                 raise Exception("insufficient funds")
 
             signer = self.get_address()
-            coins = [MsgCoin(getDenomWithChain(asset) , utils.cnv_big_number(amount, utils.DECIMAL)).to_json()]
+            coins = [MsgCoin(getDenomWithChain(asset) , amount).to_json()]
 
             msg_native_tx = message.msg_native_tx_from_json(coins , memo , signer)
             

@@ -6,7 +6,7 @@ from .cosmos.cosmosUtil import bech32_prefix
 import bech32
 
 DECIMAL = 8
-DEFAULT_GAS_VALUE = '2000000'
+DEFAULT_GAS_VALUE = 2000000
 
 def base_amount(value: str and int, decimal: int = DECIMAL) -> str:
     if type(value) == int:
@@ -44,3 +44,13 @@ def tobech32(value):
 
 def sort_dict(item: dict):
     return {k: sort_dict(v) if isinstance(v, dict) else v for k, v in sorted(item.items())}    
+
+def get_asset(denom : str):
+    if denom == 'rune':
+        return  {"chain" : "THOR", "symbol": "RUNE" , "ticker" : "RUNE"}
+    else:
+        
+        return  {"chain" : "THOR", "symbol": denom.upper() , "ticker" : denom.split('-')[0]}
+
+def asset_to_string(asset):
+    return f'{asset["chain"]}.{asset["symbol"]}'
