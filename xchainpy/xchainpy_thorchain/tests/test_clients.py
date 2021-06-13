@@ -149,7 +149,7 @@ class TestClient:
 
     @pytest.mark.asyncio
     async def test_deposit(self, client):
-        send_amount = 1000000
+        send_amount = 10000
         memo = 'swap:BNB.BNB:tbnb1ftzhmpzr4t8ta3etu4x7nwujf9jqckp3th2lh0'
 
         expected_txsPost_result = {
@@ -184,33 +184,33 @@ class TestClient:
                 ],
             })
 
-        self.mock_thorchain_deposit(client.get_default_client_url()['testnet']['node'] , {
-                "type": 'cosmos-sdk/StdTx',
-                "value": {
-                        "msg": [
-                            {
-                                "type": 'thorchain/MsgDeposit',
-                                "value": {
-                                "coins": [
-                                    {
-                                    "asset": 'THOR.RUNE',
-                                    "amount": '10000',
-                                    },
-                                ],
-                                "memo": 'swap:BNB.BNB:tbnb1ftzhmpzr4t8ta3etu4x7nwujf9jqckp3th2lh0',
-                                "signer": 'tthor19kacmmyuf2ysyvq3t9nrl9495l5cvktj5c4eh4',
-                                },
-                            },
-                        ],
-                    "fee": {
-                        "amount": [],
-                        "gas": '100000000',
-                        },
-                    "signatures": [],
-                    "memo": '',
-                    "timeout_height": '0',
-                },
-            })
+        # self.mock_thorchain_deposit(client.get_default_client_url()['testnet']['node'] , {
+        #         "type": 'cosmos-sdk/StdTx',
+        #         "value": {
+        #                 "msg": [
+        #                     {
+        #                         "type": 'thorchain/MsgDeposit',
+        #                         "value": {
+        #                         "coins": [
+        #                             {
+        #                             "asset": 'THOR.RUNE',
+        #                             "amount": '10000',
+        #                             },
+        #                         ],
+        #                         "memo": 'swap:BNB.BNB:tbnb1ftzhmpzr4t8ta3etu4x7nwujf9jqckp3th2lh0',
+        #                         "signer": 'tthor19kacmmyuf2ysyvq3t9nrl9495l5cvktj5c4eh4',
+        #                         },
+        #                     },
+        #                 ],
+        #             "fee": {
+        #                 "amount": [],
+        #                 "gas": '100000000',
+        #                 },
+        #             "signatures": [],
+        #             "memo": '',
+        #             "timeout_height": '0',
+        #         },
+        #     })
         
         self.assert_tx_post(client.get_default_client_url()['testnet']['node'] , "" , expected_txsPost_result)
 

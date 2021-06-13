@@ -24,3 +24,7 @@ class MsgCoin(Msg):
     
     def to_json(self):
         return json.dumps(self, default=lambda o: {key.lstrip('_'): value for key, value in o.__dict__.items()})
+
+    def to_obj(self):
+        data = {key.lstrip('_'): str(value) for key, value in self.__dict__.items()}
+        return data

@@ -16,7 +16,7 @@ from .cosmos.models.MsgCoin import MsgCoin
 from .cosmos.models.MsgNativeTx import MsgNativeTx
 from .cosmos.sdk_client import CosmosSDKClient
 from .cosmos import message
-from .utils import DEFAULT_GAS_VALUE, asset_to_string, frombech32, getDenomWithChain, get_asset
+from .utils import DEFAULT_GAS_VALUE, asset_to_string, frombech32, getDenomWithChain, get_asset, tobech32
 
 
 class IThorchainClient():
@@ -334,6 +334,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         try:
             url = f'{self.get_default_client_url()[self.get_network()]["node"]}/thorchain/deposit'
             client = http3.AsyncClient()
+            # msg = tobech32(msg_native_tx.signer)
             data = {
             "coins" : msg_native_tx.coins,
             "memo" : msg_native_tx.memo,
@@ -342,7 +343,8 @@ class Client(interface.IXChainClient, IThorchainClient):
                 "from" : msg_native_tx.signer
             }  
             }
-            response = await client.post(url=url , data= data)
+            data = json.dumps(data)
+            response = await client.post(url=url , data=data)
 
             if response.status_code == 200:
                 if "value" not in response:
@@ -368,7 +370,7 @@ class Client(interface.IXChainClient, IThorchainClient):
                 raise Exception("insufficient funds")
 
             signer = self.get_address()
-            coins = [MsgCoin(getDenomWithChain(asset) , amount).to_json()]
+            coins = [MsgCoin(getDenomWithChain(asset) , amount).to_obj()]
 
             msg_native_tx = message.msg_native_tx_from_json(coins , memo , signer)
             

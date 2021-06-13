@@ -30,6 +30,7 @@ def bech32_fromwords(words):
 
 def bech32_towords(value_bytes):
     res = bech32.convertbits(value_bytes , 8 , 5 , False)
+    return res
     
 
 def frombech32(address : str):
