@@ -343,19 +343,16 @@ class Client(interface.IXChainClient, IThorchainClient):
                 "from" : msg_native_tx.signer
             }  
             }
-            data = json.dumps(data)
-            response = await client.post(url=url , data=data)
+            # data = json.dumps(data)
+            response = await client.post(url=url , json=data)
 
             if response.status_code == 200:
-                if "value" not in response:
-                  raise Exception("Invalid Client Url")
-
                 res = json.loads(response.content.decode('utf-8'))['value']
                 unsigned_std_tx = StdTx(res['msg'] , res['fee'] ,[] ,'')
 
                 return unsigned_std_tx
             else:
-                raise Exception(json.loads(response.content.decode('utf-8'))['data'])
+                raise Exception(response.text)
 
         except Exception as err:
             raise Exception(str(err))
@@ -379,7 +376,7 @@ class Client(interface.IXChainClient, IThorchainClient):
             private_key = self.get_private_key()
             acc_address = frombech32(signer)
             # max gas
-            fee.gas = '10000000'
+            fee['gas'] = '10000000'
 
             result = await self.thor_client.sign_and_broadcast(unsigned_std_tx , private_key , acc_address)
             if not result['logs']:
