@@ -214,7 +214,7 @@ class CosmosSDKClient:
         }
     
     def set_prefix(self):
-        set_bech32_prefix(self.prefix , self.prefix + "pub" , self.prefix + "valoper" , self.prefix + "valoperpub" , self.prefix + "valcons" + self.prefix + "valconspub")
+        set_bech32_prefix(self.prefix , self.prefix + "pub" , self.prefix + "valoper" , self.prefix + "valoperpub" , self.prefix + "valcons" , self.prefix + "valconspub")
 
     async def account_address_get(self , address):
         if not address:
@@ -225,7 +225,7 @@ class CosmosSDKClient:
             # local_var_url_obj = urlparse(local_var_path) we can add some headers , query
             # local_var_request_options = {"method" : "GET"} # request options
             # return {"url" : local_var_path , "options" : local_var_request_options}
-            url = BASE_PATH + local_var_path
+            url = self.server + local_var_path
             client = http3.AsyncClient()
             response = await client.get(url)
 
@@ -263,7 +263,7 @@ class CosmosSDKClient:
             local_var_path = '/txs'
             
 
-            api_url = BASE_PATH + local_var_path
+            api_url = self.server + local_var_path
 
             client = http3.AsyncClient()
             response = await client.post(url=api_url, data={'tx': tx.to_json() , 'mode' : mode})
@@ -283,11 +283,11 @@ class CosmosSDKClient:
         try:
             self.set_prefix()
             account = await self.account_address_get(signer)
-            if not account["account_number"]:
+            if "account_number" not in account:
                 account = {
                     "address" : utils.frombech32(account["value"]["address"]) if account["value"]["address"] else "",
                     "public_key" : account["value"]["public_key"] if account["value"]["public_key"] else None,
-                    "coins" : account["value"]["coins"],
+                    "coins" : account["value"]["coins"] if "coins" in account["value"] else [],
                     "account_number" : account["value"]["account_number"],
                     "sequence" : account["value"]["sequence"]
                 }
