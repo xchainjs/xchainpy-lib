@@ -238,10 +238,14 @@ class CosmosSDKClient:
         except Exception as err:
                 raise Exception(str(err))
     
-    def sign_std_tx(self, privkey , unsigned_std_tx : StdTx, account_number : str, sequence : str):
+    def sign_std_tx(self, privkey , unsigned_std_tx : StdTx, account_number : str, sequence : str , pub_key : str):
         sign_bytes = unsigned_std_tx.get_sign_bytes(self.chain_id ,account_number ,sequence)
+        # signature = {
+        #     "pub_key" : self.privkey_to_pubkey(privkey),
+        #     "signature" : self._sign(sign_bytes , privkey)
+        # }
         signature = {
-            "pub_key" : self.privkey_to_pubkey(privkey),
+            "pub_key" : pub_key,
             "signature" : self._sign(sign_bytes , privkey)
         }
         signature_param = None
@@ -255,6 +259,28 @@ class CosmosSDKClient:
 
         return new_std_tx
 
+    def get_tx_post_data(self , tx : StdTx , mode) -> str:
+        pubkey = tx.signature[0]["pub_key"]
+        # base64_pubkey = base64.b64encode(pubkey).decode("utf-8")
+        pushable_tx = {
+            "tx": {
+                "msg": tx.msg,
+                "fee": {
+                    "gas": str(tx.fee['gas']),
+                    "amount": [],
+                },
+                "memo": tx.memo,
+                "signatures": [
+                    {
+                        "signature": tx.signature[0]["signature"],
+                        "pub_key": {"type": "tendermint/PubKeySecp256k1", "value": tx.signature[0]["pub_key"]},
+                    }
+                ],
+            },
+            "mode": mode,
+        }
+        return json.dumps(pushable_tx, separators=(",", ":"))
+
     async def tx_post(self , tx : StdTx , mode): # broadcastReq
         if not tx:
           raise Exception("tx not provided")
@@ -265,14 +291,16 @@ class CosmosSDKClient:
 
             api_url = self.server + local_var_path
 
+            post_data = self.get_tx_post_data(tx , mode)
+
             client = http3.AsyncClient()
-            response = await client.post(url=api_url, data={'tx': tx.to_json() , 'mode' : mode})
+            response = await client.post(url=api_url, data=post_data)
 
             if response.status_code == 200:
-                res = json.loads(response.content.decode('utf-8'))['data']
+                res = json.loads(response.content.decode('utf-8'))
                 return res
             else:
-                return json.loads(response.content.decode('utf-8'))['data']
+                return json.loads(response.content.decode('utf-8'))
         except Exception as err:
             raise Exception(str(err))
 
@@ -292,7 +320,7 @@ class CosmosSDKClient:
                     "sequence" : account["value"]["sequence"]
                 }
             
-            signed_std_tx = self.sign_std_tx(private_key , unsigned_std_tx , str(account["account_number"]) , str(account["sequence"]))
+            signed_std_tx = self.sign_std_tx(private_key , unsigned_std_tx , str(account["account_number"]) , str(account["sequence"]) ,str(account["public_key"]["value"]) )
 
             result =  await self.tx_post(signed_std_tx , 'block')
             

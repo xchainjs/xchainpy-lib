@@ -57,12 +57,16 @@ class StdTx(Tx):
             "sequence" : sequence
         }
 
-        canonicalized = sort_dict(std_sign_msg)
-        json_object = json.dumps(canonicalized)
-        encoded = json_object.encode('utf8')
-        encoded_bytes = bytearray(encoded)
+        message_str = json.dumps(
+            std_sign_msg, separators=(",", ":"), sort_keys=True)
+        message_bytes = message_str.encode("utf-8")
+
+        # canonicalized = sort_dict(std_sign_msg)
+        # json_object = json.dumps(canonicalized)
+        # encoded = json_object.encode('utf8')
+        # encoded_bytes = bytes(encoded)
         
-        return encoded_bytes
+        return message_bytes
     
     def to_json(self):
         return json.dumps(self, default=lambda o: {key.lstrip('_'): value for key, value in o.__dict__.items()})
