@@ -125,98 +125,30 @@ class TestClient:
         except Exception as err:
             assert str(err) == 'transaction not found' # no transaction found
 
-    def mock_accounts_address(self , url : str , address : str , result):
-        with requests_mock.Mocker() as mock_req:
-            mock_req.get(f'{url}/auth/accounts/{address}', json = result)
-        # resp = requests.get(f'{url}/bank/balance/{address}')
-        # return resp.json()
-
-    def mock_accounts_balance(self , url : str , address : str , result):
-        with requests_mock.Mocker() as mock_req:
-            mock_req.get(f'{url}/bank/balance/{address}', json = result)
-
-    def mock_thorchain_deposit(self , url : str, result):
-        with requests_mock.Mocker() as mock_req:
-            mock_req.get(f'{url}/thorchain/deposit', json = result)
-
     def body_checker(self, request):
         if len(request.json()['tx']['msg']) and request.json()['tx']['memo'] == self.memo_global:
             return True
-
-    def assert_tx_post(self , url : str, memo , result):
-        with requests_mock.Mocker() as mock_req:
-            mock_req.post(f'{url}/txs', json = result , additional_matcher=self.body_checker)
 
     @pytest.mark.asyncio
     async def test_deposit(self, client):
         send_amount = 10000
         memo = 'swap:BNB.BNB:tbnb1ftzhmpzr4t8ta3etu4x7nwujf9jqckp3th2lh0'
 
-        expected_txsPost_result = {
-            "check_tx" : {},
-            "deliver_tx" :{},
-            "txhash" : "EA2FAC9E82290DCB9B1374B4C95D7C4DD8B9614A96FACD38031865EB1DBAE24D",
-            "height" : 0,
-            "logs" : []
+        success_structure = {
+            'txhash':'',
+            'height':'',
+            'data':'',
+            'raw_log':'',
+            'logs':'',
+            'gas_wanted':'',
+            'gas_used':''
         }
+
         client = Client(self.phrase, network= 'testnet')
-        self.mock_accounts_address(client.get_default_client_url()['testnet']['node'],self.testnetaddress,{
-            "height": 0,
-            "result": {
-                "coins": [
-                    {
-                        "denom": 'rune',
-                        "amount": '210000000',
-                    },
-                ],
-                "account_number": '0',
-                "sequence": '0',
-            },
-        })
-
-        self.mock_accounts_balance(client.get_default_client_url()['testnet']['node'] , self.testnetaddress , {
-            "height": 0,
-            "result": [
-                    {
-                        "denom": 'rune',
-                        "amount": '210000000',
-                    },
-                ],
-            })
-
-        self.mock_thorchain_deposit(client.get_default_client_url()['testnet']['node'] , {
-                "type": 'cosmos-sdk/StdTx',
-                "value": {
-                        "msg": [
-                            {
-                                "type": 'thorchain/MsgDeposit',
-                                "value": {
-                                "coins": [
-                                    {
-                                    "asset": 'THOR.RUNE',
-                                    "amount": '10000',
-                                    },
-                                ],
-                                "memo": 'swap:BNB.BNB:tbnb1ftzhmpzr4t8ta3etu4x7nwujf9jqckp3th2lh0',
-                                "signer": 'tthor19kacmmyuf2ysyvq3t9nrl9495l5cvktj5c4eh4',
-                                },
-                            },
-                        ],
-                    "fee": {
-                        "amount": [],
-                        "gas": '100000000',
-                        },
-                    "signatures": [],
-                    "memo": '',
-                    "timeout_height": '0',
-                },
-            })
-        
-        self.assert_tx_post(client.get_default_client_url()['testnet']['node'] , "" , expected_txsPost_result)
 
         result = await client.deposit(send_amount , memo)
 
-        assert result == "EA2FAC9E82290DCB9B1374B4C95D7C4DD8B9614A96FACD38031865EB1DBAE24D"
+        assert set(success_structure) == set(result)
 
 
         

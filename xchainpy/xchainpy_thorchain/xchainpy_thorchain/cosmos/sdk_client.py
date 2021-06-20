@@ -222,9 +222,6 @@ class CosmosSDKClient:
         try:
             address = utils.tobech32(address)
             local_var_path = re.sub("{address}", quote(address.encode("utf-8")),"/auth/accounts/{address}")
-            # local_var_url_obj = urlparse(local_var_path) we can add some headers , query
-            # local_var_request_options = {"method" : "GET"} # request options
-            # return {"url" : local_var_path , "options" : local_var_request_options}
             url = self.server + local_var_path
             client = http3.AsyncClient()
             response = await client.get(url)
@@ -240,10 +237,6 @@ class CosmosSDKClient:
     
     def sign_std_tx(self, privkey , unsigned_std_tx : StdTx, account_number : str, sequence : str , pub_key : str):
         sign_bytes = unsigned_std_tx.get_sign_bytes(self.chain_id ,account_number ,sequence)
-        # signature = {
-        #     "pub_key" : self.privkey_to_pubkey(privkey),
-        #     "signature" : self._sign(sign_bytes , privkey)
-        # }
         signature = {
             "pub_key" : pub_key,
             "signature" : self._sign(sign_bytes , privkey)
@@ -260,8 +253,6 @@ class CosmosSDKClient:
         return new_std_tx
 
     def get_tx_post_data(self , tx : StdTx , mode) -> str:
-        pubkey = tx.signature[0]["pub_key"]
-        # base64_pubkey = base64.b64encode(pubkey).decode("utf-8")
         pushable_tx = {
             "tx": {
                 "msg": tx.msg,

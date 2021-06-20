@@ -60,11 +60,6 @@ class StdTx(Tx):
         message_str = json.dumps(
             std_sign_msg, separators=(",", ":"), sort_keys=True)
         message_bytes = message_str.encode("utf-8")
-
-        # canonicalized = sort_dict(std_sign_msg)
-        # json_object = json.dumps(canonicalized)
-        # encoded = json_object.encode('utf8')
-        # encoded_bytes = bytes(encoded)
         
         return message_bytes
     

@@ -334,7 +334,6 @@ class Client(interface.IXChainClient, IThorchainClient):
         try:
             url = f'{self.get_default_client_url()[self.get_network()]["node"]}/thorchain/deposit'
             client = http3.AsyncClient()
-            # msg = tobech32(msg_native_tx.signer)
             data = {
             "coins" : msg_native_tx.coins,
             "memo" : msg_native_tx.memo,
@@ -343,7 +342,6 @@ class Client(interface.IXChainClient, IThorchainClient):
                 "from" : msg_native_tx.signer
             }  
             }
-            # data = json.dumps(data)
             response = await client.post(url=url , json=data)
 
             if response.status_code == 200:
@@ -382,8 +380,7 @@ class Client(interface.IXChainClient, IThorchainClient):
             if not result['logs']:
                 raise Exception("failed to broadcast transaction")
             else:
-                txHash = result['txhash']
-                return txHash
+                return result
 
         except Exception as err:
             raise Exception(str(err))
