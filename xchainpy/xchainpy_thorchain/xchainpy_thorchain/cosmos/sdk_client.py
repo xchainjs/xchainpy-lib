@@ -116,7 +116,7 @@ class CosmosSDKClient:
         if not self._account_num:
             account = await self.account_address_get(address=from_address)
             self._account_num = account['result']['value']['account_number']
-            self._sequence = account['result']['value']['sequence']
+            self._sequence = account['result']['value'].get("sequence" , "0")
 
         self._gas = "10000000"
         self._fee = "10000000"
