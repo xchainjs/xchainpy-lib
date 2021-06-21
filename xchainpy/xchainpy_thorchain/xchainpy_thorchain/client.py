@@ -3,15 +3,20 @@ import asyncio
 from typing import Optional
 from datetime import datetime
 import time
-
+from .cosmos.models.StdTx import StdTx
+import http3
+import json
 from xchainpy_client import interface
 from xchainpy_client.models import tx_types
 from xchainpy_crypto import crypto as xchainpy_crypto
 from xchainpy_util.asset import Asset
 from . import utils
 from . import crypto
-
+from .cosmos.models.MsgCoin import MsgCoin
+from .cosmos.models.MsgNativeTx import MsgNativeTx
 from .cosmos.sdk_client import CosmosSDKClient
+from .cosmos import message
+from .utils import DEFAULT_GAS_VALUE, asset_to_string, frombech32, getDenomWithChain, get_asset, tobech32
 
 
 class IThorchainClient():
@@ -163,7 +168,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         """
         return f'{self.get_default_explorer_url()}/txs/${tx_id}'
 
-    def get_prefix(self, netowrk: str = None) -> str:
+    def get_prefix(self, network: str = None) -> str:
         """Get address prefix based on the network.
 
         :param network: network
@@ -171,7 +176,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         :returns: The address prefix based on the network.
         :rtype: string
         """
-        if netowrk:
+        if network:
             return 'tthor' if network == 'testnet' else 'thor'
         else:
             return 'tthor' if self.network == 'testnet' else 'thor'
@@ -226,7 +231,7 @@ class Client(interface.IXChainClient, IThorchainClient):
                     "Address has to be set. Or set a phrase by calling `setPhrase` before to use an address of an imported key.")
         return self.address
 
-    async def get_balance(self, address: str = None, asset: str = None) -> list:
+    async def get_balance(self, address: str = None, assets = None) -> list:
         """
          Get the balance of a given address.
 
@@ -242,10 +247,15 @@ class Client(interface.IXChainClient, IThorchainClient):
 
         balances = []
         for balance in response:
-            if not asset or str(balance['denom']) == str(asset):
-                balances.append(
-                    {"asset": balance['denom'], "amount": utils.base_amount(balance['amount'], utils.DECIMAL) })
-
+            asset = None
+            if balance['denom']:
+                asset = get_asset(balance['denom'])
+            else:
+                asset = {"chain" : "THOR", "symbol": "RUNE" , "ticker" : "RUNE"}
+            amount = balance['amount']
+            balances.append({"asset" : asset,"amount" : amount})
+        if assets:
+            return list(filter(lambda x : any(asset_to_string(x["asset"]) == asset_to_string(element) for element in assets) , balances))
         return balances
 
     async def get_transaction_data(self, tx_id: str) -> object:
@@ -319,3 +329,58 @@ class Client(interface.IXChainClient, IThorchainClient):
             "fastest": fee,
             "average": fee,
         }
+
+    async def build_deposit_tx(self , msg_native_tx : MsgNativeTx) -> StdTx :
+        try:
+            url = f'{self.get_default_client_url()[self.get_network()]["node"]}/thorchain/deposit'
+            client = http3.AsyncClient()
+            data = {
+            "coins" : msg_native_tx.coins,
+            "memo" : msg_native_tx.memo,
+            "base_req" : {
+                "chain_id" : "thorchain",
+                "from" : msg_native_tx.signer
+            }  
+            }
+            response = await client.post(url=url , json=data)
+
+            if response.status_code == 200:
+                res = json.loads(response.content.decode('utf-8'))['value']
+                unsigned_std_tx = StdTx(res['msg'] , res['fee'] ,[] ,'')
+
+                return unsigned_std_tx
+            else:
+                raise Exception(response.text)
+
+        except Exception as err:
+            raise Exception(str(err))
+        
+        
+        
+
+    async def deposit(self, amount , memo , asset = {"chain" : "THOR", "symbol": "RUNE" , "ticker" : "RUNE"}):
+        try:
+            asset_balance = await self.get_balance(self.get_address() , [asset])
+            if len(asset_balance) == 0 or float(asset_balance[0]['amount']) < (float(amount)+ DEFAULT_GAS_VALUE):
+                raise Exception("insufficient funds")
+
+            signer = self.get_address()
+            coins = [MsgCoin(getDenomWithChain(asset) , amount).to_obj()]
+
+            msg_native_tx = message.msg_native_tx_from_json(coins , memo , signer)
+            
+            unsigned_std_tx = await self.build_deposit_tx(msg_native_tx)
+            fee = unsigned_std_tx.fee
+            private_key = self.get_private_key()
+            acc_address = frombech32(signer)
+            # max gas
+            fee['gas'] = '10000000'
+
+            result = await self.thor_client.sign_and_broadcast(unsigned_std_tx , private_key , acc_address)
+            if not result['logs']:
+                raise Exception("failed to broadcast transaction")
+            else:
+                return result
+
+        except Exception as err:
+            raise Exception(str(err))

@@ -1,17 +1,21 @@
 import hashlib
-
+from ..cosmos.models.StdTx import StdTx
+from .cosmosUtil import set_bech32_prefix
+from .. import utils
 import bech32
 import ecdsa
 import hdwallets
 import mnemonic
-
 import http3
 import json
 import base64
+import re
+from urllib.parse import urlparse , parse_qs , quote
 
-from .. import utils
+BASE_PATH = re.sub(r'\/+$','',"https://api.cosmos.network")
+
 class CosmosSDKClient:
-    server = chain_id = prefix = derive_path = ''
+    
 
     _account_num = None
 
@@ -185,6 +189,17 @@ class CosmosSDKClient:
         signature_base64_str = base64.b64encode(
             signature_compact).decode("utf-8")
         return signature_base64_str
+    
+    def _sign(self , sign_bytes , priv_key) -> str:
+        privkey = ecdsa.SigningKey.from_string(
+            priv_key, curve=ecdsa.SECP256k1)
+        signature_compact = privkey.sign_deterministic(
+            sign_bytes, hashfunc=hashlib.sha256, sigencode=ecdsa.util.sigencode_string_canonize
+        )
+
+        signature_base64_str = base64.b64encode(
+            signature_compact).decode("utf-8")
+        return signature_base64_str
 
     def _get_sign_message(self):
         return {
@@ -198,3 +213,111 @@ class CosmosSDKClient:
             "sequence": str(self._sequence),
             "msgs": self._msgs,
         }
+    
+    def set_prefix(self):
+        set_bech32_prefix(self.prefix , self.prefix + "pub" , self.prefix + "valoper" , self.prefix + "valoperpub" , self.prefix + "valcons" , self.prefix + "valconspub")
+
+    async def account_address_get(self , address):
+        if not address:
+          raise Exception("address not provided")
+        try:
+            address = utils.tobech32(address)
+            local_var_path = re.sub("{address}", quote(address.encode("utf-8")),"/auth/accounts/{address}")
+            url = self.server + local_var_path
+            client = http3.AsyncClient()
+            response = await client.get(url)
+
+            if response.status_code == 200:
+                result = json.loads(response.content.decode('utf-8'))['result']
+                return result
+            else:
+                err_obj = json.loads(response.content.decode('utf-8'))
+                raise Exception(err_obj)
+        except Exception as err:
+                raise Exception(str(err))
+    
+    def sign_std_tx(self, privkey , unsigned_std_tx : StdTx, account_number : str, sequence : str , pub_key : str):
+        sign_bytes = unsigned_std_tx.get_sign_bytes(self.chain_id ,account_number ,sequence)
+        signature = {
+            "pub_key" : pub_key,
+            "signature" : self._sign(sign_bytes , privkey)
+        }
+        signature_param = None
+        if unsigned_std_tx.signature:
+            signature_param = [{**unsigned_std_tx.signature} , signature]
+        else:
+            signature_param = [signature]
+
+
+        new_std_tx = StdTx(unsigned_std_tx.msg , unsigned_std_tx.fee , signature_param , unsigned_std_tx.memo)
+
+        return new_std_tx
+
+    def get_tx_post_data(self , tx : StdTx , mode) -> str:
+        pushable_tx = {
+            "tx": {
+                "msg": tx.msg,
+                "fee": {
+                    "gas": str(tx.fee['gas']),
+                    "amount": [],
+                },
+                "memo": tx.memo,
+                "signatures": [
+                    {
+                        "signature": tx.signature[0]["signature"],
+                        "pub_key": {"type": "tendermint/PubKeySecp256k1", "value": tx.signature[0]["pub_key"]},
+                    }
+                ],
+            },
+            "mode": mode,
+        }
+        return json.dumps(pushable_tx, separators=(",", ":"))
+
+    async def tx_post(self , tx : StdTx , mode): # broadcastReq
+        if not tx:
+          raise Exception("tx not provided")
+        
+        try:
+            local_var_path = '/txs'
+            
+
+            api_url = self.server + local_var_path
+
+            post_data = self.get_tx_post_data(tx , mode)
+
+            client = http3.AsyncClient()
+            response = await client.post(url=api_url, data=post_data)
+
+            if response.status_code == 200:
+                res = json.loads(response.content.decode('utf-8'))
+                return res
+            else:
+                return json.loads(response.content.decode('utf-8'))
+        except Exception as err:
+            raise Exception(str(err))
+
+        
+        
+
+    async def sign_and_broadcast(self , unsigned_std_tx , private_key , signer):
+        try:
+            self.set_prefix()
+            account = await self.account_address_get(signer)
+            if "account_number" not in account:
+                account = {
+                    "address" : utils.frombech32(account["value"]["address"]) if account["value"]["address"] else "",
+                    "public_key" : account["value"]["public_key"] if account["value"]["public_key"] else None,
+                    "coins" : account["value"]["coins"] if "coins" in account["value"] else [],
+                    "account_number" : account["value"]["account_number"],
+                    "sequence" : account["value"]["sequence"]
+                }
+            
+            signed_std_tx = self.sign_std_tx(private_key , unsigned_std_tx , str(account["account_number"]) , str(account["sequence"]) ,str(account["public_key"]["value"]) )
+
+            result =  await self.tx_post(signed_std_tx , 'block')
+            
+            return result
+
+        except Exception as err:
+            raise Exception(str(err))
+

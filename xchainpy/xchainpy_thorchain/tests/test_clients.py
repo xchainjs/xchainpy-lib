@@ -1,4 +1,6 @@
 import pytest
+import requests
+import requests_mock
 
 from xchainpy_thorchain.client import Client
 from xchainpy_util.asset import Asset
@@ -16,6 +18,8 @@ class TestClient:
     testnetTransfer = 'tthor1pttyuys2muhj674xpr9vutsqcxj9hepy4ddueq'
 
     sampleTX = '8A2EC1EE711D1057594FAA9F7F82B6E0D726745F4E88372F6FFACC38C36D234B'
+
+    memo_global = None
 
     transfer_amount = 0.01
     single_tx_fee = 10000000
@@ -120,3 +124,33 @@ class TestClient:
             assert transaction
         except Exception as err:
             assert str(err) == 'transaction not found' # no transaction found
+
+    def body_checker(self, request):
+        if len(request.json()['tx']['msg']) and request.json()['tx']['memo'] == self.memo_global:
+            return True
+
+    @pytest.mark.asyncio
+    async def test_deposit(self, client):
+        send_amount = 10000
+        memo = 'swap:BNB.BNB:tbnb1ftzhmpzr4t8ta3etu4x7nwujf9jqckp3th2lh0'
+
+        success_structure = {
+            'txhash':'',
+            'height':'',
+            'data':'',
+            'raw_log':'',
+            'logs':'',
+            'gas_wanted':'',
+            'gas_used':''
+        }
+
+        client = Client(self.phrase, network= 'testnet')
+
+        result = await client.deposit(send_amount , memo)
+
+        assert set(success_structure) == set(result)
+
+
+        
+
+
