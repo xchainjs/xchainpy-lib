@@ -1,5 +1,3 @@
-from enum import Enum
-
 Prefix = {
     "Cosmos" : "cosmos",
     "Public" : "pub",

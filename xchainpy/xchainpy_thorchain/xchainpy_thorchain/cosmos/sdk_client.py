@@ -10,7 +10,7 @@ import http3
 import json
 import base64
 import re
-from urllib.parse import urlparse , parse_qs , quote
+from urllib.parse import quote
 
 BASE_PATH = re.sub(r'\/+$','',"https://api.cosmos.network")
 
