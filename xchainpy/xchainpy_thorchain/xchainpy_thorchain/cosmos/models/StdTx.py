@@ -1,6 +1,5 @@
 import json
 from typing import List, Optional, Union
-from ...utils import sort_dict
 from .StdSignature import StdSignature
 from .StdTxFee import StdTxFee
 from .AminoWrapping import AminoWrapping

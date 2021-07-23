@@ -10,7 +10,7 @@ import http3
 import json
 import base64
 import re
-from urllib.parse import urlparse , parse_qs , quote
+from urllib.parse import quote
 
 BASE_PATH = re.sub(r'\/+$','',"https://api.cosmos.network")
 
@@ -309,7 +309,7 @@ class CosmosSDKClient:
                     "public_key" : account["value"]["public_key"] if account["value"]["public_key"] else None,
                     "coins" : account["value"]["coins"] if "coins" in account["value"] else [],
                     "account_number" : account["value"]["account_number"],
-                    "sequence" : account["value"]["sequence"]
+                    "sequence" : account["value"]["sequence"] if "sequence" in account["value"] else "0"
                 }
             
             signed_std_tx = self.sign_std_tx(private_key , unsigned_std_tx , str(account["account_number"]) , str(account["sequence"]) ,str(account["public_key"]["value"]) )
