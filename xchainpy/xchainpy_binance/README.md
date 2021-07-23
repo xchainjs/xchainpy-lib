@@ -11,7 +11,7 @@ Binance Module for XChainPy Clients
 Following dependencies have to be installed into your project
 
 ```
-secp256k1 - py-binance-chain - pywallet - mnemonic
+secp256k1Crypto - py-binance-chain - pywallet - mnemonic
 ```
 
 
@@ -25,6 +25,6 @@ These packages needed to run tests:
 How to run test ?
 
 ```bash
-$ python -m pytest xchainpy/xchainpy_binance/test/test_binance_clients.py
+$ python -m pytest xchainpy/xchainpy_binance/tests/test_binance_clients.py
 ```
 
