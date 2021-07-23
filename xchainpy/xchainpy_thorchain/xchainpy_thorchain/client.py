@@ -1,3 +1,4 @@
+import binascii
 from .cosmos.models.StdTx import StdTx
 import http3
 import json

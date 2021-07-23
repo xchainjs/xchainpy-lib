@@ -1,7 +1,4 @@
 import pytest
-import requests
-import requests_mock
-
 from xchainpy_thorchain.client import Client
 from xchainpy_util.asset import Asset
 from xchainpy_client.models import tx_types
