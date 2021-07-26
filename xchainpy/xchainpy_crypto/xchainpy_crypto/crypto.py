@@ -36,9 +36,10 @@ def validate_phrase(phrase: str):
     is_valid = Bip39MnemonicValidator(phrase).IsValid()
     return is_valid
 
-def generate_mnemonic():
-    mnemo = Mnemonic("english")
-    new_mnemonic = mnemo.generate()
+def generate_mnemonic(size=12, language="english"):
+    strength = size * 11 * 32 / 33
+    mnemo = Mnemonic(language)
+    new_mnemonic = mnemo.generate(strength)
     return new_mnemonic
 
 async def encrypt_to_keystore(phrase: str, password: str):
