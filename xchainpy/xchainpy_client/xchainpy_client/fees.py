@@ -1,5 +1,8 @@
 from . models.types import Fees
 
+def single_fee(fee):
+    return Fees(fast=fee, fastest=fee, average=fee)
+
 def standard_fees(fee):
     return Fees(fast=fee, fastest=fee*5, average=fee*0.5)
 
