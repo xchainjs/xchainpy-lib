@@ -45,7 +45,6 @@ class BaseXChainClient(interface.IXChainClient):
 
         :param network: "mainnet" or "testnet"
         :type network: str
-        :returns: the client
         :raises: raises if network not provided
         :raises: `Invalid network' if the given network is invalid
         """    
@@ -53,9 +52,9 @@ class BaseXChainClient(interface.IXChainClient):
             raise Exception('Network must be provided')
 
         if type(network) is Network:
-            self._network = network.value
+            self.network = network.value
         elif type(network) is str and network in ['mainnet', 'MAINNET', 'testnet', 'TESTNET']:
-            self._network = network.lower()
+            self.network = network.lower()
         else:
             raise Exception("Invalid network") 
 
