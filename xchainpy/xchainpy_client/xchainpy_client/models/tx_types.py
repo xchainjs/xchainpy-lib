@@ -149,3 +149,51 @@ class TxHistoryParams:
     @asset.setter
     def asset(self, asset):
         self._asset = asset
+
+class TxParams:
+    def __init__(self, asset:Asset, amount, recipient, memo='', wallet_index=None):
+        self._asset = asset
+        self._amount = amount
+        self._recipient = recipient
+        self._memo = memo
+        self._wallet_index = wallet_index
+
+    @property
+    def asset(self):
+        return self._asset
+
+    @asset.setter
+    def asset(self, asset):
+        self._asset = asset
+
+    @property
+    def amount(self):
+        return self._amount
+
+    @amount.setter
+    def amount(self, amount):
+        self._amount = amount
+
+    @property
+    def recipient(self):
+        return self._recipient
+
+    @recipient.setter
+    def recipient(self, recipient):
+        self._recipient = recipient
+
+    @property
+    def memo(self):
+        return self._memo
+
+    @memo.setter
+    def memo(self, memo):
+        self._memo = memo
+
+    @property
+    def wallet_index(self):
+        return self._wallet_index
+
+    @wallet_index.setter
+    def wallet_index(self, wallet_index):
+        self._wallet_index = wallet_index
