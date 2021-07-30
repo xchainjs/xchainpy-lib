@@ -37,7 +37,7 @@ class BaseXChainClient(interface.IXChainClient):
         # NOTE: we don't call this.setPhrase() to avoid generating an address and paying the perf penalty
         if params.phrase:
             if not xchainpy_crypto.validate_phrase(params.phrase):
-                raise Exception('Invalid phrase')
+                raise Exception('invalid phrase')
             self.phrase = params.phrase
 
     def set_network(self, network:Network):
@@ -73,12 +73,10 @@ class BaseXChainClient(interface.IXChainClient):
         if not isinstance(data, list):
             raise Exception('bad response from Thornode API')
 
-        chain_data = filter(lambda x: x.chain == self.chain and type(x.gas_rate) == str, data)
+        chain_data = next(filter(lambda x: x['chain'] == self.chain, data), None)
 
-        if not len(chain_data) > 0:
+        if not chain_data:
             raise Exception(f'Thornode API /inbound_addresses does not contain fees for {self.chain}')
-        
-        chain_data = chain_data[0]
         
         return float(chain_data['gas_rate'])
 
@@ -98,11 +96,11 @@ class BaseXChainClient(interface.IXChainClient):
 
             api_url += endpoint
 
-            client = http3.AsyncClient()
+            client = http3.AsyncClient(timeout=5)
             response = await client.get(api_url)
 
             if response.status_code == 200:
-                return json.loads(response.content.decode('utf-8'))['data']
+                return json.loads(response.content.decode('utf-8')) 
             else:
                 return None
         
