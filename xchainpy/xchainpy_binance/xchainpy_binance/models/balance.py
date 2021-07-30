@@ -9,5 +9,5 @@ class BinanceBalance(Balance):
         :param balance: binance balance object
         :type balance: a dict contains: free, frozen, locked, symbol
         """
-        asset = Asset(Chain.Binance, balance['symbol'])
+        asset = Asset(Chain.Binance.value, balance['symbol'])
         super().__init__(asset, balance['free'])

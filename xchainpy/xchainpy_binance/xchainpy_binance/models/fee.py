@@ -16,7 +16,7 @@ class Fee:
     def fee(self):
         return self._fee
 
-    @msg_type.setter
+    @fee.setter
     def fee(self, fee):
         self._fee = fee
 

@@ -47,7 +47,7 @@ class Client(BaseXChainClient, IBinanceClient):
         :param params: params
         :type params: XChainClientParams
         """
-        BaseXChainClient.__init__(Chain.Binance, params)
+        BaseXChainClient.__init__(self, Chain.Binance, params)
         # self.set_network(network)
         # self.set_phrase(phrase)
 
@@ -284,7 +284,7 @@ class Client(BaseXChainClient, IBinanceClient):
                 elif msg['outputs'] and len(msg['outputs']):
                     address = msg['outputs'][0]['address']
 
-            transactions = await self.search_transactions({'address': address})
+            transactions = await self.__search_transactions({'address': address})
             transaction = next(filter(lambda v: v.tx_hash == tx_id , transactions['tx']), None)
             if transaction:
                 return transaction
@@ -319,12 +319,12 @@ class Client(BaseXChainClient, IBinanceClient):
         if not params.recipient:
             raise Exception('Destination address must be provided')
 
-        address = self.get_address(params.wallet_index)
+        address = self.get_address(params.wallet_index or 0)
 
         before_balance = await self.get_balance(address)
         before_balance_amount = before_balance[0].amount
         fee = await self.get_transfer_fee()
-        fee = fee['fixed_fee_params']['fee'] * 10 ** -8
+        fee = fee.fixed_fee_params.fee * 10 ** -8
         if (params.amount + fee) > float(before_balance_amount):
             raise Exception(
                 'input asset amout is higher than current (asset balance - transfer fee)')
@@ -365,6 +365,7 @@ class Client(BaseXChainClient, IBinanceClient):
 
         :returns: The current fee 
         """
+        single_tx_fee = None
         try:
             single_tx_fee = await self.get_fee_rate_from_thorchain()
             single_tx_fee = round(single_tx_fee * 10 ** -8, 8)
@@ -373,7 +374,7 @@ class Client(BaseXChainClient, IBinanceClient):
         if not single_tx_fee:
             try:
                 transfer_fee = await self.get_transfer_fee()
-                single_tx_fee = round(transfer_fee['fixed_fee_params']['fee'] * 10 ** -8, 8)
+                single_tx_fee = round(transfer_fee.fixed_fee_params.fee * 10 ** -8, 8)
             except Exception as err:
                 raise Exception(str(err))
         
@@ -386,7 +387,7 @@ class Client(BaseXChainClient, IBinanceClient):
         """
         try:
             transfer_fee = await self.get_transfer_fee()
-            multi_tx_fee = round(transfer_fee['multi_transfer_fee'] * 10 ** -8, 8)
+            multi_tx_fee = round(transfer_fee.multi_transfer_fee * 10 ** -8, 8)
             return single_fee(multi_tx_fee)
 
         except Exception as err:
