@@ -78,6 +78,9 @@ class Client(BaseXChainClient, IBinanceClient):
         else:
             raise Exception("Invalid network")
 
+        # if hasattr(self, 'client') and self.client:
+        #     await self.purge_client()
+            
         self.client = AsyncHttpApiClient(env=self.env)
 
     def get_client_url(self) -> str:
@@ -323,7 +326,7 @@ class Client(BaseXChainClient, IBinanceClient):
 
         before_balance = await self.get_balance(address)
         before_balance_amount = before_balance[0].amount
-        fee = await self.get_transfer_fee()
+        fee = await self.__get_transfer_fee()
         fee = fee.fixed_fee_params.fee * 10 ** -8
         if (params.amount + fee) > float(before_balance_amount):
             raise Exception(
@@ -344,7 +347,7 @@ class Client(BaseXChainClient, IBinanceClient):
             raise Exception(str(err))
 
 
-    async def get_transfer_fee(self):
+    async def __get_transfer_fee(self):
         """Get the current transfer fee
 
         :returns: The current transfer fee
@@ -373,7 +376,7 @@ class Client(BaseXChainClient, IBinanceClient):
             logging.warning(str(err))
         if not single_tx_fee:
             try:
-                transfer_fee = await self.get_transfer_fee()
+                transfer_fee = await self.__get_transfer_fee()
                 single_tx_fee = round(transfer_fee.fixed_fee_params.fee * 10 ** -8, 8)
             except Exception as err:
                 raise Exception(str(err))
@@ -386,7 +389,7 @@ class Client(BaseXChainClient, IBinanceClient):
         :returns: The current fee for multi-send transaction
         """
         try:
-            transfer_fee = await self.get_transfer_fee()
+            transfer_fee = await self.__get_transfer_fee()
             multi_tx_fee = round(transfer_fee.multi_transfer_fee * 10 ** -8, 8)
             return single_fee(multi_tx_fee)
 
@@ -399,7 +402,7 @@ class Client(BaseXChainClient, IBinanceClient):
         :returns: The current fee for both single and multi-send transaction
         """
         try:
-            transfer_fee = await self.get_transfer_fee()
+            transfer_fee = await self.__get_transfer_fee()
             multi_tx_fee = round(transfer_fee.multi_transfer_fee * 10 ** -8, 8)
             single_tx_fee = transfer_fee.fixed_fee_params.fee * 10 ** -8
 
