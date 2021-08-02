@@ -137,7 +137,7 @@ class TestBinanceClient:
         params = tx_types.TxHistoryParams(address=address, limit=1)
         transactions = await self.client.get_transactions(params)
         assert transactions
-        assert len(transactions['tx']) == 0
+        assert len(transactions.txs) == 0
 
     @pytest.mark.asyncio
     async def test_get_transactions(self, client):
@@ -145,9 +145,9 @@ class TestBinanceClient:
         params = tx_types.TxHistoryParams(address=self.testnetaddress_path0ForTx, limit=1)
         transactions = await self.client.get_transactions(params)
         assert transactions
-        assert len(transactions['tx']) == 1 or 0
-        if transactions['total'] > 0:
-            assert isinstance(transactions['tx'][0], tx_types.TX)
+        assert len(transactions.txs) == 1 or 0
+        if transactions.total > 0:
+            assert isinstance(transactions.txs[0], tx_types.TX)
 
     @pytest.mark.asyncio
     async def test_get_transaction_data(self, client):
@@ -155,7 +155,7 @@ class TestBinanceClient:
         try:
             params = tx_types.TxHistoryParams(address=self.testnetaddress_path0ForTx, limit=1)
             transactions = await self.client.get_transactions(params)
-            transaction = await self.client.get_transaction_data(transactions['tx'][0].tx_hash)
+            transaction = await self.client.get_transaction_data(transactions.txs[0].tx_hash)
             assert transaction
             assert isinstance(transaction, tx_types.TX)
         except Exception as err:
