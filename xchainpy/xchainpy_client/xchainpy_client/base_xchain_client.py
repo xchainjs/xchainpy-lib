@@ -171,7 +171,7 @@ class BaseXChainClient(interface.IXChainClient):
         pass
 
     @abstractmethod
-    async def get_transactions(self, params:tx_types.TxHistoryParams):
+    async def get_transactions(self, params:tx_types.TxHistoryParams) -> tx_types.TxPage:
         pass
 
     @abstractmethod
