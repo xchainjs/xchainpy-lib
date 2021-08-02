@@ -3,6 +3,7 @@
 from datetime import datetime
 import logging
 import time
+from xchainpy.xchainpy_client.xchainpy_client.models.tx_types import TxPage
 
 from py_binance_chain.http import AsyncHttpApiClient
 # from py_binance_chain.constants import KlineInterval
@@ -233,10 +234,7 @@ class Client(BaseXChainClient, IBinanceClient):
 
             txs = list(map(utils.parse_tx, transactions['tx']))
 
-            return {
-                'total': transactions['total'],
-                'tx': txs
-            }
+            return TxPage(total=transactions['total'], txs=txs)
 
         except Exception as err:
             raise Exception(str(err))
@@ -288,7 +286,7 @@ class Client(BaseXChainClient, IBinanceClient):
                     address = msg['outputs'][0]['address']
 
             transactions = await self.__search_transactions({'address': address})
-            transaction = next(filter(lambda v: v.tx_hash == tx_id , transactions['tx']), None)
+            transaction = next(filter(lambda v: v.tx_hash == tx_id , transactions.txs), None)
             if transaction:
                 return transaction
 

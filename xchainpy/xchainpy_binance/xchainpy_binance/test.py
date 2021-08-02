@@ -2,17 +2,26 @@ import asyncio
 
 
 
+
 async def main():
 
 
 
     from xchainpy_client.models.types import Network, XChainClientParams
     from .client import Client
+    from xchainpy_client.models.tx_types import TxHistoryParams
+
 
     phrase = 'rural bright ball negative already grass good grant nation screen model pizza'
     client = Client(XChainClientParams(network=Network.Testnet, phrase=phrase))
 
-    # address = client.get_address()
+    address = client.get_address()
+
+    params = TxHistoryParams(address=address, limit=1)
+    transactions = await client.get_transactions(params)
+
+    for a in transactions.txs[0].dir():
+        print(a)
 
     # balances = await client.get_balance(address=address)
 
@@ -52,9 +61,9 @@ async def main():
     # get_transaction_data
 
 
-    transactions = await client.get_transactions(params)
 
-    transaction = await client.get_transaction_data(transactions['tx'][0].tx_hash)
+
+    # transaction = await client.get_transaction_data(transactions['tx'][0].tx_hash)
 
 
     # transfer
