@@ -1,4 +1,4 @@
-from array import ArrayType
+from typing import List
 from xchainpy_util.asset import Asset
 
 class TxFrom:
@@ -200,7 +200,7 @@ class TxParams:
         self._wallet_index = wallet_index
 
 class TxPage:
-    def __init__(self, total:int, txs:ArrayType(TX)):
+    def __init__(self, total:int, txs:List[TX]):
         self._total = total
         self._txs = txs
 
