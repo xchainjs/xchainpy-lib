@@ -136,7 +136,7 @@ class BaseXChainClient(interface.IXChainClient):
         """
         return f"{self.root_derivation_paths[self.network]}{wallet_index}" if self.root_derivation_paths else ''
 
-    async def purge_client(self):
+    def purge_client(self):
         """Purge client
         """
         self.phrase = ''
