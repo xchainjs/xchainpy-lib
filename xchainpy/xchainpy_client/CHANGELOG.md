@@ -7,5 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added 
 
 - Added CHNAGELOG
-- Added base_xchain_client file
+- Added BaseXChainClient
 - Added some types (RootDerivationPaths, XChainClientParams, Network)
+- Added UTXOClient
+- Added fees.py and fee_rates.py
