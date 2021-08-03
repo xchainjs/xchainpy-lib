@@ -1,12 +1,9 @@
-# import asyncio
-# from typing import Optional
 from datetime import datetime
 import logging
 import time
 from xchainpy.xchainpy_client.xchainpy_client.models.tx_types import TxPage
 
 from py_binance_chain.http import AsyncHttpApiClient
-# from py_binance_chain.constants import KlineInterval
 from py_binance_chain.environment import BinanceEnvironment
 from secp256k1Crypto import EC_COMPRESSED
 from py_binance_chain.messages import TransferMsg, Transfer, MultiTransferMsg
@@ -20,7 +17,6 @@ from xchainpy_client.fees import single_fee
 from xchainpy_util.chain import Chain
 from xchainpy_util.asset import Asset
 
-# from xchainpy_crypto import crypto as xchainpy_crypto
 from . import crypto
 from . import utils
 from . models.balance import BinanceBalance
