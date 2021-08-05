@@ -24,4 +24,6 @@ def is_chain(chain):
     """Is the argument a chain or not
     :returns: True of False
     """
-    return True if chain in chains else False
+    if chain in chains or isinstance(chain, Chain):
+        return True
+    return False
