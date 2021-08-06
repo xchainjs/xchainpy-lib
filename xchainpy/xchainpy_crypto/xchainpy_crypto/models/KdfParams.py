@@ -1,5 +1,5 @@
 class KdfParams:
-    def __init__(self, prf : str , dklen : int , salt : str , c : int):
+    def __init__(self, prf:str , dklen:int , salt:str , c:int):
         self._prf = prf
         self._dklen = dklen
         self._salt = salt

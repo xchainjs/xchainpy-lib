@@ -3,7 +3,7 @@ import json
 
 
 class Keystore:
-    def __init__(self, crypto: CryptoStruct, id: str, version: int, meta: str):
+    def __init__(self, crypto: CryptoStruct, id:str, version:int, meta:str):
         self._crypto = crypto
         self._id = id
         self._version = version
