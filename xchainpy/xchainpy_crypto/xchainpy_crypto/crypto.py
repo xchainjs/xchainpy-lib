@@ -24,7 +24,7 @@ HASHFUNCTION = SHA256
 META = "xchain-keystore"
 
 
-def validate_phrase(phrase: str):
+def validate_phrase(phrase:str):
     """Check validity of mnemonic (phrase)
 
     Validate a mnemonic string by verifying its checksum
@@ -39,10 +39,10 @@ def validate_phrase(phrase: str):
 def generate_mnemonic(size=12, language="english"):
     strength = size * 11 * 32 / 33
     mnemo = Mnemonic(language)
-    new_mnemonic = mnemo.generate(strength)
+    new_mnemonic = mnemo.generate(int(strength))
     return new_mnemonic
 
-async def encrypt_to_keystore(phrase: str, password: str):
+async def encrypt_to_keystore(phrase:str, password:str):
     """Get the Keystore from the given phrase and password.
 
     Args:
@@ -85,7 +85,7 @@ async def encrypt_to_keystore(phrase: str, password: str):
     return keystore
 
 
-async def decrypt_from_keystore(keystore : Keystore, password: str):
+async def decrypt_from_keystore(keystore:Keystore, password:str):
     """ Get the phrase from the keystore
 
     Args:
