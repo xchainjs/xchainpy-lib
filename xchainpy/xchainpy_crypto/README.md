@@ -38,12 +38,16 @@ META = "xchain-keystore"
 ### Basic usage
 
 ```python
-from xchainpy_crypto.crypto import validate_phrase , encrypt_to_keystore , decrypt_from_keystore
+from xchainpy_crypto.crypto import validate_phrase, encrypt_to_keystore, decrypt_from_keystore, generate_mnemonic
 
-isCorrect = validate_phrase(phrase)
+phrase = generate_mnemonic(size=12, language='english')
+print(phrase)
+is_correct = validate_phrase(phrase)
+print(is_correct)
 password = 'thorchain'
 keystore = await encrypt_to_keystore(phrase, password)
-phraseDecrypted = await decrypt_from_keystore(keystore, password)
+phrase_decrypted = await decrypt_from_keystore(keystore, password)
+print(phrase_decrypted)
 ```
 
 Keystore Model
