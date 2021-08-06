@@ -38,7 +38,7 @@ META = "xchain-keystore"
 ### Basic usage
 
 ```python
-from xchainpy.xchainpy_crypto.crypto import validate_phrase , encrypt_to_keystore , decrypt_from_keystore
+from xchainpy_crypto.crypto import validate_phrase , encrypt_to_keystore , decrypt_from_keystore
 
 isCorrect = validate_phrase(phrase)
 password = 'thorchain'
@@ -50,7 +50,7 @@ Keystore Model
 
 ```python
 class Keystore:
-    def __init__(self, crypto: CryptoStruct, id: str, version: int, meta: str):
+    def __init__(self, crypto:CryptoStruct, id:str, version:int, meta:str):
         self._crypto = crypto
         self._id = id
         self._version = version
@@ -106,7 +106,7 @@ CipherParams
 
 ```python
 class CipherParams:
-    def __init__(self, iv: str):
+    def __init__(self, iv:str):
         self._iv = iv
 
     @classmethod
@@ -213,7 +213,7 @@ KdfParams
 ```python
 
 class KdfParams:
-    def __init__(self, prf : str , dklen : int , salt : str , c : int):
+    def __init__(self, prf:str , dklen:int , salt:str , c:int):
         self._prf = prf
         self._dklen = dklen
         self._salt = salt
@@ -258,12 +258,14 @@ class KdfParams:
     def c(self, c):
         self._c = c
 ```
+## Tests
 
+These packages needed to run tests:
 
-## Development
+- pytest `pip install pytest`
 
-### Tests
+How to run test ?
 
 ```bash
-$ python -m pytest xchainpy/xchainpy_crypto/test/test_crypto.py
+$ python -m pytest xchainpy/xchainpy_crypto/tests
 ```
