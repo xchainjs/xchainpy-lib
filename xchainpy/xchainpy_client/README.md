@@ -65,19 +65,19 @@ Returns the correctly formatted url string with paths for:
 The default Explorer URL can be hard-coded, or passed in as a service. It will be provided by `get_explorer_url`
 
 ```python
-get_explorer_url(): -> str
+get_explorer_url() -> str
 ```
 
 To get explorer's URL for an address, use `get_explorer_address_url` by passing an `address`.
 
 ```python
-get_explorer_address_url = (address:str): -> str
+get_explorer_address_url = (address:str) -> str
 ```
 
 To get explorer's URL for a transaction, use `get_explorer_tx_url` by passing a transaction ID.
 
 ```python
-get_explorer_tx_url = (tx_id:str): -> str
+get_explorer_tx_url = (tx_id:str) -> str
 ```
 
 All functions should return the correctly formatted url string.
