@@ -32,15 +32,16 @@ def validate_phrase(phrase: str):
     :type phrase: str
     :returns: is the phrase valid or not (true or false)
     """
-    #is_valid = Bip39MnemonicValidator(phrase).Validate()
-    is_valid = Bip39MnemonicValidator(phrase).IsValid()
-    return is_valid
+    validator = Bip39MnemonicValidator(phrase)
+    return validator.IsValid() if hasattr(validator, 'IsValid') else validator.Validate()
+
 
 def generate_mnemonic(size=12, language="english"):
     strength = size * 11 * 32 / 33
     mnemo = Mnemonic(language)
     new_mnemonic = mnemo.generate(strength)
     return new_mnemonic
+
 
 async def encrypt_to_keystore(phrase: str, password: str):
     """Get the Keystore from the given phrase and password.

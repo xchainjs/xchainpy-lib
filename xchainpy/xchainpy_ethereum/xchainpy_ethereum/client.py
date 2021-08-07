@@ -3,7 +3,7 @@ import json
 import os
 import requests
 from web3 import Web3, WebsocketProvider, Account
-from web3.gas_strategies.time_based import slow_gas_price_strategy,medium_gas_price_strategy, fast_gas_price_strategy
+from web3.gas_strategies.time_based import slow_gas_price_strategy, medium_gas_price_strategy, fast_gas_price_strategy
 from xchainpy_ethereum.models.asset import Asset
 from xchainpy_client import interface
 from xchainpy_crypto import crypto
@@ -197,45 +197,43 @@ class Client(interface.IXChainClient, IEthereumClient):
                 o.write(r["result"])
             return json.loads(r["result"])
 
-    async def get_contract(self, contract_address, erc20=True):
+    async def get_contract(self, contract, erc20=True):
         """Get Contract object of given address
+        if you are calling non-generic functions you have to pass in erc20=false
 
         Args:
-            contract_address: ethereum contract address
+            address: ethereum contract address
             erc20: True if contract = ERC-20, False otherwise
 
         Returns:
             web3 contract object
 
         """
+        abi = self.erc20_abi
         if not erc20:
-            contract = await self.get_abi(contract_address)
-        else:
-            contract = self.erc20_abi
-        return self.w3.eth.contract(abi=contract, address=contract_address)
+            abi = await self.get_abi(contract)
+        return self.w3.eth.contract(abi=abi, address=contract)
 
     async def get_balance(self, asset=None, address=None):
         """Get the balance of a erc-20 token
 
         Args:
+            asset: asset object, if None, return balance of ethereum. (optional)
             address: By default, it will return the balance of the current wallet. (optional)
-            contract_address: If not set, it will return ethereum balance. (optional)
 
         Returns:
             Balance of the address
 
         """
+        if not address:
+            address = self.get_address()
         if not asset:
-            if address:
-                return self.w3.fromWei(self.w3.eth.get_balance(address), 'ether')
-            return self.w3.fromWei(self.w3.eth.get_balance(self.get_address()), 'ether')
+            return self.w3.fromWei(self.w3.eth.get_balance(address), 'ether')
         else:
-            assert asset.chain == 'ETH'
-            token_contract = await self.get_contract(asset.ticker)
-            decimal = token_contract.functions.decimals().call()
-            if address:
-                return token_contract.functions.balanceOf(address).call() / 10 ** decimal
-            return token_contract.functions.balanceOf(self.get_address()).call() / 10 ** decimal
+            assert asset.contract, "asset contract address not set"
+            contract = await self.get_contract(asset.contract)
+            decimal = contract.functions.decimals().call()
+            return contract.functions.balanceOf(address).call() / 10 ** decimal
 
     def set_gas_strategy(self, gas_strategy) -> None:
         """Set Gas fee calculation parameter
