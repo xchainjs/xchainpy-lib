@@ -1,1 +1,3 @@
-xchainpy_util>=0.1.5
+xchainpy_crypto==0.1.6
+http3==0.6.7
+xchainpy_util==0.1.6

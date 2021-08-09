@@ -1,15 +1,12 @@
 from setuptools import setup, find_packages
 
-with open('requirements.txt') as f:
-    required = f.read().splitlines()
-
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
     name='xchainpy_binance',
     packages=find_packages(),
-    version='0.1.4',
+    version='0.2',
     license='MIT',
     description='Custom Binance client and utilities used by XChainPY clients',
     author='THORChain',
@@ -18,7 +15,7 @@ setup(
     long_description_content_type="text/markdown",
     url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_binance',
     keywords=["BNB", "Binance", "XChainpy_binance","THORChain"],
-    install_requires=required,
+    install_requires=['py_binance_chain>=0.2', 'xchainpy_client>=0.1.4', 'xchainpy_crypto>=0.1.6', 'xchainpy_util>=0.1.6'],
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',
