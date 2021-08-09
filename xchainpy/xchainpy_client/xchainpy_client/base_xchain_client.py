@@ -37,7 +37,7 @@ class BaseXChainClient(interface.IXChainClient):
         # NOTE: we don't call this.setPhrase() to avoid generating an address and paying the perf penalty
         if params.phrase:
             if not xchainpy_crypto.validate_phrase(params.phrase):
-                raise Exception('Invalid phrase')
+                raise Exception('invalid phrase')
             self.phrase = params.phrase
 
     def set_network(self, network:Network):
@@ -45,7 +45,6 @@ class BaseXChainClient(interface.IXChainClient):
 
         :param network: "mainnet" or "testnet"
         :type network: str
-        :returns: the client
         :raises: raises if network not provided
         :raises: `Invalid network' if the given network is invalid
         """    
@@ -53,9 +52,9 @@ class BaseXChainClient(interface.IXChainClient):
             raise Exception('Network must be provided')
 
         if type(network) is Network:
-            self._network = network.value
+            self.network = network.value
         elif type(network) is str and network in ['mainnet', 'MAINNET', 'testnet', 'TESTNET']:
-            self._network = network.lower()
+            self.network = network.lower()
         else:
             raise Exception("Invalid network") 
 
@@ -74,12 +73,10 @@ class BaseXChainClient(interface.IXChainClient):
         if not isinstance(data, list):
             raise Exception('bad response from Thornode API')
 
-        chain_data = filter(lambda x: x.chain == self.chain and type(x.gas_rate) == str, data)
+        chain_data = next(filter(lambda x: x['chain'] == self.chain, data), None)
 
-        if not len(chain_data) > 0:
+        if not chain_data:
             raise Exception(f'Thornode API /inbound_addresses does not contain fees for {self.chain}')
-        
-        chain_data = chain_data[0]
         
         return float(chain_data['gas_rate'])
 
@@ -99,11 +96,11 @@ class BaseXChainClient(interface.IXChainClient):
 
             api_url += endpoint
 
-            client = http3.AsyncClient()
+            client = http3.AsyncClient(timeout=5)
             response = await client.get(api_url)
 
             if response.status_code == 200:
-                return json.loads(response.content.decode('utf-8'))['data']
+                return json.loads(response.content.decode('utf-8')) 
             else:
                 return None
         
@@ -139,7 +136,7 @@ class BaseXChainClient(interface.IXChainClient):
         """
         return f"{self.root_derivation_paths[self.network]}{wallet_index}" if self.root_derivation_paths else ''
 
-    async def purge_client(self):
+    def purge_client(self):
         """Purge client
         """
         self.phrase = ''
@@ -174,7 +171,7 @@ class BaseXChainClient(interface.IXChainClient):
         pass
 
     @abstractmethod
-    async def get_transactions(self, params:tx_types.TxHistoryParams):
+    async def get_transactions(self, params:tx_types.TxHistoryParams) -> tx_types.TxPage:
         pass
 
     @abstractmethod

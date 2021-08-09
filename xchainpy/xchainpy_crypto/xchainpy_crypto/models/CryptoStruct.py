@@ -5,12 +5,12 @@ from .CipherParams import CipherParams
 class CryptoStruct:
     def __init__(
         self,
-        cipher: int,
-        ciphertext: str,
-        cipherparams: CipherParams,
-        kdf: str,
-        kdfparams: KdfParams,
-        mac: str,
+        cipher:int,
+        ciphertext:str,
+        cipherparams:CipherParams,
+        kdf:str,
+        kdfparams:KdfParams,
+        mac:str,
     ):
         self._cipher = cipher
         self._ciphertext = ciphertext

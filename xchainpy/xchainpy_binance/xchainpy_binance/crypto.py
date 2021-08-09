@@ -5,7 +5,7 @@ from py_binance_chain.utils.segwit_addr import address_from_public_key, decode_a
 from py_binance_chain.environment import BinanceEnvironment
 from py_binance_chain.wallet import Wallet
 
-HD_PATH = "44'/714'/0'/0/0"
+HD_PATH = "44'/714'/0'/0/"
 DECODED_ADDRESS_LEN = 20
 
 def mnemonic_to_seed(mnemonic, pass_phrase = ''):
@@ -21,17 +21,21 @@ def mnemonic_to_seed(mnemonic, pass_phrase = ''):
     seed = mnemo.to_seed(mnemonic, pass_phrase)
     return seed
 
-def mnemonic_to_private_key(mnemonic, env, pass_phrase = ''):
+def mnemonic_to_private_key(mnemonic, index, env):
     """Convert mnemonic (phrase) to a private key
 
     :param mnemonic: A phrase
     :type mnemonic: str
+    :param index: index
+    :type index: int
     :param pass_phrase: A password
     :type pass_phrase: str
     :returns: private key
     """
+    Wallet.HD_PATH = HD_PATH + str(index)
     wallet = Wallet.create_wallet_from_mnemonic(mnemonic, env)
     private_key = wallet.private_key
+
     return private_key
 
 def private_key_to_public_key(private_key):
@@ -86,5 +90,7 @@ def check_address(address, prefix):
         decoded_address_length = len(decode_address(address))
         if decoded_address_length == DECODED_ADDRESS_LEN and decoded_address[0] == prefix:
             return True
+        else:
+            return False
     except:
         return False

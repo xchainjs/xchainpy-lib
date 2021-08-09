@@ -16,7 +16,7 @@ class TestBinanceCrypto:
         assert crypto.mnemonic_to_seed(self.phrase) == self.seed
 
     def test_mnemonic_to_private_key(self):
-        assert crypto.mnemonic_to_private_key(self.phrase, self.env) == self.private_key
+        assert crypto.mnemonic_to_private_key(self.phrase, 0, self.env) == self.private_key
 
     def test_private_key_to_public_key(self):
         assert crypto.private_key_to_public_key(self.private_key) == self.public_key
