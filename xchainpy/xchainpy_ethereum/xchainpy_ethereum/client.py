@@ -197,12 +197,12 @@ class Client(interface.IXChainClient, IEthereumClient):
                 o.write(r["result"])
             return json.loads(r["result"])
 
-    async def get_contract(self, contract, erc20=True):
+    async def get_contract(self, contract_address, erc20=True):
         """Get Contract object of given address
         if you are calling non-generic functions you have to pass in erc20=false
 
         Args:
-            address: ethereum contract address
+            contract_address: ethereum contract address
             erc20: True if contract = ERC-20, False otherwise
 
         Returns:
