@@ -16,7 +16,6 @@ class TestCrypto:
 
     def test_generate_mnemonic(self):
         phrase = crypto.generate_mnemonic()
-        print(phrase)
         assert crypto.validate_phrase(phrase)
 
     @pytest.mark.asyncio
