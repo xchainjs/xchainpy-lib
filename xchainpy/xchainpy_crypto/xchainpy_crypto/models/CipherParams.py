@@ -1,5 +1,5 @@
 class CipherParams:
-    def __init__(self, iv: str):
+    def __init__(self, iv:str):
         self._iv = iv
 
     @classmethod
