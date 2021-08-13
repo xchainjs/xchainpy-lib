@@ -39,7 +39,7 @@ def validate_phrase(phrase: str):
 def generate_mnemonic(size=12, language="english"):
     strength = size * 11 * 32 / 33
     mnemo = Mnemonic(language)
-    new_mnemonic = mnemo.generate(strength)
+    new_mnemonic = mnemo.generate(int(strength))
     return new_mnemonic
 
 
