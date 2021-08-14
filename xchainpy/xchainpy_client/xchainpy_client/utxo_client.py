@@ -9,7 +9,7 @@ from . fees import calc_fees
 class UTXOClient(BaseXChainClient):
 
     @abstractmethod
-    async def get_suggested_fee_rate(self):
+    async def _get_suggested_fee_rate(self):
         pass
     
     @abstractmethod
@@ -24,7 +24,7 @@ class UTXOClient(BaseXChainClient):
         :returns: A FeesWithRates object
         """
         rates = await self.get_fee_rates()
-        fees = await calc_fees(rates, self.calc_fee, memo)
+        fees = await calc_fees(rates, self._calc_fee, memo)
         return FeesWithRates(fees=fees,rates=rates)
 
     async def get_fees(self, memo:str=None):
@@ -52,6 +52,6 @@ class UTXOClient(BaseXChainClient):
         except Exception as err:
             logging.warning(str(err))
 
-            fee_rate = await self.get_suggested_fee_rate()
+            fee_rate = await self._get_suggested_fee_rate()
 
         return standard_fee_rates(fee_rate)

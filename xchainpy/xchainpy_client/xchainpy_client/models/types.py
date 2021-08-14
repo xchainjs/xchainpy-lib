@@ -32,7 +32,7 @@ class RootDerivationPaths:
         self._testnet = testnet
 
 class XChainClientParams:
-    def __init__(self, network:Network=None, phrase=None, root_derivation_paths=None):
+    def __init__(self, network:Network=None, phrase=None, root_derivation_paths:RootDerivationPaths=None):
         """
         :param network: network
         :type network: str

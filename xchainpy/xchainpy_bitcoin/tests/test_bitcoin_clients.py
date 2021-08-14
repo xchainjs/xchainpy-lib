@@ -1,6 +1,6 @@
 import pytest
 from xchainpy_bitcoin.client import Client
-from xchainpy_util.asset import Asset
+from xchainpy_util.asset import AssetBTC
 from xchainpy_client.models import tx_types
 from xchainpy_bitcoin.const import *
 
@@ -10,7 +10,6 @@ class TestBitcoinClient:
     # please don't touch the tBTC in these
     phrase = 'atom green various power must another rent imitate gadget creek fat then'
     testnetaddress = 'tb1q2pkall6rf6v6j0cvpady05xhy37erndvku08wp'
-    btc_asset = Asset('BTC', 'BTC')
     memo = 'SWAP:THOR.RUNE'
 
     phrase_for_tx1 = 'caution pear excite vicious exotic slow elite marble attend science strategy rude'
@@ -159,7 +158,7 @@ class TestBitcoinClient:
         assert txs
         if txs['total'] > 0:
             tx = txs['tx'][0]
-            assert tx.asset == self.btc_asset
+            assert tx.asset == AssetBTC
             assert tx.tx_date
             assert tx.tx_hash
             assert tx.tx_type == 'transfer'
