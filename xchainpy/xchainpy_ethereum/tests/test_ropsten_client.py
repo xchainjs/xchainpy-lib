@@ -4,8 +4,9 @@ from xchainpy_ethereum.models.asset import Asset
 import json, os, time
 
 
-ETH_RUNE = Asset("ETH", "RUNE-0xd601c6A3a36721320573885A8d8420746dA3d7A0")
+ETH_RUNE = Asset("ETH", "RUNE", contract="0xd601c6A3a36721320573885A8d8420746dA3d7A0")
 ETH_ETH = Asset("ETH", "ETH")
+
 
 class TestClient:
     prefix = "../xchainpy_ethereum/resources/ropsten/"
@@ -66,7 +67,7 @@ class TestClient:
     def test_validate_address(self, test_init):
         assert self.client.validate_address(self.test_address)
         assert self.client.validate_address(self.thor_router_address)
-        assert self.client.validate_address(ETH_RUNE.ticker)
+        assert self.client.validate_address(ETH_RUNE.contract)
 
     def test_get_address(self, test_init):
         assert self.client.get_address() == self.test_address
@@ -77,24 +78,24 @@ class TestClient:
 
     @pytest.mark.asyncio
     async def test_get_abi(self, test_init):
-        if os.path.exists(self.prefix + ETH_RUNE.ticker):
-            os.remove(self.prefix + ETH_RUNE.ticker)
+        if os.path.exists(self.prefix + ETH_RUNE.contract):
+            os.remove(self.prefix + ETH_RUNE.contract)
         if os.path.exists(self.prefix + self.thor_router_address):
             os.remove(self.prefix + self.thor_router_address)
 
         assert str(await self.client.get_abi(self.thor_router_address)) == str(self.router_abi)
-        assert str(await self.client.get_abi(ETH_RUNE.ticker)) == str(self.token_abi)
+        assert str(await self.client.get_abi(ETH_RUNE.contract)) == str(self.token_abi)
         self.client.ether_api = None
         assert str(await self.client.get_abi(self.thor_router_address)) == str(self.router_abi)
-        assert str(await self.client.get_abi(ETH_RUNE.ticker)) == str(self.token_abi)
+        assert str(await self.client.get_abi(ETH_RUNE.contract)) == str(self.token_abi)
 
     @pytest.mark.asyncio
     async def test_get_contract(self, test_init):
         router_contract = await self.client.get_contract(self.thor_router_address, erc20=False)
-        assert router_contract.functions.RUNE().call() == ETH_RUNE.ticker
-        token_contract = await self.client.get_contract(ETH_RUNE.ticker, erc20=True)
+        assert router_contract.functions.RUNE().call() == ETH_RUNE.contract
+        token_contract = await self.client.get_contract(ETH_RUNE.contract, erc20=True)
         assert token_contract.functions.symbol().call() == 'RUNE'
-        token_contract = await self.client.get_contract(ETH_RUNE.ticker, erc20=False)
+        token_contract = await self.client.get_contract(ETH_RUNE.contract, erc20=False)
         decimal_place = token_contract.functions.decimals().call()
         assert token_contract.functions.maxSupply().call()/10**decimal_place == 500000000.0
 
@@ -153,16 +154,16 @@ class TestClient:
 
     @pytest.mark.asyncio
     async def test_read_contract(self, test_init):
-        assert await self.client.read_contract(ETH_RUNE.ticker, "balanceOf", self.client.get_address()) / 10**18 \
+        assert await self.client.read_contract(ETH_RUNE.contract, "balanceOf", self.client.get_address()) / 10**18 \
                == await self.client.get_balance(asset=ETH_RUNE)
-        assert await self.client.read_contract(self.thor_router_address, "RUNE", erc20=False) == ETH_RUNE.ticker
+        assert await self.client.read_contract(self.thor_router_address, "RUNE", erc20=False) == ETH_RUNE.contract
 
     @pytest.mark.asyncio
     async def test_write_contract_token(self, test_init):
         old_balance = await self.client.get_balance(asset=ETH_RUNE)
         func_to_call = "giveMeRUNE"
         self.client.gas_price = self.client.w3.toWei(10, 'gwei')
-        tx_receipt = await self.client.write_contract(ETH_RUNE.ticker, func_to_call, erc20=False)
+        tx_receipt = await self.client.write_contract(ETH_RUNE.contract, func_to_call, erc20=False)
         new_balance = await self.client.get_balance(asset=ETH_RUNE)
         time.sleep(1)
         assert new_balance > old_balance
@@ -180,7 +181,7 @@ class TestClient:
         self.client.gas_price = self.client.w3.toWei(10, 'gwei')
         # <Function deposit(address,address,uint256,string)>
         tx_receipt = await self.client.write_contract(self.thor_router_address, func_to_call,
-                                                asgard_address, ETH_RUNE.ticker, amount,
+                                                asgard_address, ETH_RUNE.contract, amount,
                                                 memo, erc20=False)
         new_balance = await self.client.get_balance(asset=ETH_RUNE)
         time.sleep(1)
@@ -197,4 +198,4 @@ class TestClient:
     #     self.client.set_gas_strategy("fast")
     #     nonce = self.client.w3.eth.getTransactionCount(self.client.get_address())
     #     for i in range(10):
-    #         tx_receipt = self.client.write_contract(ETH_RUNE.ticker, func_to_call, erc20=False, nonce=nonce+i)
+    #         tx_receipt = self.client.write_contract(ETH_RUNE.contract, func_to_call, erc20=False, nonce=nonce+i)

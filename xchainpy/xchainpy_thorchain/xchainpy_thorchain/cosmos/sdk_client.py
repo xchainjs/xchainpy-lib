@@ -113,21 +113,32 @@ class CosmosSDKClient:
             raise Exception(err)
 
     async def make_transaction(self, privkey: bytes, from_address: str, fee_denom: str = "rune", memo: str = "", sync_mode: str = "block") -> None:
-        if not self._account_num:
-            account = await self.account_address_get(address=from_address)
-            self._account_num = account['result']['value']['account_number']
-            # there is no "sequence" for a fresh wallet, so we use "get" with default
-            self._sequence = account['result']['value'].get('sequence', '0')
-
-        self._gas = "10000000"
-        self._fee = "10000000"
-        self._privkey = privkey
-        self._fee_denom = fee_denom
-        self._memo = memo
-        self._chain_id = self.chain_id
-        self._hrp = "tthor"
-        self._sync_mode = sync_mode
-        self._msgs = []
+        try:
+            self.set_prefix()
+            acc_address = utils.frombech32(from_address)
+            account = await self.account_address_get(acc_address)
+            if "account_number" not in account:
+                account = {
+                    "address": utils.frombech32(account["value"]["address"]) if account["value"]["address"] else "",
+                    "public_key": account["value"]["public_key"]["value"] if account["value"]["public_key"] else base64.b64encode(self.privkey_to_pubkey(private_key)).decode("utf-8"),
+                    "coins": account["value"]["coins"] if "coins" in account["value"] else [],
+                    "account_number": account["value"]["account_number"],
+                    # there is no "sequence" for a fresh wallet, so we use "get" with default
+                    "sequence": account["value"]["sequence"] if "sequence" in account["value"] else "0"
+                }
+            self._account_num = account["account_number"]
+            self._sequence = account["sequence"]
+            self._gas = "10000000"
+            self._fee = "10000000"
+            self._privkey = privkey
+            self._fee_denom = fee_denom
+            self._memo = memo
+            self._chain_id = self.chain_id
+            self._hrp = "tthor"
+            self._sync_mode = sync_mode
+            self._msgs = []
+        except Exception as err:
+            raise Exception(str(err))
 
     def add_transfer(self, recipient: str, amount: int, denom: str = "rune") -> None:
         transfer = {
@@ -153,7 +164,7 @@ class CosmosSDKClient:
                 "memo": self._memo,
                 "signatures": [
                     {
-                        "signature": self._sign(),
+                        "signature": self._sign_simple(),
                         "pub_key": {"type": "tendermint/PubKeySecp256k1", "value": base64_pubkey},
                     }
                 ],
@@ -167,15 +178,16 @@ class CosmosSDKClient:
 
         client = http3.AsyncClient()
 
-        print(content)
+        #print(content)
 
         response = await client.post(api_url, data=content)
 
-        print(response)
+        #print(response)
 
-        print(response.content.decode('utf-8'))
+        #print(response.content.decode('utf-8'))
+        return response.content.decode('utf-8')
 
-    def _sign(self) -> str:
+    def _sign_simple(self) -> str:
         message_str = json.dumps(
             self._get_sign_message(), separators=(",", ":"), sort_keys=True)
         message_bytes = message_str.encode("utf-8")
@@ -296,8 +308,6 @@ class CosmosSDKClient:
         except Exception as err:
             raise Exception(str(err))
 
-        
-        
 
     async def sign_and_broadcast(self , unsigned_std_tx , private_key , signer):
         try:
@@ -305,17 +315,14 @@ class CosmosSDKClient:
             account = await self.account_address_get(signer)
             if "account_number" not in account:
                 account = {
-                    "address" : utils.frombech32(account["value"]["address"]) if account["value"]["address"] else "",
-                    "public_key" : account["value"]["public_key"] if account["value"]["public_key"] else None,
-                    "coins" : account["value"]["coins"] if "coins" in account["value"] else [],
-                    "account_number" : account["value"]["account_number"],
-                    "sequence" : account["value"]["sequence"] if "sequence" in account["value"] else "0"
+                    "address": utils.frombech32(account["value"]["address"]) if account["value"]["address"] else "",
+                    "public_key": account["value"]["public_key"]["value"] if account["value"]["public_key"] else base64.b64encode(self.privkey_to_pubkey(private_key)).decode("utf-8"),
+                    "coins": account["value"]["coins"] if "coins" in account["value"] else [],
+                    "account_number": account["value"]["account_number"],
+                    "sequence": account["value"]["sequence"] if "sequence" in account["value"] else "0"
                 }
-            
-            signed_std_tx = self.sign_std_tx(private_key , unsigned_std_tx , str(account["account_number"]) , str(account["sequence"]) ,str(account["public_key"]["value"]) )
-
-            result =  await self.tx_post(signed_std_tx , 'block')
-            
+            signed_std_tx = self.sign_std_tx(private_key, unsigned_std_tx, str(account["account_number"]), str(account["sequence"]), str(account["public_key"]) )
+            result = await self.tx_post(signed_std_tx, 'block')
             return result
 
         except Exception as err:

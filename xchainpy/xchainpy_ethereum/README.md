@@ -2,45 +2,35 @@
 
 Ethereum Module for XChainPy Clients
 
-## Install
-Python 3.8-3.9 tested
+## Environment
+tested with Python Virtual Environment 3.8 3.9
+
+## Installation
 ```angular2html
-python setup.py install
-```
-
-## Modules
-
-- `client` - Custom client for communicating with ethereum-lib
-
-Following dependencies have to be installed into your project
-
-```
-web3>=5.16.0
-websockets>=8.1
-requests>=2.25.1
+python3 setup.py install
 ```
 
 ## Service Providers
+- ``Infura WSS API`` was used to interact with ethereum blockchain, head to https://infura.io/ to get your own websocket token.
+- If interaction with ``non-ERC20 token`` is needed, head to https://etherscan.io/ to get your etherscan token.
 
-This package uses ``Infura WSS API``, head to https://infura.io/ to get your own websocket token.
-In addition, if you want to interact with ``non-ERC20 token``, head to https://etherscan.io/ to get your
-etherscan token.
+## Initialization of Client
+Pass in your infura WSS api token as network, and pass your ether token as ether_api (not enforced).
 
-Initialize mainnet client:
 
+- Initialize mainnet client:
 ``
 client = Client(phrase="mnemonimic", network="wss://mainnet.infura.io/ws/v3/...", network_type="mainnet",
                              ether_api="...")
 ``
 
-Initialize ropsten(testnet) client:
-
+- Initialize ropsten(testnet) client:
 ``
 client = Client(phrase="mnemonimic", network="wss://ropsten.infura.io/ws/v3/...", network_type="ropsten",
                              ether_api="...")
 ``
 
-You can generate mnemonic phrase using ``crypto.py``, head to ``test/test_ropsten_client.py`` to see a
+Head to ``test/test_ropsten_client.py`` to see a
 more comprehensive way to using this client.
 ## Tests
 

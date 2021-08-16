@@ -6,7 +6,7 @@ class Asset:
 
     def __init__(self, chain, symbol, ticker = ''):
         """
-        :param chian: chain type
+        :param chain: chain type
         :type chain: str
         :param symbol: symbol name
         :type symbol: str

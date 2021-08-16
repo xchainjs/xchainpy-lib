@@ -1,9 +1,11 @@
-from xchainpy_util.asset import Asset as template
+from xchainpy_util.asset import Asset as base
 from xchainpy_util.chain import is_chain
 
 
-class Asset(template):
-    def __init__(self, chain, symbol, ticker = ''):
+class Asset(base):
+    _contract = ''
+
+    def __init__(self, chain, symbol, ticker='', contract=''):
         """
         :param chain: chain type
         :type chain: str
@@ -20,8 +22,30 @@ class Asset(template):
         self._symbol = symbol
         if not ticker:
             if '-' in symbol:
-                self._ticker = symbol[symbol.index('-')+1:]
+                self._ticker = symbol[0:symbol.index('-')]
             else:
                 self._ticker = symbol
         else:
             self._ticker = ticker
+        if not contract:
+            if ':' in symbol:
+                self._contract = symbol[symbol.index(':')+1:]
+            else:
+                self._contract = symbol
+        else:
+            self._contract = contract
+
+    def __str__(self):
+        """Get an asset from a string
+
+        :returns: the asset (BNB.BNB or BNB.RUNE)
+        """
+        return f'{self.chain}.{self.symbol}:{self.contract}'
+
+    @property
+    def contract(self):
+        return self._contract
+
+    @contract.setter
+    def contract(self, contract):
+        self._contract = contract
