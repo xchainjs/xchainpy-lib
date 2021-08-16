@@ -34,7 +34,7 @@ class BaseXChainClient(interface.IXChainClient):
         self.set_network(params.network or Network.Testnet)
         if params.root_derivation_paths:
             self.root_derivation_paths = params.root_derivation_paths
-        # NOTE: we don't call this.setPhrase() to avoid generating an address and paying the perf penalty
+        # NOTE: we don't call self.set_phrase() to avoid generating an address and paying the perf penalty
         if params.phrase:
             if not xchainpy_crypto.validate_phrase(params.phrase):
                 raise Exception('invalid phrase')

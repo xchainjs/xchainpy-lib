@@ -36,8 +36,6 @@ class IBinanceClient():
         pass
 
 class Client(BaseXChainClient, IBinanceClient):
-    # phrase = address = network = ''
-    # private_key = client = env = None
 
     def __init__(self, params:XChainClientParams):
         """
@@ -45,8 +43,6 @@ class Client(BaseXChainClient, IBinanceClient):
         :type params: XChainClientParams
         """
         BaseXChainClient.__init__(self, Chain.Binance, params)
-        # self.set_network(network)
-        # self.set_phrase(phrase)
 
 
     def get_bnc_client(self):
