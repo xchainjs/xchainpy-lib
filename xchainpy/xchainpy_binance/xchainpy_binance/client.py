@@ -1,7 +1,7 @@
 from datetime import datetime
 import logging
 import time
-from xchainpy.xchainpy_client.xchainpy_client.models.tx_types import TxPage
+from xchainpy_client.models.tx_types import TxPage
 
 from py_binance_chain.http import AsyncHttpApiClient
 from py_binance_chain.environment import BinanceEnvironment

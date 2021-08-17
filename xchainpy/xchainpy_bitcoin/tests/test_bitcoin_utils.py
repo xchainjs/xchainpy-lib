@@ -22,3 +22,34 @@ class TestBitcoinUtils:
 
     def test_get_minimum_fee_of_1000(self):
         assert utils.get_fee(self.utxos, 1) == 1000
+
+    def test_get_default_fees(self):
+        fees = utils.get_default_fees()
+        assert fees.average
+        assert fees.fast
+        assert fees.fastest
+
+    @pytest.mark.asyncio
+    async def test_get_utxos_associated_with_an_address(self):
+        address = '34xp4vRoCGJym3xR7yCVPFHoCNxv4Twseo'
+        utxos = await utils.scan_UTXOs(
+            sochain_url='https://sochain.com/api/v2',
+            network='mainnet',
+            address=address,
+            confirmed_only=False, # get all confirmed & unconfirmed UTXOs
+            )
+        assert len(utxos) > 100
+        assert utxos[0].hash == '82ac8b4e4efea7edbab6a91449be9a31863746ac5af45479e57a17133c72ecba'
+        assert utxos[189].hash == 'b963b8745623a4022b07220d4ffdd35f2ad9837530fef4fddbeabed26954da30'
+
+
+    @pytest.mark.asyncio
+    async def test_get_utxos_associated_with_a_testnet_address(self):
+        address = '2NA8UF8xz2KMgyW7AzxKRiaJQjSx1zBr7gi'
+        utxos = await utils.scan_UTXOs(
+            sochain_url='https://sochain.com/api/v2',
+            network='testnet',
+            address=address,
+            confirmed_only=False, # get all confirmed & unconfirmed UTXOs
+            )
+        assert len(utxos) > 100

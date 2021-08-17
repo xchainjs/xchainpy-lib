@@ -1,19 +1,16 @@
-from xchainpy.xchainpy_bitcoin.xchainpy_bitcoin import blockstream_api
+import binascii
 from bitcoinlib.keys import Address
 from typing import List, Optional, Union
-import asyncio
-
-from xchainpy_client.models import balance
 from .const import MIN_TX_FEE
 from .models.common import DerivePath, UTXO
+from . import sochain_api, haskoin_api, blockstream_api
 from bitcoinlib.services.services import *
-from xchainpy_util.asset import Asset
-from xchainpy_client.models.balance import Balance
-from xchainpy_util.chain import BTCCHAIN
+from xchainpy_util.asset import AssetBTC
+from xchainpy_client.fees import standard_fees, calc_fees
 from xchainpy_client.models import tx_types
-from . import sochain_api, haskoin_api
+from xchainpy_client.models.types import FeesWithRates
+from xchainpy_client.models.types import FeesWithRates
 import datetime
-import binascii
 
 
 TX_EMPTY_SIZE = 4 + 1 + 1 + 4  # 10
@@ -27,6 +24,24 @@ DUST_THRESHOLD = 1000
 def get_derive_path(index:int=0):
     return DerivePath(index=index)
 
+def get_default_fees_with_rates() -> FeesWithRates:
+    """Get the default fees with rates
+
+    :returns: The default fees and rates (FeesWithRates)
+    """
+    rates = standard_fees(20)
+    rates.fastest = 50
+    fees = calc_fees(rates, calc_fee)
+    return FeesWithRates(fees, rates)
+
+def get_default_fees() -> FeesWithRates:
+    """Get the default fees
+
+    :returns: The default fees (Fees)
+    """
+    fees = get_default_fees_with_rates().fees
+    return fees
+
 
 def parse_tx(tx) -> tx_types.TX:
     """Parse tx
@@ -35,7 +50,7 @@ def parse_tx(tx) -> tx_types.TX:
     :type tx: str
     :returns: The transaction parsed from the binance tx
     """
-    asset = Asset.from_str(f'{BTCCHAIN}.BTC')
+    asset = AssetBTC
     tx_from = [tx_types.TxFrom(i['address'], i['value']) for i in tx['inputs']]
     tx_to = [tx_types.TxTo(i['address'], i['value']) for i in tx['outputs']]
     tx_date = datetime.datetime.fromtimestamp(tx['time'])
@@ -186,7 +201,7 @@ async def get_change(sochain_url:str, value_out, network:str, address:str):
     """
     try:
         balance = await sochain_api.get_balance(sochain_url, network, address)
-        balance = balance[0].amount * 10 ** 8
+        balance = round(balance[0].amount * 10 ** 8)
         change = 0
         if balance - value_out > DUST_THRESHOLD:
             change = balance - value_out
@@ -225,19 +240,19 @@ async def build_tx(sochain_url, amount, recipient, memo, fee_rate, sender, netwo
             raise Exception("No utxos to send")
 
         balance = await sochain_api.get_balance(sochain_url, network, sender)
-
+        
         if not validate_address(network, recipient):
             raise Exception('Invalid address')
-
+        
         fee_rate_whole = int(fee_rate)
-
+        
         compiled_memo = None
         if memo:
             compiled_memo = compile_memo(memo)
 
         fee = get_fee(utxos, fee_rate_whole, compiled_memo)
 
-        if fee + amount > balance[0].amount * 10 ** 8:
+        if fee + amount > round(balance[0].amount * 10 ** 8):
             raise Exception('Balance insufficient for transaction')
 
         t = Transaction(network=network, witness_type='segwit')
@@ -250,7 +265,8 @@ async def build_tx(sochain_url, amount, recipient, memo, fee_rate, sender, netwo
         change = await get_change(sochain_url, amount + fee, network, sender)
         
         if change > 0:
-            t.add_output(address=sender, value=int(change))
+            
+            t.add_output(address=sender, value=change)
 
         if compiled_memo:
             t.add_output(lock_script=compiled_memo, value=0)

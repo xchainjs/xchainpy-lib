@@ -17,7 +17,7 @@ def haskoin_utxo_to_xchain_utxo(utxo):
     """
     hash = utxo['txid']
     index = utxo['index']
-    value = int(float(utxo['value']) * 10 ** 8)
+    value = round(float(utxo['value']) * 10 ** 8)
     script =  bytearray.fromhex(utxo['pkscript']) #utxo['script_hex']
     witness_utxo = Witness_UTXO(value, script)
     return UTXO(hash, index, witness_utxo)
@@ -48,7 +48,7 @@ async def get_balance(address:str):
     except Exception as err:
         raise Exception(str(err))
 
-async def get_unspent_txs(address):
+async def get_unspent_txs(address, offset=0):
     """Get address balance
     https://api.haskoin.com/#/Address/getAddressUnspent
 
@@ -59,11 +59,19 @@ async def get_unspent_txs(address):
     try:
         api_url = f'{HASKOIN_API_URL}/address/{address}/unspent'
 
+        if offset:
+            api_url += f'?offset={offset}'
+
         client = http3.AsyncClient(timeout=5)
         response = await client.get(api_url)
 
         if response.status_code == 200:
             txs = json.loads(response.content.decode('utf-8'))
+            if len(txs) == 100:
+                # fetch the next batch
+                offset += 100
+                next_batch = await get_unspent_txs(address, offset)
+                txs = txs + next_batch
             return txs
 
     except Exception as err:

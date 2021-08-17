@@ -24,7 +24,7 @@ class UTXOClient(BaseXChainClient):
         :returns: A FeesWithRates object
         """
         rates = await self.get_fee_rates()
-        fees = await calc_fees(rates, self._calc_fee, memo)
+        fees = calc_fees(rates, self._calc_fee, memo)
         return FeesWithRates(fees=fees,rates=rates)
 
     async def get_fees(self, memo:str=None):
