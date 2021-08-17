@@ -1,7 +1,7 @@
-from xchainpy_client.models.tx_types import TX, TxHistoryParams, TxPage, TxParams
+from xchainpy_client.models.tx_types import TX, TxHistoryParams, TxPage
 from xchainpy_client.utxo_client import UTXOClient
 from xchainpy_util.chain import Chain
-from . models.client_types import BitcoinClientParams
+from . models.client_types import BitcinTxParams, BitcoinClientParams
 from . import crypto, sochain_api
 from . import utils
 
@@ -149,7 +149,7 @@ class Client(UTXOClient):
         fee = utils.calc_fee(fee_rate, memo)
         return fee
 
-    async def transfer(self, params:TxParams, fee_rate=None):
+    async def transfer(self, params:BitcinTxParams):
         """Transfer BTC
 
         :param amount: amount of BTC to transfer (don't multiply by 10**8)
@@ -162,14 +162,14 @@ class Client(UTXOClient):
         :type fee_rate: int
         :returns: the transaction hash
         """
-        if not fee_rate:
+        if not params.fee_rate:
             fee_rates = await self.get_fee_rates()
-            fee_rate = fee_rates.fast
+            params.fee_rate = fee_rates.fast
 
         spend_pending_UTXO = False if params.memo else True
 
         t, utxos = await utils.build_tx(sochain_url=self.sochain_url, amount=int(params.amount*10**8), recipient=params.recipient,
-                                        memo=params.memo, fee_rate=fee_rate, sender=self.get_address(), network=self.get_network(), 
+                                        memo=params.memo, fee_rate=params.fee_rate, sender=self.get_address(), network=self.get_network(), 
                                         spend_pending_UTXO=spend_pending_UTXO)
 
         derivation_path = self.root_derivation_paths.testnet if self.get_network() == 'testnet' else self.root_derivation_paths.mainnet

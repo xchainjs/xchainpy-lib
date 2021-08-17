@@ -1,5 +1,5 @@
 import pytest
-from xchainpy_bitcoin.models.client_types import BitcoinClientParams
+from xchainpy_bitcoin.models.client_types import BitcoinClientParams, BitcinTxParams
 from xchainpy_bitcoin.client import Client
 from xchainpy_bitcoin.const import *
 from xchainpy_client.models.types import Network
@@ -90,7 +90,7 @@ class TestBitcoinClient:
         self.client.set_phrase(self.phrase_for_tx1)
         amount = 0.0000001
         with pytest.raises(Exception) as err:
-            await self.client.transfer(tx_types.TxParams(AssetBTC, amount, 'invalid address'))
+            await self.client.transfer(BitcinTxParams(amount, 'invalid address'))
         assert str(err.value) == "Invalid address"
 
     @pytest.mark.asyncio
@@ -102,7 +102,7 @@ class TestBitcoinClient:
         if balance.amount > 0:
             amount = balance.amount + 1000  # BTC
             with pytest.raises(Exception) as err:
-                await self.client.transfer(tx_types.TxParams(AssetBTC, amount, self.testnet_address_for_tx2))
+                await self.client.transfer(BitcinTxParams(amount, self.testnet_address_for_tx2))
             assert str(err.value) == "Balance insufficient for transaction"
 
     @pytest.mark.asyncio
@@ -116,7 +116,7 @@ class TestBitcoinClient:
         balance = balance[0]
         if balance.amount > 0:
             amount = 0.0000001
-            tx_id = await self.client.transfer(tx_types.TxParams(AssetBTC, amount, self.testnet_address_for_tx2, self.memo), fee_rate)
+            tx_id = await self.client.transfer(BitcinTxParams(amount, self.testnet_address_for_tx2, self.memo, fee_rate))
             assert tx_id
 
     @pytest.mark.asyncio
