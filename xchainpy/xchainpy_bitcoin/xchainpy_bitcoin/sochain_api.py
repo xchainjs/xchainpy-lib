@@ -7,8 +7,8 @@ from xchainpy_util.asset import AssetBTC
 
 DEFAULT_SUGGESTED_TRANSACTION_FEE = 127
 
-def to_sochain_network(net: str):
-    return 'BTCTEST' if net == 'testnet' else 'BTC'
+def to_sochain_network(network: str):
+    return 'BTCTEST' if network == 'testnet' else 'BTC'
 
 def sochain_utxo_to_xchain_utxo(utxo):
     """Get utxo object from a sochain utxo
@@ -19,7 +19,8 @@ def sochain_utxo_to_xchain_utxo(utxo):
     """
     hash = utxo['txid']
     index = utxo['output_no']
-    value = int(float(utxo['value']) * 10 ** 8)
+    
+    value = round(float(utxo['value']) * 10 ** 8)
     script =  bytearray.fromhex(utxo['script_hex']) #utxo['script_hex']
     witness_utxo = Witness_UTXO(value, script)
     return UTXO(hash, index, witness_utxo)
@@ -160,7 +161,7 @@ async def get_unspent_txs(sochain_url, network, address, starting_from_tx_id=Non
                 # fetch the next batch
                 last_tx_id = txs[99]['txid']
                 next_batch = await get_unspent_txs(sochain_url, network, address, last_tx_id)
-                txs = txs.extend(next_batch)
+                txs = txs + next_batch
             return txs
     except Exception as err:
         raise Exception(str(err))
