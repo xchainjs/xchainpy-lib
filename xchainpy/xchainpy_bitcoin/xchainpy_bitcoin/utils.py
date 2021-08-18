@@ -21,9 +21,6 @@ TX_OUTPUT_PUBKEYHASH = 25
 DUST_THRESHOLD = 1000
 
 
-def get_derive_path(index:int=0):
-    return DerivePath(index=index)
-
 def get_default_fees_with_rates() -> FeesWithRates:
     """Get the default fees with rates
 
@@ -195,8 +192,6 @@ async def get_change(sochain_url:str, value_out, network:str, address:str):
     :type network: str
     :param address: address
     :type address: str
-    :param confirmed_only: only confirmed
-    :type confirmed_only: str
     :returns: The UTXOs of the given address
     """
     try:

@@ -1,5 +1,6 @@
 bitcoinlib>=0.5.2
 http3>=0.6.7
-xchainpy_client>=0.1.3
-xchainpy_crypto>=0.1.3
-xchainpy_util>=0.1.5
+xchainpy_client>=0.1.4
+xchainpy_crypto>=0.1.6
+xchainpy_util>=0.1.6
+bip_utils==1.11.1

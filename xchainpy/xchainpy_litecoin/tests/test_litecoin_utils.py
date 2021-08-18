@@ -1,6 +1,6 @@
 import pytest
-from xchainpy.xchainpy_litecoin import utils
-from xchainpy.xchainpy_litecoin.models import common
+from xchainpy_litecoin import utils
+from xchainpy_litecoin.models import common
 
 
 class TestLitecoinUtils:
@@ -22,3 +22,24 @@ class TestLitecoinUtils:
 
     def test_get_minimum_fee_of_1000(self):
         assert utils.get_fee(self.utxos, 1) == 1000
+
+    @pytest.mark.asyncio
+    async def test_get_utxos_associated_with_an_address(self):
+        address = 'M8T1B2Z97gVdvmfkQcAtYbEepune1tzGua'
+        utxos = await utils.scan_UTXOs(
+            sochain_url='https://sochain.com/api/v2',
+            network='mainnet',
+            address=address)
+        assert len(utxos) > 100
+        assert utxos[0].hash == '65b34acff41570854758adf6bdafc94c0c33f78194d7f49f1cf8d24314b4d47a'
+        assert utxos[212].hash == 'f180c1cd0a8e719456f3f033c497bae2cedc482d87443b668c0a5a277272b2ba'
+
+
+    @pytest.mark.asyncio
+    async def test_get_utxos_associated_with_a_testnet_address(self):
+        address = 'tltc1q2pkall6rf6v6j0cvpady05xhy37erndv05de7g'
+        utxos = await utils.scan_UTXOs(
+            sochain_url='https://sochain.com/api/v2',
+            network='testnet',
+            address=address)
+        assert len(utxos) > 0
