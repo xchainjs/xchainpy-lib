@@ -27,21 +27,6 @@ class UTXO:
       self._index = index
       self._witness_utxo = witness_utxo
       self._tx_hex = tx_hex
-
-    @classmethod
-    def from_sochain_utxo(cls, utxo):
-        """Get utxo object from a sochain utxo
-
-        :param utxo: sochain utxo
-        :type utxo: dict
-        :returns: UTXO object
-        """
-        hash = utxo['txid']
-        index = utxo['output_no']
-        value = int(float(utxo['value']) * 10 ** 8)
-        script =  bytearray.fromhex(utxo['script_hex']) #utxo['script_hex']
-        witness_utxo = Witness_UTXO(value, script)
-        return UTXO(hash, index, witness_utxo)
     
     @property
     def hash(self):
@@ -96,3 +81,24 @@ class Witness_UTXO:
     @script.setter
     def script(self , script):
         self._script = script
+
+class NodeAuth:
+    def __init__(self, username:str, password:str):
+      self._username = username
+      self._password = password
+    
+    @property
+    def username(self):
+        return self._username
+
+    @username.setter
+    def username(self , username):
+        self._username = username
+    
+    @property
+    def password(self):
+        return self._password
+
+    @password.setter
+    def password(self , password):
+        self._password = password

@@ -1,7 +1,7 @@
 import pytest
-from xchainpy_bitcoin.models.client_types import BitCoinClientParams, BitCoinTxParams
+from xchainpy_bitcoin.models.client_types import BitcoinClientParams, BitcoinTxParams
 from xchainpy_bitcoin.client import Client
-from xchainpy_bitcoin.const import *
+from xchainpy_bitcoin.const import MIN_TX_FEE
 from xchainpy_client.models.types import Network
 from xchainpy_client.models import tx_types
 from xchainpy_util.asset import AssetBTC
@@ -39,7 +39,7 @@ class TestBitcoinClient:
 
     @pytest.fixture
     def client(self):
-        self.client = Client(BitCoinClientParams(network='mainnet', sochain_url='https://sochain.com/api/v2'))
+        self.client = Client(BitcoinClientParams(network='mainnet', sochain_url='https://sochain.com/api/v2'))
         yield
         self.client.purge_client()
 
@@ -90,7 +90,7 @@ class TestBitcoinClient:
         self.client.set_phrase(self.phrase_for_tx1)
         amount = 0.0000001
         with pytest.raises(Exception) as err:
-            await self.client.transfer(BitCoinTxParams(amount, 'invalid address'))
+            await self.client.transfer(BitcoinTxParams(amount, 'invalid address'))
         assert str(err.value) == "Invalid address"
 
     @pytest.mark.asyncio
@@ -102,7 +102,7 @@ class TestBitcoinClient:
         if balance.amount > 0:
             amount = balance.amount + 1000  # BTC
             with pytest.raises(Exception) as err:
-                await self.client.transfer(BitCoinTxParams(amount, self.testnet_address_for_tx2))
+                await self.client.transfer(BitcoinTxParams(amount, self.testnet_address_for_tx2))
             assert str(err.value) == "Balance insufficient for transaction"
 
     @pytest.mark.asyncio
@@ -116,7 +116,7 @@ class TestBitcoinClient:
         balance = balance[0]
         if balance.amount > 0:
             amount = 0.0000001
-            tx_id = await self.client.transfer(BitCoinTxParams(amount, self.testnet_address_for_tx2, self.memo, fee_rate))
+            tx_id = await self.client.transfer(BitcoinTxParams(amount, self.testnet_address_for_tx2, self.memo, fee_rate))
             assert tx_id
 
     @pytest.mark.asyncio
@@ -243,7 +243,7 @@ class TestBitcoinClient:
 
     @pytest.mark.asyncio
     async def test_purge_client_should_purge_phrase_and_utxos(self):
-        self.client = Client(BitCoinClientParams(network='testnet', phrase=self.phrase_one))
+        self.client = Client(BitcoinClientParams(network='testnet', phrase=self.phrase_one))
         self.client.purge_client()
         with pytest.raises(Exception) as err:
             self.client.get_address()

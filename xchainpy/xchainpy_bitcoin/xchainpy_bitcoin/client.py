@@ -1,7 +1,7 @@
 from xchainpy_client.models.tx_types import TX, TxHistoryParams, TxPage
 from xchainpy_client.utxo_client import UTXOClient
 from xchainpy_util.chain import Chain
-from . models.client_types import BitCoinTxParams, BitCoinClientParams
+from . models.client_types import BitcoinTxParams, BitcoinClientParams
 from . import crypto, sochain_api
 from . import utils
 
@@ -9,10 +9,10 @@ from . import utils
 class Client(UTXOClient):
     sochain_url = blockstream_url = ''
 
-    def __init__(self, params:BitCoinClientParams):
+    def __init__(self, params:BitcoinClientParams):
         """
         :param params: params
-        :type params: BitCoinClientParams
+        :type params: BitcoinClientParams
         """
         UTXOClient.__init__(self, Chain.Bitcoin, params)
 
@@ -149,17 +149,11 @@ class Client(UTXOClient):
         fee = utils.calc_fee(fee_rate, memo)
         return fee
 
-    async def transfer(self, params:BitCoinTxParams):
+    async def transfer(self, params:BitcoinTxParams):
         """Transfer BTC
 
-        :param amount: amount of BTC to transfer (don't multiply by 10**8)
-        :type amount: int, float, decimal
-        :param recipient: destination address
-        :type recipient: str
-        :param memo: optional memo for transaction
-        :type memo: str
-        :param fee_rate: fee rates for transaction
-        :type fee_rate: int
+        :param params: transfer params
+        :type params: BitcoinTxParams
         :returns: the transaction hash
         """
         if not params.fee_rate:
@@ -168,7 +162,7 @@ class Client(UTXOClient):
 
         spend_pending_UTXO = False if params.memo else True
 
-        t, utxos = await utils.build_tx(sochain_url=self.sochain_url, amount=int(params.amount*10**8), recipient=params.recipient,
+        t, utxos = await utils.build_tx(sochain_url=self.sochain_url, amount=round(params.amount*10**8), recipient=params.recipient,
                                         memo=params.memo, fee_rate=params.fee_rate, sender=self.get_address(), network=self.get_network(), 
                                         spend_pending_UTXO=spend_pending_UTXO)
 

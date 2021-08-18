@@ -110,8 +110,6 @@ async def get_balance(sochain_url:str, network:str, address:str):
     :type network: str
     :param address: wallet address
     :type address: str
-    :param confirmed_only: only confirmed
-    :type confirmed_only: str
     :returns: BTC balance
     """
     try:
