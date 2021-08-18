@@ -23,7 +23,7 @@ This package uses the following service providers:
 | Balances                    | Sochain     | https://sochain.com/api#get-balance                                              |
 | Transaction history         | Sochain     | https://sochain.com/api#get-display-data-address, https://sochain.com/api#get-tx |
 | Transaction details by hash | Sochain     | https://sochain.com/api#get-tx                                                   |
-| Transaction fees            | bitcoinfees | https://bitcoinfees.earn.com/api/v1/fees/recommended                             |
+| Transaction fees            | Bitgo       | https://app.bitgo.com/docs/#operation/v2.tx.getfeeestimate                       |
 | Transaction broadcast       | Sochain     | https://sochain.com/api#send-transaction                                         |
 | Explorer                    | Blockstream | https://blockstream.info                                                         |
 
