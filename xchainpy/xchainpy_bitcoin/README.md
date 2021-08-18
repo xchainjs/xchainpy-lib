@@ -39,11 +39,11 @@ Bitcoin Client module
 
 from xchainpy_client.models.types import Network
 from xchainpy_bitcoin.client import Client
-from xchainpy_bitcoin.models.client_types import BitcoinClientParams
+from xchainpy_bitcoin.models.client_types import BitCoinClientParams
 
 # Note: This phrase is created by https://iancoleman.io/bip39/ and will never been used in a real-world
 phrase = 'atom green various power must another rent imitate gadget creek fat then'
-client = Client(BitcoinClientParams(phrase=phrase, network=Network.Testnet))
+client = Client(BitCoinClientParams(phrase=phrase, network=Network.Testnet))
 
 # if you want to change phrase after initialize the client
 client.set_phrase('caution pear excite vicious exotic slow elite marble attend science strategy rude')
@@ -64,10 +64,10 @@ client.purge_client()
 
 from xchainpy_client.models.types import Network
 from xchainpy_bitcoin.client import Client
-from xchainpy_bitcoin.models.client_types import BitcoinClientParams
+from xchainpy_bitcoin.models.client_types import BitCoinClientParams
 
 phrase = 'atom green various power must another rent imitate gadget creek fat then'
-client = Client(BitcoinClientParams(phrase=phrase, network=Network.Testnet))
+client = Client(BitCoinClientParams(phrase=phrase, network=Network.Testnet))
 
 address = client.get_address()
 is_valid = client.validate_address(client.network, address) # bool
@@ -86,9 +86,9 @@ print(is_valid)
 ```python
 
 from xchainpy_bitcoin.client import Client
-from xchainpy_bitcoin.models.client_types import BitcoinClientParams
+from xchainpy_bitcoin.models.client_types import BitCoinClientParams
 
-client = Client(BitcoinClientParams())
+client = Client(BitCoinClientParams())
 
 # Get feeRate estimations
 fee_rates = await client.get_fee_rates()
@@ -123,10 +123,10 @@ fastest: {fees_with_memo.fastest}\n''')
 
 from xchainpy_client.models.types import Network
 from xchainpy_bitcoin.client import Client
-from xchainpy_bitcoin.models.client_types import BitcoinClientParams
+from xchainpy_bitcoin.models.client_types import BitCoinClientParams
 
 phrase = 'atom green various power must another rent imitate gadget creek fat then'
-client = Client(BitcoinClientParams(phrase=phrase, network=Network.Testnet))
+client = Client(BitCoinClientParams(phrase=phrase, network=Network.Testnet))
 
 address = client.get_address()
 
@@ -142,10 +142,10 @@ print(f'asset: {balance.asset}, amount: {balance.amount}')
 from xchainpy_client.models.tx_types import TxHistoryParams
 from xchainpy_client.models.types import Network
 from xchainpy_bitcoin.client import Client
-from xchainpy_bitcoin.models.client_types import BitcoinClientParams
+from xchainpy_bitcoin.models.client_types import BitCoinClientParams
 
 phrase = 'atom green various power must another rent imitate gadget creek fat then'
-client = Client(BitcoinClientParams(phrase=phrase, network=Network.Testnet))
+client = Client(BitCoinClientParams(phrase=phrase, network=Network.Testnet))
 
 address = client.get_address()
 
@@ -172,14 +172,14 @@ transaction = await client.get_transaction_data(t.tx_hash)
 ```python
 from xchainpy_client.models.types import Network
 from xchainpy_bitcoin.client import Client
-from xchainpy_bitcoin.models.client_types import BitcoinClientParams, BitcinTxParams
+from xchainpy_bitcoin.models.client_types import BitCoinClientParams, BitCoinTxParams
 
 phrase = 'atom green various power must another rent imitate gadget creek fat then'
-client = Client(BitcoinClientParams(phrase=phrase, network=Network.Testnet))
+client = Client(BitCoinClientParams(phrase=phrase, network=Network.Testnet))
 
 address = client.get_address()
 
-params = BitcinTxParams(amount=0.0000001, recipient=address, memo='memo')
+params = BitCoinTxParams(amount=0.0000001, recipient=address, memo='memo')
 tx_hash = await client.transfer(params)
 
 print(tx_hash)
@@ -190,9 +190,9 @@ print(tx_hash)
 ```python
 from xchainpy_client.models.types import Network
 from xchainpy_bitcoin.client import Client
-from xchainpy_bitcoin.models.client_types import BitcoinClientParams
+from xchainpy_bitcoin.models.client_types import BitCoinClientParams
 
-client = Client(BitcoinClientParams())
+client = Client(BitCoinClientParams())
 
 print(client.get_explorer_url())
 print(client.get_explorer_address_url('testAddressHere'))

@@ -1,7 +1,7 @@
 from xchainpy_client.models.tx_types import TX, TxHistoryParams, TxPage
 from xchainpy_client.utxo_client import UTXOClient
 from xchainpy_util.chain import Chain
-from . models.client_types import BitcinTxParams, BitcoinClientParams
+from . models.client_types import BitCoinTxParams, BitCoinClientParams
 from . import crypto, sochain_api
 from . import utils
 
@@ -9,10 +9,10 @@ from . import utils
 class Client(UTXOClient):
     sochain_url = blockstream_url = ''
 
-    def __init__(self, params:BitcoinClientParams):
+    def __init__(self, params:BitCoinClientParams):
         """
         :param params: params
-        :type params: BitcoinClientParams
+        :type params: BitCoinClientParams
         """
         UTXOClient.__init__(self, Chain.Bitcoin, params)
 
@@ -149,7 +149,7 @@ class Client(UTXOClient):
         fee = utils.calc_fee(fee_rate, memo)
         return fee
 
-    async def transfer(self, params:BitcinTxParams):
+    async def transfer(self, params:BitCoinTxParams):
         """Transfer BTC
 
         :param amount: amount of BTC to transfer (don't multiply by 10**8)
