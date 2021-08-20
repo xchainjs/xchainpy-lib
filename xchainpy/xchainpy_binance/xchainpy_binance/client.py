@@ -5,7 +5,6 @@ from xchainpy_client.models.tx_types import TxPage
 
 from py_binance_chain.http import AsyncHttpApiClient
 from py_binance_chain.environment import BinanceEnvironment
-from secp256k1Crypto import EC_COMPRESSED
 from py_binance_chain.messages import TransferMsg, Transfer, MultiTransferMsg
 from py_binance_chain.wallet import Wallet
 
@@ -22,8 +21,6 @@ from . import utils
 from . models.balance import BinanceBalance
 from . models.fee import Fee, TransferFee
 
-
-# from .models.coin import Coin
 
 class IBinanceClient():
     def get_bnc_client(self):

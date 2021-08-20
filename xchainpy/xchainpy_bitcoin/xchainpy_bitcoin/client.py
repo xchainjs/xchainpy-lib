@@ -108,7 +108,7 @@ class Client(UTXOClient):
         :returns: The transaction history
         """
         try:
-            transactions = await sochain_api.get_transactions(self.sochain_url, self.get_network(), self.get_address())
+            transactions = await sochain_api.get_transactions(self.sochain_url, self.get_network(), params.address)
             total = transactions['total_txs']
             offset = params.offset or 0
             limit = params.limit or 10

@@ -75,9 +75,13 @@ def network_to_bitcoinlib_format(network: str):
 async def get_balance(sochain_url:str, network:str, address:str):
     """Get the LTC balance of a given address
 
-    :param address: By default, it will return the balance of the current wallet. (optional)
+    :param sochain_url: sochain url
+    :type sochain_url: str
+    :param address: LTC address
     :type address: str
-    :returns: The BTC balance of the address.
+    :param network: mainnet or testnet
+    :type network: str
+    :returns: The LTC balance of the address
     """
     try:
         balance = await sochain_api.get_balance(sochain_url, network, address)
@@ -194,7 +198,7 @@ async def build_tx(sochain_url, amount, recipient, memo, fee_rate, sender, netwo
 
     :param sochain_url: sochain url
     :type sochain_url: str
-    :param amount: amount of BTC to transfer
+    :param amount: amount of LTC to transfer
     :type amount: int
     :param recipient: destination address
     :type recipient: str

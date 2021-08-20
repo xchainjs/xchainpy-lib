@@ -1,17 +1,13 @@
 from . models.client_types import LitecoinClientParams, LitecoinTxParams
 from xchainpy_client.utxo_client import UTXOClient
 from xchainpy_crypto.crypto import validate_phrase
-from . import utils
-from . import sochain_api
+from . import utils, crypto, sochain_api
 from xchainpy_client.models.balance import Balance
 from xchainpy_util.asset import Asset
 from xchainpy_client.models import tx_types
-
-
 from xchainpy_client.models.tx_types import TX, TxHistoryParams, TxPage
 from xchainpy_client.utxo_client import UTXOClient
 from xchainpy_util.chain import Chain
-from . import crypto
 
 
 
@@ -107,7 +103,7 @@ class Client(UTXOClient):
         :returns: The transaction history
         """
         try:
-            transactions = await sochain_api.get_transactions(self.sochain_url, self.get_network(), self.get_address())
+            transactions = await sochain_api.get_transactions(self.sochain_url, self.get_network(), params.address)
             total = transactions['total_txs']
             offset = params.offset or 0
             limit = params.limit or 10
@@ -158,8 +154,6 @@ class Client(UTXOClient):
         if not params.fee_rate:
             fee_rates = await self.get_fee_rates()
             params.fee_rate = fee_rates.fast
-
-        spend_pending_UTXO = False if params.memo else True
 
         t, utxos = await utils.build_tx(sochain_url=self.sochain_url, amount=round(params.amount*10**8), recipient=params.recipient,
                                         memo=params.memo, fee_rate=params.fee_rate, sender=self.get_address(), network=self.get_network())
