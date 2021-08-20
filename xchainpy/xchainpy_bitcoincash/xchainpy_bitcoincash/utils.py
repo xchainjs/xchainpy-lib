@@ -1,10 +1,11 @@
 import datetime
+from xchainpy.xchainpy_bitcoincash.xchainpy_bitcoincash.models.api_types import TxUnspent
 from cashaddress import convert
 from bitcash import transaction
 from xchainpy_util.asset import AssetBCH
 from xchainpy_client.models.balance import Balance
 from xchainpy_client.models import tx_types
-from . import haskoin_api
+from . import haskoin_api, bitcore_api
 
 
 
@@ -95,8 +96,8 @@ async def scan_UTXOs(haskoin_url, network, address):
     :returns: The UTXOs of the given address
     """
     unspents = await haskoin_api.get_unspent_transactions(haskoin_url, network, address)
-    # utxos = list(map(TxUnspent.unspent_from_object, unspents))
-    return unspents
+    utxos = list(map(TxUnspent.bitcash_unspent_from_object, unspents))
+    return utxos
 
 def validate_address(address):
     return convert.is_valid(address)
@@ -139,8 +140,19 @@ async def build_tx(haskoin_url, amount, recipient, memo, fee_rate, sender, netwo
 
         outputs = [(recipient, amount, 'bch')]
 
-        tx = key.create_transaction(outputs=outputs, fee=int(fee_rate), message=memo, unspents=key.get_unspents(), leftover=sender)
+        tx = key.create_transaction(outputs=outputs, fee=int(fee_rate), message=memo, unspents=utxos, leftover=sender)
         return tx
 
     except Exception as err:
         raise Exception(str(err))
+
+async def broadcast_tx(network, tx_hex):
+    """Broadcast the transaction
+
+    :param network: testnet or mainnet
+    :type network: str
+    :param tx_hex: tranaction hex
+    :type tx_hex: str
+    :returns: The transaction hash
+    """
+    return await bitcore_api.broadcast_tx(network, tx_hex)

@@ -24,6 +24,7 @@ This package uses the following service providers:
 | Transaction history         | Haskoin       | https://api.haskoin.com/#/Address/getAddressTxsFull                              |
 | Transaction details by hash | Haskoin       | https://api.haskoin.com/#/Transaction/Transaction                                |
 | Transaction fees            | Bitgo         | https://app.bitgo.com/docs/#operation/v2.tx.getfeeestimate                       |
+| Transaction broadcast       | bitcore.io    | https://api.bitcore.io                                                           |
 | Explorer                    | Blockchain.com| https://www.blockchain.com                                                       |
 
 Haskoin API rate limits: No
