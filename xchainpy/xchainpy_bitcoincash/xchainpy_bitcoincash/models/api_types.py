@@ -325,7 +325,7 @@ class Block:
         self._position = position
 
 class TxUnspent:
-    def __init__(self , pkscript , value , address , block : Block , index , txid):
+    def __init__(self, pkscript, value, address, block:Block, index, txid):
         self._pkscript = pkscript
         self._value = value
         self._address = address
@@ -335,11 +335,11 @@ class TxUnspent:
 
     @classmethod
     def unspent_from_object(cls , unspent):
-        txid = unspent.txid
-        output_index = unspent.index
-        script = bytes.fromhex(unspent.pkscript)
-        satoshis = unspent.value
-        return Unspent(satoshis , 0, script,txid,output_index)
+        txid = unspent['txid']
+        output_index = unspent['index']
+        script = bytes.fromhex(unspent['pkscript'])
+        satoshis = unspent['value']
+        return Unspent(satoshis, 0, script, txid, output_index)
 
     @property
     def pkscript(self):

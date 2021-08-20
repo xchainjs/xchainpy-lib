@@ -4,20 +4,25 @@ from .models.api_types import AddressBalance, Block, Transaction, TransactionInp
 import http3
 import json
 
+def to_haskoin_network(network: str):
+    return 'bchtest' if network == 'testnet' else 'bch'
 
-async def get_account(client_url: str, address: str) -> AddressBalance:
+async def get_account(haskoin_url:str, network:str, address:str) -> AddressBalance:
     """Get account from address
+    https://api.haskoin.com/#/Address/getBalance
 
     :param client_url: The haskoin API url
     :type client_url: str
+    :param network: network
+    :type network: str
     :param address: The BCH address
     :type address: str
     :returns: AddressBalance
     """
     try:
-        api_url = f'{client_url}/address/{address}/balance'
+        api_url = f'{haskoin_url}/{to_haskoin_network(network)}/address/{address}/balance'
 
-        client = http3.AsyncClient()
+        client = http3.AsyncClient(timeout=5)
         response = await client.get(api_url)
 
         if response.status_code == 200:
@@ -34,38 +39,54 @@ async def get_account(client_url: str, address: str) -> AddressBalance:
     except Exception as err:
         raise Exception(str(err))
 
+async def get_transactions(haskoin_url:str, network:str, address:str, offset:int, limit:int):
+    """Get address information
+    https://api.haskoin.com/#/Address/getAddressTxsFull
 
-async def get_transaction(client_url: str, tx_id: str) -> Transaction:
+    :param haskoin_url: haskoin url
+    :type haskoin_url: str
+    :param network: mainnet or testnet
+    :type network: str
+    :param address: wallet address
+    :type address: str
+    :returns: The fees with memo
+    """
+    try:
+        api_url = f'{haskoin_url}/{to_haskoin_network(network)}/address/{address}/transactions/full'
+        api_url += f'?offset={offset}&limit={limit}'
+
+        client = http3.AsyncClient(timeout=5)
+        response = await client.get(api_url)
+
+        if response.status_code == 200:
+            return json.loads(response.content.decode('utf-8'))
+        else:
+            raise Exception('failed to query transactions')
+    except Exception as err:
+        raise Exception(str(err))
+
+
+async def get_transaction(haskoin_url:str, network:str, tx_id:str):
     """Get transaction by hash
+    https://api.haskoin.com/#/Transaction/getTransaction
 
     :param client_url: The haskoin API url
     :type client_url: str
+    :param network: network
+    :type network: str
     :param tx_id: The transaction id
     :type tx_id: str
     :returns: Transaction info
     :raises: 'failed to query transaction by a given hash' if failed to query transaction by a given hash
     """
     try:
-        api_url = f'{client_url}/transaction/{tx_id}'
+        api_url = f'{haskoin_url}/{to_haskoin_network(network)}/transaction/{tx_id}'
 
-        client = http3.AsyncClient()
+        client = http3.AsyncClient(timeout=5)
         response = await client.get(api_url)
 
         if response.status_code == 200:
-            balance_response = json.loads(response.content.decode('utf-8'))
-
-            inputs = []
-            for i in balance_response['inputs']:
-                inputs.append(TransactionInput(i["pkscript"], i['value'], i['address'], i['witness'],
-                                               i['sequence'], i['output'], i['sigscript'], i['coinbase'], i['txid']))
-            outputs = []
-            for i in balance_response['outputs']:
-                outputs.append(TransactionOutput(
-                    i["spent"], i['pkscript'], i['value'], i['address'], i['spender']))
-
-            result = Transaction(balance_response["time"], balance_response["size"], inputs, balance_response["weight"], balance_response["fee"], balance_response["locktime"],
-                                 balance_response["block"], outputs, balance_response["version"], balance_response["deleted"], balance_response["rbf"], balance_response["txid"])
-
+            result = json.loads(response.content.decode('utf-8'))
             return result
         else:
             raise Exception('failed to query transaction by a given hash')
@@ -85,7 +106,7 @@ async def get_suggested_tx_fee():
     try:
         api_url = 'https://app.bitgo.com/api/v2/bch/tx/fee'
 
-        client = http3.AsyncClient()
+        client = http3.AsyncClient(timeout=5)
         response = await client.get(api_url)
 
         if response.status_code == 200:
@@ -100,27 +121,28 @@ async def get_suggested_tx_fee():
     except:
         return utils.DEFAULT_SUGGESTED_TRANSACTION_FEE
 
-async def get_unspent_transactions(client_url , address) -> List[TxUnspent]:
+async def get_unspent_transactions(haskoin_url, network, address):
     """Get unspent transactions
 
-    :param client_url: The haskoin API url
-    :type client_url: str
+    :param haskoin_url: haskoin url
+    :type haskoin_url: str
+    :param network: network
+    :type network: str
     :param address: The BCH address
     :type address: str
     :returns: The Bitcoin cash stats
     :raises: 'failed to query unspent transactions' if failed to query unspent transactions
     """
     try:
-        account = await get_account(client_url , address)
+        account = await get_account(haskoin_url, network, address)
 
-        api_url = f'{client_url}/address/{address}/unspent?limit={account.txs}'
+        api_url = f'{haskoin_url}/{to_haskoin_network(network)}/address/{address}/unspent?limit={account.txs}'
 
-        client = http3.AsyncClient()
+        client = http3.AsyncClient(timeout=5)
         response = await client.get(api_url)
 
         if response.status_code == 200:
-            tx_response = json.loads(response.content.decode('utf-8'))
-            result = [TxUnspent(i['pkscript'],i['value'],i['address'],Block(i['block']['height'] , i['block']['position']) ,i['index'],i['txid']) for i in tx_response]
+            result = json.loads(response.content.decode('utf-8'))
             return result
         else:
             raise Exception('failed to query unspent transactions')
@@ -140,7 +162,7 @@ async def get_unspent_transactions(client_url , address) -> List[TxUnspent]:
 #     try:
 #         api_url = f'{client_url}/transactions'
 
-#         client = http3.AsyncClient()
+#         client = http3.AsyncClient(timeout=5)
 #         response = await client.post(url=api_url, data=tx_hex)
 
 #         if response.status_code == 200:
