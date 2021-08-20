@@ -1,5 +1,5 @@
 import datetime
-from xchainpy.xchainpy_bitcoincash.xchainpy_bitcoincash.models.api_types import TxUnspent
+from xchainpy_bitcoincash.models.api_types import TxUnspent
 from cashaddress import convert
 from bitcash import transaction
 from xchainpy_util.asset import AssetBCH

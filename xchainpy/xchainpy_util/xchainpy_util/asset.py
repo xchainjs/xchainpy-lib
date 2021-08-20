@@ -38,7 +38,10 @@ class Asset:
 
         :returns: the asset (BNB.BNB or BNB.RUNE)
         """
-        return f'{self.chain}.{self.symbol}'
+        chain = self.chain
+        if type(self.chain) != str:
+            chain = self.chain.value
+        return f'{chain}.{self.symbol}'
 
 
     def __eq__(self, asset):
