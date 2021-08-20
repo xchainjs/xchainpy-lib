@@ -178,8 +178,8 @@ class Client(UTXOClient):
 
             tx_hex = await utils.build_tx(self.haskoin_url, params.amount , params.recipient , params.memo , params.fee_rate , self.get_address(),self.get_network(), key)
             
-            network.NetworkAPI.broadcast_tx_testnet(tx_hex)
-            return transaction.calc_txid(tx_hex)
+            tx_id = await utils.broadcast_tx(self.get_network(), tx_hex)
+            return tx_id
             
         except Exception as err:
             raise Exception(str(err))

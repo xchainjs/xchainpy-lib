@@ -1,6 +1,5 @@
-import bitcash
 from bitcash.network.meta import Unspent
-
+from bitcash.network import currency_to_satoshi
 
 class AddressBalance:
     def __init__(self , received , utxo , address , txs , unconfirmed , confirmed):
@@ -334,12 +333,12 @@ class TxUnspent:
         self._txid = txid
 
     @classmethod
-    def unspent_from_object(cls , unspent):
+    def bitcash_unspent_from_object(cls , unspent):
         txid = unspent['txid']
         output_index = unspent['index']
-        script = bytes.fromhex(unspent['pkscript'])
+        script = unspent['pkscript']
         satoshis = unspent['value']
-        return Unspent(satoshis, 0, script, txid, output_index)
+        return Unspent(satoshis, 1, script, txid, output_index)
 
     @property
     def pkscript(self):
