@@ -1,4 +1,3 @@
-from xchainpy.xchainpy_bitcoincash.xchainpy_bitcoincash.models.api_types import Transaction
 from xchainpy_client.models.tx_types import TX, TxHistoryParams, TxPage
 from xchainpy_client.utxo_client import UTXOClient
 from xchainpy_util.chain import Chain

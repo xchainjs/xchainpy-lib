@@ -1,8 +1,8 @@
 import pytest
 from xchainpy_client.models import tx_types
 from xchainpy_client.models.types import Network
-from xchainpy.xchainpy_bitcoincash.xchainpy_bitcoincash.models.client_types import BitcoincashClientParams, BitcoincashTxParams
-from xchainpy.xchainpy_bitcoincash.xchainpy_bitcoincash.client import Client
+from xchainpy_bitcoincash.models.client_types import BitcoincashClientParams, BitcoincashTxParams
+from xchainpy_bitcoincash.client import Client
 from xchainpy_util.asset import AssetBCH
 
 

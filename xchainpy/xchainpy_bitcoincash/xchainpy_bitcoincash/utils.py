@@ -1,67 +1,15 @@
 import datetime
-import bitcash
-
 from cashaddress import convert
+from bitcash import transaction
+from xchainpy_util.asset import AssetBCH
 from xchainpy_client.models.balance import Balance
+from xchainpy_client.models import tx_types
 from . import haskoin_api
 
-from bitcash import transaction, PrivateKey, PrivateKeyTestnet
-from .models.api_types import Transaction, TxUnspent
-from xchainpy_util.asset import Asset, AssetBCH
-from xchainpy_util.chain import BITCOINCASH
-from xchainpy_client.models import tx_types
 
 
 BCH_DECIMAL = 8
 DEFAULT_SUGGESTED_TRANSACTION_FEE = 1
-
-class DerivePath:
-    def __init__(self, index:int=0):
-
-        self._mainnet = f"m/44'/145'/0'/0/{index}"
-        self._testnet = f"m/44'/1'/0'/0/{index}"
-
-    @property
-    def mainnet(self):
-        return self._mainnet
-
-    @mainnet.setter
-    def mainnet(self, mainnet):
-        self._mainnet = mainnet
-
-    @property
-    def testnet(self):
-        return self._testnet
-
-    @testnet.setter
-    def testnet(self, testnet):
-        self._testnet = testnet
-
-def get_derive_path(index: int = 0):
-    return DerivePath(index=index)
-
-
-class ClientUrl:
-    def __init__(self , testnet , mainnet):
-        self._testnet : str = testnet
-        self._mainnet : str = mainnet
-
-    @property
-    def mainnet(self):
-        return self._mainnet
-
-    @mainnet.setter
-    def mainnet(self, mainnet : str):
-        self._mainnet = mainnet
-
-    @property
-    def testnet(self):
-        return self._testnet
-
-    @testnet.setter
-    def testnet(self, testnet : str):
-        self._testnet = testnet
-    
 
 def parse_tx(tx):
     """Parse tx
