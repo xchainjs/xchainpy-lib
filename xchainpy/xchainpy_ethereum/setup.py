@@ -1,8 +1,5 @@
 from setuptools import setup, find_packages
 
-with open('requirements.txt') as f:
-    required = f.read().splitlines()
-
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
@@ -13,7 +10,7 @@ setup(
         "xchainpy_ethereum": ["resources/*"],
     },
     include_package_data=True,
-    version='0.2.3',
+    version='0.2.2',
     license='MIT',
     description='Custom Ethereum client and utilities used by XChainPY clients',
     author='THORChain',
@@ -22,7 +19,10 @@ setup(
     long_description_content_type="text/markdown",
     url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_ethereum',
     keywords=["ETH", "Ethereum", "XChainpy_ethereum","THORChain", "web3"],
-    install_requires=required,
+    install_requires=["web3>=5.16.0",
+"websockets>=8.1",
+'xchainpy_client>=0.1.4', 'xchainpy_crypto>=0.1.6', 'xchainpy_util>=0.1.6',
+"requests>=2.25.1"],
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',
@@ -30,6 +30,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python'
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ],
 )

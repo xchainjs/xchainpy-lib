@@ -6,8 +6,9 @@ from web3 import Web3, WebsocketProvider, Account
 from web3.gas_strategies.time_based import slow_gas_price_strategy, medium_gas_price_strategy, fast_gas_price_strategy
 from xchainpy_ethereum.models.asset import Asset
 from xchainpy_client import interface
+from xchainpy_client.models.types import XChainClientParams
 from xchainpy_crypto import crypto
-
+from xchainpy_client.base_xchain_client import BaseXChainClient
 
 class IEthereumClient:
     def is_connected(self):
@@ -211,8 +212,8 @@ class Client(interface.IXChainClient, IEthereumClient):
         """
         abi = self.erc20_abi
         if not erc20:
-            abi = await self.get_abi(contract)
-        return self.w3.eth.contract(abi=abi, address=contract)
+            abi = await self.get_abi(contract_address)
+        return self.w3.eth.contract(abi=abi, address=contract_address)
 
     async def get_balance(self, asset=None, address=None):
         """Get the balance of a erc-20 token
@@ -303,7 +304,7 @@ class Client(interface.IXChainClient, IEthereumClient):
                 'gas': gas_limit,
                 'gasPrice': gas_price,
             }
-            token_contract = await self.get_contract(contract_address=asset.ticker)
+            token_contract = await self.get_contract(contract_address=asset.contract)
             decimal = token_contract.functions.decimals().call()
             raw_tx = token_contract.functions.transfer(recipient, amount*10**decimal).buildTransaction(tx)
             signed_tx = self.account.sign_transaction(raw_tx)

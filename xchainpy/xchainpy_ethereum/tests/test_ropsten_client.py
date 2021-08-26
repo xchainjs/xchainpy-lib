@@ -136,7 +136,7 @@ class TestClient:
     @pytest.mark.asyncio
     async def test_transfer_rune(self, test_init):
         self.client.set_gas_strategy("fast")
-        dest_addr = self.client.w3.toChecksumAddress('0x5039c76445efcfa78d91b8974c100151634cbf2d')
+        dest_addr = self.client.w3.toChecksumAddress('0xec68740C1691AFd0bF5622Aa42cbEcf2f46e1104')
         rune_balance = await self.client.get_balance(asset=ETH_RUNE)
         assert rune_balance > 1
         receipt = await self.client.transfer(asset=ETH_RUNE, amount=1, recipient=dest_addr)
@@ -148,7 +148,7 @@ class TestClient:
     async def test_transfer_ethereum(self, test_init):
         self.client.set_gas_strategy("fast")
         assert await self.client.get_balance() > 0.0001
-        tx_hash = await self.client.transfer(asset=ETH_ETH, amount=0.0001, recipient='0x81941E3DeEeA41b6309045ECbAFd919Db5aF6147')
+        tx_hash = await self.client.transfer(asset=ETH_ETH, amount=0.0001, recipient='0xec68740C1691AFd0bF5622Aa42cbEcf2f46e1104')
         data = self.client.get_transaction_data(tx_hash)
         assert float(self.client.w3.fromWei(data["value"], 'ether')) == 0.0001
 
