@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='xchainpy_binance',
     packages=find_packages(),
-    version='0.2',
+    version='0.2.2',
     license='MIT',
     description='Custom Binance client and utilities used by XChainPY clients',
     author='THORChain',
@@ -15,7 +15,7 @@ setup(
     long_description_content_type="text/markdown",
     url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_binance',
     keywords=["BNB", "Binance", "XChainpy_binance","THORChain"],
-    install_requires=['py_binance_chain>=0.2', 'xchainpy_client>=0.1.4', 'xchainpy_crypto>=0.1.6', 'xchainpy_util>=0.1.6'],
+    install_requires=['py_binance_chain>=0.2', 'xchainpy_client>=0.1.6', 'xchainpy_crypto>=0.1.7', 'xchainpy_util>=0.1.8'],
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',

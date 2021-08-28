@@ -1,11 +1,10 @@
 from datetime import datetime
 import logging
 import time
-from xchainpy.xchainpy_client.xchainpy_client.models.tx_types import TxPage
+from xchainpy_client.models.tx_types import TxPage
 
 from py_binance_chain.http import AsyncHttpApiClient
 from py_binance_chain.environment import BinanceEnvironment
-from secp256k1Crypto import EC_COMPRESSED
 from py_binance_chain.messages import TransferMsg, Transfer, MultiTransferMsg
 from py_binance_chain.wallet import Wallet
 
@@ -23,8 +22,6 @@ from . models.balance import BinanceBalance
 from . models.fee import Fee, TransferFee
 
 
-# from .models.coin import Coin
-
 class IBinanceClient():
     def get_bnc_client(self):
         pass
@@ -36,8 +33,6 @@ class IBinanceClient():
         pass
 
 class Client(BaseXChainClient, IBinanceClient):
-    # phrase = address = network = ''
-    # private_key = client = env = None
 
     def __init__(self, params:XChainClientParams):
         """
@@ -45,8 +40,6 @@ class Client(BaseXChainClient, IBinanceClient):
         :type params: XChainClientParams
         """
         BaseXChainClient.__init__(self, Chain.Binance, params)
-        # self.set_network(network)
-        # self.set_phrase(phrase)
 
 
     def get_bnc_client(self):

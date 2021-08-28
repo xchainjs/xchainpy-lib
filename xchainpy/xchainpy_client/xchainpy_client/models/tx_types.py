@@ -152,7 +152,7 @@ class TxHistoryParams:
         self._asset = asset
 
 class TxParams:
-    def __init__(self, asset:Asset, amount, recipient, memo='', wallet_index=None):
+    def __init__(self, asset:Asset, amount, recipient, memo='', wallet_index=0):
         self._asset = asset
         self._amount = amount
         self._recipient = recipient

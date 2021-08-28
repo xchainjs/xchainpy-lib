@@ -1,7 +1,7 @@
 import pytest
 from xchainpy_client.models.types import Network, XChainClientParams
 from xchainpy_binance.client import Client
-from xchainpy_util.asset import Asset
+from xchainpy_util.asset import AssetBNB
 from xchainpy_client.models import tx_types
 
 class TestBinanceClient:
@@ -13,7 +13,6 @@ class TestBinanceClient:
 
     testnetaddress_path0 = 'tbnb1zd87q9dywg3nu7z38mxdcxpw8hssrfp9htcrvj'
     testnetaddress_path1 = 'tbnb1vjlcrl5d9t8sexzajsr57taqmxf6jpmgaacvmz'
-    bnb_asset = Asset('BNB', 'BNB', 'BNB')
 
     phraseForTX = 'wheel leg dune emerge sudden badge rough shine convince poet doll kiwi sleep labor hello'
     testnetaddress_path0ForTx = 'tbnb1t95kjgmjc045l2a728z02textadd98yt339jk7'
@@ -77,8 +76,8 @@ class TestBinanceClient:
     @pytest.mark.asyncio
     async def test_balance_has_correct_asset(self, client):
         self.client.set_network('testnet')
-        balance = await self.client.get_balance(self.testnetaddress_path0, self.bnb_asset)
-        assert str(balance[0].asset) == str(self.bnb_asset)
+        balance = await self.client.get_balance(self.testnetaddress_path0, AssetBNB)
+        assert str(balance[0].asset) == str(AssetBNB)
         assert balance[0].amount
 
     @pytest.mark.asyncio
@@ -114,7 +113,7 @@ class TestBinanceClient:
         before_balance = await self.client.get_balance(self.testnetaddress_path0ForTx)
         assert len(before_balance) == 1
         before_balance_amount = before_balance[0].amount
-        await self.client.transfer(tx_types.TxParams(asset=self.bnb_asset, amount=self.transfer_amount, recipient=self.testnetaddress_path0ForTx))
+        await self.client.transfer(tx_types.TxParams(asset=AssetBNB, amount=self.transfer_amount, recipient=self.testnetaddress_path0ForTx))
         after_balance = await self.client.get_balance(self.testnetaddress_path0ForTx)
         after_balance_amount = after_balance[0].amount
         # assert round((float(before_balance_amount) - float(after_balance_amount)) * 10**8) == round((await self.client.get_fees()).average * 10 ** 8)
@@ -127,7 +126,7 @@ class TestBinanceClient:
         before_balance_amount = before_balance[0].amount
         send_amount = float(before_balance_amount) + 1
         with pytest.raises(Exception) as err:
-            await self.client.transfer(tx_types.TxParams(asset=self.bnb_asset, amount=send_amount, recipient=self.testnetaddress_path0ForTx))
+            await self.client.transfer(tx_types.TxParams(asset=AssetBNB, amount=send_amount, recipient=self.testnetaddress_path0ForTx))
         assert str(err.value) == "input asset amout is higher than current (asset balance - transfer fee)"
 
     @pytest.mark.asyncio
@@ -185,7 +184,7 @@ class TestBinanceClient:
     #     assert len(before_balance) == 1
     #     before_balance_amount = before_balance[0].amount
 
-    #     coins = [Coin(self.bnb_asset, self.transfer_amount), Coin(Asset.from_str('BNB.BNB'), self.transfer_amount)]
+    #     coins = [Coin(AssetBNB, self.transfer_amount), Coin(Asset.from_str('BNB.BNB'), self.transfer_amount)]
     #     tx_hash = await self.client.multi_send(coins, 'tbnb185tqzq3j6y7yep85lncaz9qeectjxqe5054cgn')
 
     #     after_balance = await self.client.get_balance()

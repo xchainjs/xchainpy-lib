@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='xchainpy_client',
     packages=find_packages(),
-    version='0.1.4',
+    version='0.1.6',
     license='MIT',
     description='A specification for a generalised interface for crypto wallets clients, to be used by XChainPY implementations. The client should not have any functionality to generate a key, instead, the `asgardex-crypto` library should be used to ensure cross-chain com',
     long_description=long_description,
@@ -15,7 +15,7 @@ setup(
     author_email='',
     url='https://github.com/xchainjs/xchainpy-lib/tree/main/xchainpy/xchainpy_client',
     keywords=["THORChain", "XChainpy","xchainpy_client"],
-    install_requires=['xchainpy_util>=0.1.6', 'xchainpy_crypto>=0.1.6', 'http3>=0.6.7'],
+    install_requires=['xchainpy_util>=0.1.8', 'xchainpy_crypto>=0.1.7', 'http3>=0.6.7'],
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',

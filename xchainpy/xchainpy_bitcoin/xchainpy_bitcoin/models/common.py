@@ -27,21 +27,6 @@ class UTXO:
       self._index = index
       self._witness_utxo = witness_utxo
       self._tx_hex = tx_hex
-
-    @classmethod
-    def from_sochain_utxo(cls, utxo):
-        """Get utxo object from a sochain utxo
-
-        :param utxo: sochain utxo
-        :type utxo: dict
-        :returns: UTXO object
-        """
-        hash = utxo['txid']
-        index = utxo['output_no']
-        value = int(float(utxo['value']) * 10 ** 8)
-        script =  bytearray.fromhex(utxo['script_hex']) #utxo['script_hex']
-        witness_utxo = Witness_UTXO(value, script)
-        return UTXO(hash, index, witness_utxo)
     
     @property
     def hash(self):

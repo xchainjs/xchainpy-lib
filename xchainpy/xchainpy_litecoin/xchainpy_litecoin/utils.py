@@ -4,9 +4,9 @@ from typing import List, Optional, Union
 from bitcoinlib.transactions import Transaction
 
 from xchainpy_client.models import tx_types
-from .models.common import DerivePath, UTXO
+from .models.common import DerivePath, UTXO, Witness_UTXO
 from . import sochain_api
-from xchainpy_util.asset import Asset
+from xchainpy_util.asset import Asset, AssetLTC
 from xchainpy_util.chain import LTCCHAIN
 import datetime
 
@@ -27,7 +27,7 @@ def parse_tx(tx):
     :type tx: str
     :returns: The transaction parsed from the binance tx
     """
-    asset = Asset.from_str(f'{LTCCHAIN}.LTC')
+    asset = AssetLTC
     tx_from = [tx_types.TxFrom(i['address'], i['value']) for i in tx['inputs']]
     tx_to = [tx_types.TxTo(i['address'], i['value']) for i in tx['outputs']]
     tx_date = datetime.datetime.fromtimestamp(tx['time'])
@@ -37,9 +37,20 @@ def parse_tx(tx):
     tx = tx_types.TX(asset, tx_from, tx_to, tx_date, tx_type, tx_hash)
     return tx
 
+def sochain_utxo_to_xchain_utxo(utxo):
+    """Get utxo object from a sochain utxo
 
-def get_derive_path(index:int=0):
-    return DerivePath(index=index)
+    :param utxo: sochain utxo
+    :type utxo: dict
+    :returns: UTXO object
+    """
+    hash = utxo['txid']
+    index = utxo['output_no']
+    
+    value = round(float(utxo['value']) * 10 ** 8)
+    script =  bytearray.fromhex(utxo['script_hex']) #utxo['script_hex']
+    witness_utxo = Witness_UTXO(value, script)
+    return UTXO(hash, index, witness_utxo)
 
 def validate_address(network, address):
     """Validate the LTC address
@@ -60,6 +71,25 @@ def validate_address(network, address):
 def network_to_bitcoinlib_format(network: str):
     return 'litecoin' if network == 'mainnet' else 'litecoin_testnet'
 
+
+async def get_balance(sochain_url:str, network:str, address:str):
+    """Get the LTC balance of a given address
+
+    :param sochain_url: sochain url
+    :type sochain_url: str
+    :param address: LTC address
+    :type address: str
+    :param network: mainnet or testnet
+    :type network: str
+    :returns: The LTC balance of the address
+    """
+    try:
+        balance = await sochain_api.get_balance(sochain_url, network, address)
+        if balance == None:
+            raise Exception("Invalid Address")
+        return balance
+    except Exception as err:
+        raise Exception(str(err))
 
 def calc_fee(fee_rate, memo=''):
     """Calculate fees based on fee rate and memo
@@ -137,7 +167,7 @@ async def scan_UTXOs(sochain_url, network, address):
     :returns: The UTXOs of the given address
     """
     utxos = await sochain_api.get_unspent_txs(sochain_url, network, address)
-    utxos = list(map(UTXO.from_sochain_utxo, utxos))
+    utxos = list(map(sochain_utxo_to_xchain_utxo, utxos))
     return utxos
 
 
@@ -154,7 +184,7 @@ async def get_change(sochain_url, value_out, network, address):
     """
     try:
         balance = await sochain_api.get_balance(sochain_url, network, address)
-        balance = balance * 10 ** 8
+        balance = round(balance[0].amount * 10 ** 8)
         change = 0
         if balance - value_out > DUST_THRESHOLD:
             change = balance - value_out
@@ -163,10 +193,12 @@ async def get_change(sochain_url, value_out, network, address):
         raise Exception(str(err))
 
 
-async def build_tx(amount, recipient, memo, fee_rate, sender, network, sochain_url):
+async def build_tx(sochain_url, amount, recipient, memo, fee_rate, sender, network):
     """Build transcation
 
-    :param amount: amount of BTC to transfer
+    :param sochain_url: sochain url
+    :type sochain_url: str
+    :param amount: amount of LTC to transfer
     :type amount: int
     :param recipient: destination address
     :type recipient: str
@@ -186,19 +218,19 @@ async def build_tx(amount, recipient, memo, fee_rate, sender, network, sochain_u
             raise Exception("No utxos to send")
 
         balance = await sochain_api.get_balance(sochain_url, network, sender)
-
+        
         if not validate_address(network, recipient):
             raise Exception('Invalid address')
-
-        fee_rate_whole = fee_rate
-
+        
+        fee_rate_whole = int(fee_rate)
+        
         compiled_memo = None
         if memo:
             compiled_memo = compile_memo(memo)
 
         fee = get_fee(utxos, fee_rate_whole, compiled_memo)
 
-        if fee + amount > balance * 10 ** 8:
+        if fee + amount > round(balance[0].amount * 10 ** 8):
             raise Exception('Balance insufficient for transaction')
 
         t = Transaction(network=network_to_bitcoinlib_format(network), witness_type='segwit')
@@ -211,7 +243,8 @@ async def build_tx(amount, recipient, memo, fee_rate, sender, network, sochain_u
         change = await get_change(sochain_url, amount + fee, network, sender)
         
         if change > 0:
-            t.add_output(address=sender, value=int(change))
+            
+            t.add_output(address=sender, value=change)
 
         if compiled_memo:
             t.add_output(lock_script=compiled_memo, value=0)

@@ -161,6 +161,7 @@ transaction = await client.get_transaction_data(t.tx_hash)
 from xchainpy_client.models.types import Network, XChainClientParams
 from xchainpy_binance.client import Client
 from xchainpy_client.models.tx_types import TxParams
+from xchainpy_util.asset import AssetBTC
 
 
 phrase = 'rural bright ball negative already grass good grant nation screen model pizza'
@@ -168,7 +169,7 @@ client = Client(XChainClientParams(network=Network.Testnet, phrase=phrase))
 
 address = client.get_address()
 
-params = TxParams(asset=Asset('BNB','BNB'), amount=0.0001, recipient=address, memo='memo')
+params = TxParams(asset=AssetBNB, amount=0.0001, recipient=address, memo='memo')
 tx_hash = await client.transfer(params)
 
 print(tx_hash)

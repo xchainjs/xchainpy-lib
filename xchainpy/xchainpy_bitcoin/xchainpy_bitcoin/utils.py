@@ -1,16 +1,16 @@
+import binascii
 from bitcoinlib.keys import Address
 from typing import List, Optional, Union
-import asyncio
 from .const import MIN_TX_FEE
 from .models.common import DerivePath, UTXO
+from . import sochain_api, haskoin_api, blockstream_api
 from bitcoinlib.services.services import *
-from xchainpy_util.asset import Asset
-from xchainpy_client.models.balance import Balance
-from xchainpy_util.chain import BTCCHAIN
+from xchainpy_util.asset import AssetBTC
+from xchainpy_client.fees import standard_fees, calc_fees
 from xchainpy_client.models import tx_types
-from . import sochain_api
+from xchainpy_client.models.types import FeesWithRates
+from xchainpy_client.models.types import FeesWithRates
 import datetime
-import binascii
 
 
 TX_EMPTY_SIZE = 4 + 1 + 1 + 4  # 10
@@ -21,18 +21,33 @@ TX_OUTPUT_PUBKEYHASH = 25
 DUST_THRESHOLD = 1000
 
 
-def get_derive_path(index: int = 0):
-    return DerivePath(index=index)
+def get_default_fees_with_rates() -> FeesWithRates:
+    """Get the default fees with rates
+
+    :returns: The default fees and rates (FeesWithRates)
+    """
+    rates = standard_fees(20)
+    rates.fastest = 50
+    fees = calc_fees(rates, calc_fee)
+    return FeesWithRates(fees, rates)
+
+def get_default_fees() -> FeesWithRates:
+    """Get the default fees
+
+    :returns: The default fees (Fees)
+    """
+    fees = get_default_fees_with_rates().fees
+    return fees
 
 
-def parse_tx(tx):
+def parse_tx(tx) -> tx_types.TX:
     """Parse tx
 
     :param tx: The transaction to be parsed
     :type tx: str
     :returns: The transaction parsed from the binance tx
     """
-    asset = Asset.from_str(f'{BTCCHAIN}.BTC')
+    asset = AssetBTC
     tx_from = [tx_types.TxFrom(i['address'], i['value']) for i in tx['inputs']]
     tx_to = [tx_types.TxTo(i['address'], i['value']) for i in tx['outputs']]
     tx_date = datetime.datetime.fromtimestamp(tx['time'])
@@ -129,23 +144,48 @@ def get_fee(inputs: List[UTXO], fee_rate: float, data: Optional[bytes]=None):
     return result
 
 
-async def scan_UTXOs(network, address):
+async def scan_UTXOs(sochain_url, network, address, confirmed_only=True):
     """Scan UTXOs from sochain
 
+    :param sochain_url: sochain url
+    :type sochain_url: str
     :param network: testnet or mainnet
     :type network: str
     :param address: address
     :type address: str
+    :param confirmed_only: By default is True, scan only confirmed UTXOs
+    :type confirmed_only: bool
     :returns: The UTXOs of the given address
     """
-    utxos = await sochain_api.get_unspent_txs(network, address)
-    utxos = list(map(UTXO.from_sochain_utxo, utxos))
+    if network == 'testnet':
+        if confirmed_only:
+            utxos = await sochain_api.get_confirmed_unspent_txs(sochain_url, network, address)
+        else:
+            utxos = await sochain_api.get_unspent_txs(sochain_url, network, address)
+
+        utxos = list(map(sochain_api.sochain_utxo_to_xchain_utxo, utxos))
+    else:
+        if confirmed_only:
+            utxos = await haskoin_api.get_confirmed_unspent_txs(address)
+        else:
+            utxos = await haskoin_api.get_unspent_txs(address)
+
+        utxos = list(map(haskoin_api.haskoin_utxo_to_xchain_utxo, utxos))
+
     return utxos
 
 
-async def get_change(value_out, network, address):
+
+    # utxos = await sochain_api.get_unspent_txs(sochain_url, network, address)
+    # utxos = list(map(UTXO.from_sochain_utxo, utxos))
+    # return utxos
+
+
+async def get_change(sochain_url:str, value_out, network:str, address:str):
     """Get the balance changes amount
 
+    :param sochain_url: sochain url
+    :type sochain_url: str
     :param value_out: amount you wnat to transfer
     :type value_out: int
     :param network: testnet or mainnet
@@ -155,8 +195,8 @@ async def get_change(value_out, network, address):
     :returns: The UTXOs of the given address
     """
     try:
-        balance = await sochain_api.get_balance(network, address)
-        balance = balance * 10 ** 8
+        balance = await sochain_api.get_balance(sochain_url, network, address)
+        balance = round(balance[0].amount * 10 ** 8)
         change = 0
         if balance - value_out > DUST_THRESHOLD:
             change = balance - value_out
@@ -165,9 +205,11 @@ async def get_change(value_out, network, address):
         raise Exception(str(err))
 
 
-async def build_tx(amount, recipient, memo, fee_rate, sender, network):
+async def build_tx(sochain_url, amount, recipient, memo, fee_rate, sender, network, spend_pending_UTXO=False):
     """Build transcation
 
+    :param sochain_url: sochain url
+    :type sochain_url: str
     :param amount: amount of BTC to transfer
     :type amount: int
     :param recipient: destination address
@@ -180,27 +222,32 @@ async def build_tx(amount, recipient, memo, fee_rate, sender, network):
     :type sender: str
     :param network: testnet or mainnet
     :type network: str
+    :param spend_pending_UTXO: By default is False, prevent spending uncomfirmed UTXOs
+    :type spend_pending_UTXO: bool
     :returns: transaction
     """
     try:
-        utxos = await scan_UTXOs(network, sender)
+        # search only confirmed UTXOs if pending UTXO is not allowed
+        confirmed_only = not spend_pending_UTXO
+
+        utxos = await scan_UTXOs(sochain_url, network, sender, confirmed_only)
         if len(utxos) == 0:
             raise Exception("No utxos to send")
 
-        balance = await sochain_api.get_balance(network, sender)
-
+        balance = await sochain_api.get_balance(sochain_url, network, sender)
+        
         if not validate_address(network, recipient):
             raise Exception('Invalid address')
-
+        
         fee_rate_whole = int(fee_rate)
-
+        
         compiled_memo = None
         if memo:
             compiled_memo = compile_memo(memo)
 
         fee = get_fee(utxos, fee_rate_whole, compiled_memo)
 
-        if fee + amount > balance * 10 ** 8:
+        if fee + amount > round(balance[0].amount * 10 ** 8):
             raise Exception('Balance insufficient for transaction')
 
         t = Transaction(network=network, witness_type='segwit')
@@ -210,10 +257,11 @@ async def build_tx(amount, recipient, memo, fee_rate, sender, network):
                     value=i.witness_utxo.value, witnesses=i.witness_utxo.script)
 
         t.add_output(address=recipient, value=amount)
-        change = await get_change(amount + fee, network, sender)
+        change = await get_change(sochain_url, amount + fee, network, sender)
         
         if change > 0:
-            t.add_output(address=sender, value=int(change))
+            
+            t.add_output(address=sender, value=change)
 
         if compiled_memo:
             t.add_output(lock_script=compiled_memo, value=0)
@@ -224,13 +272,39 @@ async def build_tx(amount, recipient, memo, fee_rate, sender, network):
         raise Exception(str(err))
 
 
-async def broadcast_tx(network, tx_hex):
+async def broadcast_tx(blockstream_url, network, tx_hex):
     """Broadcast the transaction
 
+    :param sochain_url: sochain url
+    :type sochain_url: str
     :param network: testnet or mainnet
     :type network: str
     :param tx_hex: tranaction hex
     :type tx_hex: str
     :returns: The transaction hash
     """
-    return await sochain_api.broadcast_tx(network, tx_hex)
+    return await blockstream_api.broadcast_tx(blockstream_url, network, tx_hex)
+
+
+async def get_balance(sochain_url:str, address:str, network:str):
+    """Get the BTC balance of a given address
+
+    :param sochain_url: sochain url
+    :type sochain_url: str
+    :param address: BTC address
+    :type address: str
+    :param network: mainnet or testnet
+    :type network: str
+    :returns: The BTC balance of the address
+    """
+    try:
+        if network == 'testnet':
+            balance = await sochain_api.get_balance(sochain_url, network, address)
+        else:
+            balance = await haskoin_api.get_balance(address)
+        
+        if balance == None:
+            raise Exception("Invalid Address")
+        return balance
+    except Exception as err:
+        raise Exception(str(err))

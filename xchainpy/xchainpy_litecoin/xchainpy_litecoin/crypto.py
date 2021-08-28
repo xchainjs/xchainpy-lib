@@ -1,7 +1,6 @@
-from bitcash import Key, PrivateKeyTestnet
 from bip_utils.bip.bip_keys import BipPrivateKey
 from mnemonic import Mnemonic
-from bip_utils import Bip32, P2WPKH, BitcoinCashConf
+from bip_utils import Bip32, P2WPKH, LitecoinConf
 from bip_utils.conf import Bip32Conf
 
 def mnemonic_to_seed(mnemonic, language="english"):
@@ -49,9 +48,9 @@ def mnemonic_to_address(mnemonic:str, derivation_path:str, network:str, mnemonic
     :returns: address
     """
     seed = mnemonic_to_seed(mnemonic=mnemonic, language=mnemonic_language)
-    key_net_ver = Bip32Conf.KEY_NET_VER.Test() if network == 'testnet' else Bip32Conf.KEY_NET_VER.Main()
-    bip32_ctx = Bip32.FromSeedAndPath(seed, derivation_path, key_net_ver)
-    private_key_hex = bip32_ctx.PrivateKey().Raw().ToHex()
-    KeyClass = PrivateKeyTestnet if network == "testnet" else Key
-    key = KeyClass.from_hex(private_key_hex)
-    return key.address
+    bip32_ctx = Bip32.FromSeedAndPath(seed, derivation_path)
+    public_key_bytes = bip32_ctx.PublicKey().RawCompressed().ToBytes()
+
+    net_addr_ver = LitecoinConf.P2WPKH_NET_VER.Test() if network == 'testnet' else LitecoinConf.P2WPKH_NET_VER.Main()
+    address = P2WPKH.ToAddress(pub_key_bytes=public_key_bytes, net_addr_ver=net_addr_ver)
+    return address
