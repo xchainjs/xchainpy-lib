@@ -5,10 +5,11 @@ import requests
 from web3 import Web3, WebsocketProvider, Account
 from web3.gas_strategies.time_based import slow_gas_price_strategy, medium_gas_price_strategy, fast_gas_price_strategy
 from xchainpy_ethereum.models.asset import Asset
-from xchainpy_client import interface
-from xchainpy_client.models.types import XChainClientParams
 from xchainpy_crypto import crypto
+from models.client_types import EthereumClientParams
 from xchainpy_client.base_xchain_client import BaseXChainClient
+
+from xchainpy_util.chain import Chain
 
 class IEthereumClient:
     def is_connected(self):
@@ -41,40 +42,37 @@ class IEthereumClient:
     async def get_balance(self, asset: Asset=None, address=None):
         pass
 
-
-class Client(interface.IXChainClient, IEthereumClient):
+class Client(BaseXChainClient, IEthereumClient):
+    wss_provider = etherscan_token = ""
     script_dir = os.path.dirname(__file__)
     with open(os.path.join(script_dir, "resources/ERC20"), 'r') as f:
         erc20_abi = json.loads(f.read())["abi"]
-    network = network_type = ether_api = ''
     gas_strategy = "medium"
     gas_price = None
     w3 = account = None
 
-    def __init__(self,  phrase: str, network: str, network_type: str = "ropsten", ether_api: str = None):
-        """Constructor
+    def __init__(self, params: EthereumClientParams):
+        BaseXChainClient.__init__(self, Chain.Ethereum, params)
+        os.makedirs(os.path.join(self.script_dir, f'resources/{params.network}'), exist_ok=True)
+        self.set_wss_provider(params.wss_provider)
+        self.set_etherscan_token(params.etherscan_token)
+        Account.enable_unaudited_hdwallet_features()
+        self.account = self.w3.eth.account.from_mnemonic(mnemonic=params.phrase)
 
-        Client has to be initialised with mnemonic phrase, network (infura_api token), network_type ("mainnet" or "ropsten"),
-        ether_api: etherscan api token.
-        It will throw an error if an invalid phrase or network has been passed.
+    def set_wss_provider(self, wss_provider: str):
+        self.w3 = Web3(WebsocketProvider(wss_provider))
+        if not self.is_w3_connected():
+            raise Exception("websocket provider error")
 
-        Args:
-            phrase: phrase of wallet (mnemonic) will be set to the Class
-            network: infura websocket api endpoint of the selected network_type
-            network_type: network type can either be `mainnet` or 'ropsten'
-            ether_api: etherscan API token, used for downloading non ERC20 contract ABI
+    def set_etherscan_token(self, etherscan_token: str):
+        self.etherscan_token = etherscan_token
 
+    def is_w3_connected(self):
+        """Check Web3 connectivity
         Returns:
-            void
-
+            bool
         """
-        if network_type != "ropsten" and network_type != "mainnet":
-            raise Exception('Network type has to be ropsten or mainnet')
-        self.ether_api = ether_api
-        self.network_type = network_type
-        os.makedirs(os.path.join(self.script_dir, f'resources/{network_type}'), exist_ok=True)
-        self.set_network(network)
-        self.set_phrase(phrase)
+        return self.w3.isConnected()
 
     def purge_client(self):
         """Purge Client
@@ -87,45 +85,27 @@ class Client(interface.IXChainClient, IEthereumClient):
         """
         self.w3 = self.account = None
 
-    def is_connected(self):
-        """Check Web3 connectivity
+    # def __get_private_key(self, index:int=0):
+    #     """Get private key
+    #     :param index: index for the derivation path
+    #     :type index: int
+    #     :returns: the private key generated from the given phrase
+    #     :raises: raise an exception if phrase not set
+    #     """
+    #     if not self.phrase:
+    #         raise Exception('Phrase not set')
+    #
+    #     self.private_key = crypto.mnemonic_to_private_key(self.phrase, index, self.env)
+    #     return self.private_key
+
+    def get_address(self):
+        """Get current wallet address
 
         Returns:
-            bool
+            current wallet address
 
         """
-        return self.w3.isConnected()
-
-    def set_network(self, network: str):
-        """Set/update the current network
-
-        It will throw an error if an invalid phrase or network has been passed.
-
-        Args:
-            network: infura websocket api endpoint of the selected network_type
-
-        Returns:
-            void
-
-        Raises:
-            Exception: "Network must be provided". -> Thrown if network has not been set before.
-
-        """
-        self.network = network
-        if self.network_type not in network:
-            raise Exception("invalid network type")
-        self.w3 = Web3(WebsocketProvider(network))
-        if not self.is_connected():
-            raise Exception("Infura API error")
-
-    def get_network(self):
-        """Get the current network
-
-        Returns:
-            infura websocket api
-
-        """
-        return self.network
+        return self.account.address
 
     def validate_address(self, address: str):
         """Check address validity
@@ -138,34 +118,6 @@ class Client(interface.IXChainClient, IEthereumClient):
 
         """
         return self.w3.isAddress(address)
-
-    def get_address(self):
-        """Get current wallet address
-
-        Returns:
-            current wallet address
-
-        """
-        return self.account.address
-
-    def set_phrase(self, phrase: str):
-        """Set/Update a new phrase
-
-        Args:
-            phrase: A new phrase
-
-        Returns:
-            The address of the given phrase
-
-        Raises:
-            'Invalid Phrase' if the given phrase is invalid
-
-        """
-        if not crypto.validate_phrase(phrase):
-            raise Exception("invalid phrase")
-        Account.enable_unaudited_hdwallet_features()
-        self.account = self.w3.eth.account.from_mnemonic(mnemonic=phrase)
-        return self.get_address()
 
     async def get_abi(self, contract_address):
         """Get abi description of a non ERC-20 contract

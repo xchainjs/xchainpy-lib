@@ -26,9 +26,9 @@ class TestClient:
     def test_invalid_network_type(self):
         with pytest.raises(Exception) as err:
             assert Client(phrase=self.mnemonic, network=self.network, network_type="invalid")
-        assert str(err.value) == "Network type has to be ropsten or mainnet"
+        assert str(err.value) == "Network type has to be testnet or mainnet"
         with pytest.raises(Exception) as err:
-            assert Client(phrase=self.mnemonic, network=self.network, network_type="ropsten")
+            assert Client(phrase=self.mnemonic, network=self.network, network_type="testnet")
         assert str(err.value) == "invalid network type"
 
     def test_invalid_init_phrase(self):

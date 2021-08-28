@@ -9,7 +9,7 @@ ETH_ETH = Asset("ETH", "ETH")
 
 
 class TestClient:
-    prefix = "../xchainpy_ethereum/resources/ropsten/"
+    prefix = "../xchainpy_ethereum/resources/testnet/"
     mnemonic = open(prefix + "mnemonic", 'r').readline()
     router_abi = json.loads(open(prefix + "router_abi", 'r').readline())
     token_abi = json.loads(open(prefix + "token_abi", 'r').readline())
@@ -23,7 +23,7 @@ class TestClient:
 
     @pytest.fixture
     def test_init(self):
-        self.client = Client(phrase=self.mnemonic, network=self.network, network_type="ropsten",
+        self.client = Client(phrase=self.mnemonic, network=self.network, network_type="testnet",
                              ether_api=self.eth_api)
         yield
         self.client.purge_client()
@@ -31,7 +31,7 @@ class TestClient:
     def test_invalid_network_type(self):
         with pytest.raises(Exception) as err:
             assert Client(phrase=self.mnemonic, network=self.network, network_type="invalid")
-        assert str(err.value) == "Network type has to be ropsten or mainnet"
+        assert str(err.value) == "Network type has to be testnet or mainnet"
         with pytest.raises(Exception) as err:
             assert Client(phrase=self.mnemonic, network=self.network, network_type="mainnet")
         assert str(err.value) == "invalid network type"
@@ -51,11 +51,11 @@ class TestClient:
 
     def test_invalid_init_network(self):
         with pytest.raises(Exception) as err:
-            assert Client(phrase=self.mnemonic, network="wss://ropsten.infura.io/ws/v3/invalid")
+            assert Client(phrase=self.mnemonic, network="wss://testnet.infura.io/ws/v3/invalid")
 
     def test_invalid_set_network(self, test_init):
         with pytest.raises(Exception) as err:
-            assert self.client.set_network(network="wss://ropsten.infura.io/ws/v3/invalid")
+            assert self.client.set_network(network="wss://testnet.infura.io/ws/v3/invalid")
 
     def test_set_network(self, test_init):
         self.client.set_network(network=self.network)
