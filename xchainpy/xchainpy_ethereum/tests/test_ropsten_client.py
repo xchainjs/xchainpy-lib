@@ -1,6 +1,7 @@
 import pytest
 from xchainpy_ethereum.client import Client
 from xchainpy_ethereum.models.asset import Asset
+from xchainpy_ethereum.models.client_types import EthereumClientParams
 import json, os, time
 
 
@@ -9,60 +10,58 @@ ETH_ETH = Asset("ETH", "ETH")
 
 
 class TestClient:
+    # initialization of parameters for xchainpy_etheruem client
     prefix = "../xchainpy_ethereum/resources/testnet/"
     mnemonic = open(prefix + "mnemonic", 'r').readline()
+    # web3 websocket provider is needed, e.g. infura
+    wss = open(prefix + "infura", 'r').readline()
+    # etherscan api is needed if there's intention to interact with non ERC20 token
+    # the client will fetch abi for specific contract
+    eth_api = open("../xchainpy_ethereum/resources/ether_api", 'r').readline()
+    params = EthereumClientParams(wss_provider=wss, etherscan_token=eth_api, phrase=mnemonic)
+
     router_abi = json.loads(open(prefix + "router_abi", 'r').readline())
     token_abi = json.loads(open(prefix + "token_abi", 'r').readline())
-    network = open(prefix + "network", 'r').readline()
-    eth_api = open("../xchainpy_ethereum/resources/ether_api", 'r').readline()
-    thor_router_address = "0x9d496De78837f5a2bA64Cb40E62c19FBcB67f55a"
-
     test_address = "0x0dC1Ce70a8ddFA3F2070984C35010a285CF0530D"
     test_hash = "0x7aa171c7c024cbfdcf6e8097fbd8ec18bacf33581acdea0d3923c031a55b931e"
     test_rune_transfer_hash = "0xa23a19ec29fbc0edc245befe80bda6a29def5b3b4610bf20b670d9e90bfa8095"
 
+    # the router address changes on every churn
+    thor_router_address = "0x9d496De78837f5a2bA64Cb40E62c19FBcB67f55a"
+
     @pytest.fixture
     def test_init(self):
-        self.client = Client(phrase=self.mnemonic, network=self.network, network_type="testnet",
-                             ether_api=self.eth_api)
+        self.client = Client(params=self.params)
         yield
         self.client.purge_client()
 
-    def test_invalid_network_type(self):
+    def test_init_param(self):
         with pytest.raises(Exception) as err:
-            assert Client(phrase=self.mnemonic, network=self.network, network_type="invalid")
-        assert str(err.value) == "Network type has to be testnet or mainnet"
-        with pytest.raises(Exception) as err:
-            assert Client(phrase=self.mnemonic, network=self.network, network_type="mainnet")
-        assert str(err.value) == "invalid network type"
+            EthereumClientParams(wss_provider=self.wss, etherscan_token=self.eth_api,
+                                 phrase=self.mnemonic, network="invalid")
+        assert str(err.value) == "Invalid network"
 
-    def test_invalid_init_phrase(self):
+    def test_init_client(self):
+        test_params = EthereumClientParams(wss_provider=self.wss, etherscan_token=self.eth_api, phrase="invalid")
         with pytest.raises(Exception) as err:
-            assert Client(phrase="invalid", network=self.network)
+            Client(test_params)
         assert str(err.value) == "invalid phrase"
 
-    def test_invalid_set_phrase(self, test_init):
+    def test_set_phrase(self, test_init):
         with pytest.raises(Exception) as err:
-            assert self.client.set_phrase(phrase="invalid")
+            self.client.set_phrase(phrase="invalid")
         assert str(err.value) == "invalid phrase"
 
-    def test_is_connected(self, test_init):
-        assert self.client.is_connected()
-
-    def test_invalid_init_network(self):
+    def test_web3_provider_connection(self, test_init):
+        assert self.client.is_web3_connected()
+        test_params = EthereumClientParams(wss_provider="wss://testnet.network.io/ws/v3/invalid",
+                                           etherscan_token=self.eth_api, phrase=self.mnemonic)
         with pytest.raises(Exception) as err:
-            assert Client(phrase=self.mnemonic, network="wss://testnet.infura.io/ws/v3/invalid")
-
-    def test_invalid_set_network(self, test_init):
+            Client(test_params)
         with pytest.raises(Exception) as err:
-            assert self.client.set_network(network="wss://testnet.infura.io/ws/v3/invalid")
-
-    def test_set_network(self, test_init):
-        self.client.set_network(network=self.network)
-        assert self.client.is_connected()
-
-    def test_get_network(self, test_init):
-        assert self.client.get_network() == self.network
+            assert self.client.set_wss_provider(wss_provider="wss://testnet.network.io/ws/v3/invalid")
+        self.client.set_wss_provider(wss_provider=self.wss)
+        assert self.client.is_web3_connected()
 
     def test_validate_address(self, test_init):
         assert self.client.validate_address(self.test_address)
@@ -72,12 +71,10 @@ class TestClient:
     def test_get_address(self, test_init):
         assert self.client.get_address() == self.test_address
 
-    def test_set_phrase(self, test_init):
-        assert self.client.set_phrase(self.mnemonic) == self.test_address
-        assert self.client.is_connected()
-
     @pytest.mark.asyncio
     async def test_get_abi(self, test_init):
+        res = await self.client.thornode_api_get("/inbound_addresses")
+        self.thor_router_address = next(filter(lambda x: x['chain'] == self.client.chain, res), None)["router"]
         if os.path.exists(self.prefix + ETH_RUNE.contract):
             os.remove(self.prefix + ETH_RUNE.contract)
         if os.path.exists(self.prefix + self.thor_router_address):
@@ -91,6 +88,8 @@ class TestClient:
 
     @pytest.mark.asyncio
     async def test_get_contract(self, test_init):
+        res = await self.client.thornode_api_get("/inbound_addresses")
+        self.thor_router_address = next(filter(lambda x: x['chain'] == self.client.chain, res), None)["router"]
         router_contract = await self.client.get_contract(self.thor_router_address, erc20=False)
         assert router_contract.functions.RUNE().call() == ETH_RUNE.contract
         token_contract = await self.client.get_contract(ETH_RUNE.contract, erc20=True)
@@ -136,7 +135,7 @@ class TestClient:
     @pytest.mark.asyncio
     async def test_transfer_rune(self, test_init):
         self.client.set_gas_strategy("fast")
-        dest_addr = self.client.w3.toChecksumAddress('0xec68740C1691AFd0bF5622Aa42cbEcf2f46e1104')
+        dest_addr = self.client.w3.toChecksumAddress('0x81941E3DeEeA41b6309045ECbAFd919Db5aF6147')
         rune_balance = await self.client.get_balance(asset=ETH_RUNE)
         assert rune_balance > 1
         receipt = await self.client.transfer(asset=ETH_RUNE, amount=1, recipient=dest_addr)
@@ -148,12 +147,14 @@ class TestClient:
     async def test_transfer_ethereum(self, test_init):
         self.client.set_gas_strategy("fast")
         assert await self.client.get_balance() > 0.0001
-        tx_hash = await self.client.transfer(asset=ETH_ETH, amount=0.0001, recipient='0xec68740C1691AFd0bF5622Aa42cbEcf2f46e1104')
+        tx_hash = await self.client.transfer(asset=ETH_ETH, amount=0.0001, recipient='0x81941E3DeEeA41b6309045ECbAFd919Db5aF6147')
         data = self.client.get_transaction_data(tx_hash)
         assert float(self.client.w3.fromWei(data["value"], 'ether')) == 0.0001
 
     @pytest.mark.asyncio
     async def test_read_contract(self, test_init):
+        res = await self.client.thornode_api_get("/inbound_addresses")
+        self.thor_router_address = next(filter(lambda x: x['chain'] == self.client.chain, res), None)["router"]
         assert await self.client.read_contract(ETH_RUNE.contract, "balanceOf", self.client.get_address()) / 10**18 \
                == await self.client.get_balance(asset=ETH_RUNE)
         assert await self.client.read_contract(self.thor_router_address, "RUNE", erc20=False) == ETH_RUNE.contract

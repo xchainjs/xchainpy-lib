@@ -1,94 +1,90 @@
 import pytest
 from xchainpy_ethereum.client import Client
-import json, os
+from xchainpy_ethereum.models.asset import Asset
+from xchainpy_ethereum.models.client_types import EthereumClientParams
+from xchainpy_client.models .types import Network
+import json, os, time
 
+ETH_RUNE = Asset("ETH", "RUNE", contract="0x3155BA85D5F96b2d030a4966AF206230e46849cb")
+ETH_ETH = Asset("ETH", "ETH")
 
 class TestClient:
     prefix = "../xchainpy_ethereum/resources/mainnet/"
     mnemonic = open(prefix + "mnemonic", 'r').readline()
     sushi_abi = json.loads(open(prefix + "sushi_abi", 'r').readline())
     token_abi = json.loads(open(prefix + "token_abi", 'r').readline())
-    network = open(prefix + "network", 'r').readline()
+    wss = open(prefix + "infura", 'r').readline()
     eth_api = open("../xchainpy_ethereum/resources/ether_api", 'r').readline()
+    params = EthereumClientParams(wss_provider=wss, etherscan_token=eth_api,
+                                  phrase=mnemonic, network=Network.Mainnet)
+
     sushi_contract_address = "0xcc39592f5cB193a70f262aA301f54DB1d600e6Da"
-    thor_token_address = "0x3155BA85D5F96b2d030a4966AF206230e46849cb"
     test_address = "0xB1aA026725cD51700E674E240D971785F95429FD"
     test_hash = "0x1ea72e2c1721757fd431306cb124e2b75943c5cd20fee5e3e1f79e028c00e99e"
     test_rune_transfer_hash = "0xc8b3e4c68c9d7022290d4203ff867dcef157efb8927ad29e718f97ac5dddaab2"
 
     @pytest.fixture
     def test_init(self):
-        self.client = Client(phrase=self.mnemonic, network=self.network, network_type="mainnet",
-                             ether_api=self.eth_api)
+        self.client = Client(params=self.params)
         yield
         self.client.purge_client()
 
-    def test_invalid_network_type(self):
+    def test_init_param(self):
         with pytest.raises(Exception) as err:
-            assert Client(phrase=self.mnemonic, network=self.network, network_type="invalid")
-        assert str(err.value) == "Network type has to be testnet or mainnet"
-        with pytest.raises(Exception) as err:
-            assert Client(phrase=self.mnemonic, network=self.network, network_type="testnet")
-        assert str(err.value) == "invalid network type"
+            EthereumClientParams(wss_provider=self.wss, etherscan_token=self.eth_api,
+                                 phrase=self.mnemonic, network="invalid")
+        assert str(err.value) == "Invalid network"
 
-    def test_invalid_init_phrase(self):
+    def test_init_client(self):
+        test_params = EthereumClientParams(wss_provider=self.wss, etherscan_token=self.eth_api,
+                                           phrase="invalid", network=Network.Mainnet)
         with pytest.raises(Exception) as err:
-            assert Client(phrase="invalid", network=self.network, network_type="mainnet")
+            Client(test_params)
         assert str(err.value) == "invalid phrase"
 
-    def test_invalid_set_phrase(self, test_init):
+    def test_set_phrase(self, test_init):
         with pytest.raises(Exception) as err:
-            assert self.client.set_phrase(phrase="invalid")
-        assert str(err.value) == 'invalid phrase'
+            self.client.set_phrase(phrase="invalid")
+        assert str(err.value) == "invalid phrase"
 
-    def test_is_connected(self, test_init):
-        assert self.client.is_connected()
-
-    def test_invalid_init_network(self):
+    def test_web3_provider_connection(self, test_init):
+        assert self.client.is_web3_connected()
+        test_params = EthereumClientParams(wss_provider="wss://mainnet.network.io/ws/v3/invalid",
+                                           etherscan_token=self.eth_api, phrase=self.mnemonic,
+                                           network=Network.Mainnet)
         with pytest.raises(Exception) as err:
-            assert Client(phrase=self.mnemonic, network="wss://mainnet.infura.io/ws/v3/invalid")
-
-    def test_invalid_set_network(self, test_init):
+            Client(test_params)
         with pytest.raises(Exception) as err:
-            assert self.client.set_network(network="wss://mainnet.infura.io/ws/v3/invalid")
-
-    def test_set_network(self, test_init):
-        self.client.set_network(network=self.network)
-        assert self.client.is_connected()
-
-    def test_get_network(self, test_init):
-        assert self.client.get_network() == self.network
-
-    def test_validate_address(self, test_init):
-        assert self.client.validate_address(self.sushi_contract_address)
-        assert self.client.validate_address(self.thor_token_address)
+            assert self.client.set_wss_provider(wss_provider="wss://mainnet.network.io/ws/v3/invalid")
+        self.client.set_wss_provider(wss_provider=self.wss)
+        assert self.client.is_web3_connected()
 
     def test_get_address(self, test_init):
         assert self.client.get_address() == self.test_address
 
-    def test_set_phrase(self, test_init):
-        assert self.client.set_phrase(self.mnemonic) == self.test_address
-        assert self.client.is_connected()
+    def test_validate_address(self, test_init):
+        assert self.client.validate_address(self.sushi_contract_address)
+        assert self.client.validate_address(ETH_RUNE.contract)
 
     @pytest.mark.asyncio
     async def test_get_abi(self, test_init):
-        if os.path.exists(self.prefix + self.thor_token_address):
-            os.remove(self.prefix + self.thor_token_address)
+        if os.path.exists(self.prefix + ETH_RUNE.contract):
+            os.remove(self.prefix + ETH_RUNE.contract)
         if os.path.exists(self.prefix + self.sushi_contract_address):
             os.remove(self.prefix + self.sushi_contract_address)
         assert str(await self.client.get_abi(self.sushi_contract_address)) == str(self.sushi_abi)
-        assert str(await self.client.get_abi(self.thor_token_address)) == str(self.token_abi)
+        assert str(await self.client.get_abi(ETH_RUNE.contract)) == str(self.token_abi)
         self.client.ether_api = None
         assert str(await self.client.get_abi(self.sushi_contract_address)) == str(self.sushi_abi)
-        assert str(await self.client.get_abi(self.thor_token_address)) == str(self.token_abi)
+        assert str(await self.client.get_abi(ETH_RUNE.contract)) == str(self.token_abi)
 
     @pytest.mark.asyncio
     async def test_get_contract(self, test_init):
         sushi_contract = await self.client.get_contract(self.sushi_contract_address, erc20=False)
-        assert sushi_contract.functions.token0().call() == self.thor_token_address
-        token_contract = await self.client.get_contract(self.thor_token_address, erc20=True)
+        assert sushi_contract.functions.token0().call() == ETH_RUNE.contract
+        token_contract = await self.client.get_contract(ETH_RUNE.contract, erc20=True)
         assert token_contract.functions.symbol().call() == 'RUNE'
-        token_contract = await self.client.get_contract(self.thor_token_address, erc20=False)
+        token_contract = await self.client.get_contract(ETH_RUNE.contract, erc20=False)
         decimal_place = token_contract.functions.decimals().call()
         assert token_contract.functions.maxSupply().call()/10**decimal_place == 500000000.0
 
@@ -97,10 +93,10 @@ class TestClient:
         balance = await self.client.get_balance()
         balance_address = await self.client.get_balance(address=self.test_address)
         assert balance == balance_address
-        # rune_balance = await self.client.get_balance(contract_address=self.thor_token_address)
-        # rune_balance_address = await self.client.get_balance(address=self.test_address,
-        #                                                contract_address=self.thor_token_address)
-        # assert rune_balance == rune_balance_address
+        rune_balance = await self.client.get_balance(asset=ETH_RUNE)
+        rune_balance_address = await self.client.get_balance(address=self.test_address,
+                                                             asset=ETH_RUNE)
+        assert rune_balance == rune_balance_address
 
     # def test_get_fees(self, test_init):
     #     self.client.set_gas_strategy("fast")

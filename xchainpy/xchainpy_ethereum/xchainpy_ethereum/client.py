@@ -5,14 +5,13 @@ import requests
 from web3 import Web3, WebsocketProvider, Account
 from web3.gas_strategies.time_based import slow_gas_price_strategy, medium_gas_price_strategy, fast_gas_price_strategy
 from xchainpy_ethereum.models.asset import Asset
-from xchainpy_crypto import crypto
-from models.client_types import EthereumClientParams
+from xchainpy_ethereum.models.client_types import EthereumClientParams
 from xchainpy_client.base_xchain_client import BaseXChainClient
-
+from xchainpy_crypto import crypto
 from xchainpy_util.chain import Chain
 
 class IEthereumClient:
-    def is_connected(self):
+    def is_web3_connected(self):
         pass
 
     async def get_abi(self, contract_address):
@@ -61,13 +60,13 @@ class Client(BaseXChainClient, IEthereumClient):
 
     def set_wss_provider(self, wss_provider: str):
         self.w3 = Web3(WebsocketProvider(wss_provider))
-        if not self.is_w3_connected():
+        if not self.is_web3_connected():
             raise Exception("websocket provider error")
 
     def set_etherscan_token(self, etherscan_token: str):
         self.etherscan_token = etherscan_token
 
-    def is_w3_connected(self):
+    def is_web3_connected(self):
         """Check Web3 connectivity
         Returns:
             bool
@@ -85,27 +84,40 @@ class Client(BaseXChainClient, IEthereumClient):
         """
         self.w3 = self.account = None
 
-    # def __get_private_key(self, index:int=0):
-    #     """Get private key
-    #     :param index: index for the derivation path
-    #     :type index: int
-    #     :returns: the private key generated from the given phrase
-    #     :raises: raise an exception if phrase not set
-    #     """
-    #     if not self.phrase:
-    #         raise Exception('Phrase not set')
-    #
-    #     self.private_key = crypto.mnemonic_to_private_key(self.phrase, index, self.env)
-    #     return self.private_key
+    def get_explorer_url(self) -> str:
+        """Get explorer url
+        :returns: the explorer url for binance chain based on the network
+        """
+        return 'https://ropsten.etherscan.io' if self.network == 'testnet' else 'https://etherscan.io'
 
-    def get_address(self):
+    def get_explorer_address_url(self, address: str) -> str:
+        """Get the explorer url for the given address
+        :param address: address
+        :type address: str
+        :returns: The explorer url for the given address based on the network
+        """
+        return f'{self.get_explorer_url()}/address/{address}'
+
+    def get_explorer_tx_url(self, tx_id: str) -> str:
+        """Get the explorer url for the given transaction id
+        :param tx_id: tx_id
+        :type tx_id: str
+        :returns: The explorer url for the given transaction id based on the network
+        """
+        return f'{self.get_explorer_url()}/tx/{tx_id}'
+
+    def get_account(self):
+        return self.account
+
+    def get_address(self, index=0):
         """Get current wallet address
 
         Returns:
             current wallet address
 
         """
-        return self.account.address
+        if index == 0:
+            return self.account.address
 
     def validate_address(self, address: str):
         """Check address validity
@@ -129,19 +141,19 @@ class Client(BaseXChainClient, IEthereumClient):
             abi description[json]
 
         """
-        path = os.path.join(self.script_dir, f'resources/{self.network_type}/{contract_address}')
+        path = os.path.join(self.script_dir, f'resources/{self.network}/{contract_address}')
         if os.path.exists(path):
             with open(path, 'r') as f:
                 return json.loads(f.read())
         else:
-            resource_path = os.path.join(self.script_dir, f'resources/{self.network_type}')
+            resource_path = os.path.join(self.script_dir, f'resources/{self.network}')
             os.makedirs(resource_path, exist_ok=True)
-            if not self.ether_api:
+            if not self.etherscan_token:
                 raise Exception("undefined ether api token")
-            if self.network_type == 'mainnet':
-                url = f'https://api.etherscan.io/api?module=contract&action=getabi&address={contract_address}&apikey={self.ether_api}'
+            if self.network == 'mainnet':
+                url = f'https://api.etherscan.io/api?module=contract&action=getabi&address={contract_address}&apikey={self.etherscan_token}'
             else:
-                url = f'https://api-ropsten.etherscan.io/api?module=contract&action=getabi&address={contract_address}&apikey={self.ether_api}'
+                url = f'https://api-ropsten.etherscan.io/api?module=contract&action=getabi&address={contract_address}&apikey={self.etherscan_token}'
             headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
             r = requests.get(url, headers=headers).json()
             if r["status"] != '1':
