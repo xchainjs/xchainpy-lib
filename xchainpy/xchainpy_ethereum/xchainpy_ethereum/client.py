@@ -5,12 +5,13 @@ import requests
 from web3 import Web3, WebsocketProvider, Account
 from web3.gas_strategies.time_based import slow_gas_price_strategy, medium_gas_price_strategy, fast_gas_price_strategy
 from xchainpy_ethereum.models.asset import Asset
-from xchainpy_client import interface
+from xchainpy_ethereum.models.client_types import EthereumClientParams
+from xchainpy_client.base_xchain_client import BaseXChainClient
 from xchainpy_crypto import crypto
-
+from xchainpy_util.chain import Chain
 
 class IEthereumClient:
-    def is_connected(self):
+    def is_web3_connected(self):
         pass
 
     async def get_abi(self, contract_address):
@@ -40,40 +41,37 @@ class IEthereumClient:
     async def get_balance(self, asset: Asset=None, address=None):
         pass
 
-
-class Client(interface.IXChainClient, IEthereumClient):
+class Client(BaseXChainClient, IEthereumClient):
+    wss_provider = etherscan_token = ""
     script_dir = os.path.dirname(__file__)
     with open(os.path.join(script_dir, "resources/ERC20"), 'r') as f:
         erc20_abi = json.loads(f.read())["abi"]
-    network = network_type = ether_api = ''
     gas_strategy = "medium"
     gas_price = None
     w3 = account = None
 
-    def __init__(self,  phrase: str, network: str, network_type: str = "ropsten", ether_api: str = None):
-        """Constructor
+    def __init__(self, params: EthereumClientParams):
+        BaseXChainClient.__init__(self, Chain.Ethereum, params)
+        os.makedirs(os.path.join(self.script_dir, f'resources/{params.network}'), exist_ok=True)
+        self.set_wss_provider(params.wss_provider)
+        self.set_etherscan_token(params.etherscan_token)
+        Account.enable_unaudited_hdwallet_features()
+        self.account = self.w3.eth.account.from_mnemonic(mnemonic=params.phrase)
 
-        Client has to be initialised with mnemonic phrase, network (infura_api token), network_type ("mainnet" or "ropsten"),
-        ether_api: etherscan api token.
-        It will throw an error if an invalid phrase or network has been passed.
+    def set_wss_provider(self, wss_provider: str):
+        self.w3 = Web3(WebsocketProvider(wss_provider))
+        if not self.is_web3_connected():
+            raise Exception("websocket provider error")
 
-        Args:
-            phrase: phrase of wallet (mnemonic) will be set to the Class
-            network: infura websocket api endpoint of the selected network_type
-            network_type: network type can either be `mainnet` or 'ropsten'
-            ether_api: etherscan API token, used for downloading non ERC20 contract ABI
+    def set_etherscan_token(self, etherscan_token: str):
+        self.etherscan_token = etherscan_token
 
+    def is_web3_connected(self):
+        """Check Web3 connectivity
         Returns:
-            void
-
+            bool
         """
-        if network_type != "ropsten" and network_type != "mainnet":
-            raise Exception('Network type has to be ropsten or mainnet')
-        self.ether_api = ether_api
-        self.network_type = network_type
-        os.makedirs(os.path.join(self.script_dir, f'resources/{network_type}'), exist_ok=True)
-        self.set_network(network)
-        self.set_phrase(phrase)
+        return self.w3.isConnected()
 
     def purge_client(self):
         """Purge Client
@@ -86,45 +84,40 @@ class Client(interface.IXChainClient, IEthereumClient):
         """
         self.w3 = self.account = None
 
-    def is_connected(self):
-        """Check Web3 connectivity
+    def get_explorer_url(self) -> str:
+        """Get explorer url
+        :returns: the explorer url for binance chain based on the network
+        """
+        return 'https://ropsten.etherscan.io' if self.network == 'testnet' else 'https://etherscan.io'
+
+    def get_explorer_address_url(self, address: str) -> str:
+        """Get the explorer url for the given address
+        :param address: address
+        :type address: str
+        :returns: The explorer url for the given address based on the network
+        """
+        return f'{self.get_explorer_url()}/address/{address}'
+
+    def get_explorer_tx_url(self, tx_id: str) -> str:
+        """Get the explorer url for the given transaction id
+        :param tx_id: tx_id
+        :type tx_id: str
+        :returns: The explorer url for the given transaction id based on the network
+        """
+        return f'{self.get_explorer_url()}/tx/{tx_id}'
+
+    def get_account(self):
+        return self.account
+
+    def get_address(self, index=0):
+        """Get current wallet address
 
         Returns:
-            bool
+            current wallet address
 
         """
-        return self.w3.isConnected()
-
-    def set_network(self, network: str):
-        """Set/update the current network
-
-        It will throw an error if an invalid phrase or network has been passed.
-
-        Args:
-            network: infura websocket api endpoint of the selected network_type
-
-        Returns:
-            void
-
-        Raises:
-            Exception: "Network must be provided". -> Thrown if network has not been set before.
-
-        """
-        self.network = network
-        if self.network_type not in network:
-            raise Exception("invalid network type")
-        self.w3 = Web3(WebsocketProvider(network))
-        if not self.is_connected():
-            raise Exception("Infura API error")
-
-    def get_network(self):
-        """Get the current network
-
-        Returns:
-            infura websocket api
-
-        """
-        return self.network
+        if index == 0:
+            return self.account.address
 
     def validate_address(self, address: str):
         """Check address validity
@@ -138,34 +131,6 @@ class Client(interface.IXChainClient, IEthereumClient):
         """
         return self.w3.isAddress(address)
 
-    def get_address(self):
-        """Get current wallet address
-
-        Returns:
-            current wallet address
-
-        """
-        return self.account.address
-
-    def set_phrase(self, phrase: str):
-        """Set/Update a new phrase
-
-        Args:
-            phrase: A new phrase
-
-        Returns:
-            The address of the given phrase
-
-        Raises:
-            'Invalid Phrase' if the given phrase is invalid
-
-        """
-        if not crypto.validate_phrase(phrase):
-            raise Exception("invalid phrase")
-        Account.enable_unaudited_hdwallet_features()
-        self.account = self.w3.eth.account.from_mnemonic(mnemonic=phrase)
-        return self.get_address()
-
     async def get_abi(self, contract_address):
         """Get abi description of a non ERC-20 contract
 
@@ -176,19 +141,19 @@ class Client(interface.IXChainClient, IEthereumClient):
             abi description[json]
 
         """
-        path = os.path.join(self.script_dir, f'resources/{self.network_type}/{contract_address}')
+        path = os.path.join(self.script_dir, f'resources/{self.network}/{contract_address}')
         if os.path.exists(path):
             with open(path, 'r') as f:
                 return json.loads(f.read())
         else:
-            resource_path = os.path.join(self.script_dir, f'resources/{self.network_type}')
+            resource_path = os.path.join(self.script_dir, f'resources/{self.network}')
             os.makedirs(resource_path, exist_ok=True)
-            if not self.ether_api:
+            if not self.etherscan_token:
                 raise Exception("undefined ether api token")
-            if self.network_type == 'mainnet':
-                url = f'https://api.etherscan.io/api?module=contract&action=getabi&address={contract_address}&apikey={self.ether_api}'
+            if self.network == 'mainnet':
+                url = f'https://api.etherscan.io/api?module=contract&action=getabi&address={contract_address}&apikey={self.etherscan_token}'
             else:
-                url = f'https://api-ropsten.etherscan.io/api?module=contract&action=getabi&address={contract_address}&apikey={self.ether_api}'
+                url = f'https://api-ropsten.etherscan.io/api?module=contract&action=getabi&address={contract_address}&apikey={self.etherscan_token}'
             headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
             r = requests.get(url, headers=headers).json()
             if r["status"] != '1':
@@ -211,8 +176,8 @@ class Client(interface.IXChainClient, IEthereumClient):
         """
         abi = self.erc20_abi
         if not erc20:
-            abi = await self.get_abi(contract)
-        return self.w3.eth.contract(abi=abi, address=contract)
+            abi = await self.get_abi(contract_address)
+        return self.w3.eth.contract(abi=abi, address=contract_address)
 
     async def get_balance(self, asset=None, address=None):
         """Get the balance of a erc-20 token
@@ -303,7 +268,7 @@ class Client(interface.IXChainClient, IEthereumClient):
                 'gas': gas_limit,
                 'gasPrice': gas_price,
             }
-            token_contract = await self.get_contract(contract_address=asset.ticker)
+            token_contract = await self.get_contract(contract_address=asset.contract)
             decimal = token_contract.functions.decimals().call()
             raw_tx = token_contract.functions.transfer(recipient, amount*10**decimal).buildTransaction(tx)
             signed_tx = self.account.sign_transaction(raw_tx)
