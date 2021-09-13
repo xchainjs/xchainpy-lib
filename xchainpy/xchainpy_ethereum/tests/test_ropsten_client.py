@@ -108,14 +108,14 @@ class TestClient:
                                                        asset=ETH_RUNE)
         assert rune_balance == rune_balance_address
 
-    def test_get_fees(self, test_init):
-        self.client.set_gas_strategy("fast")
-        fast_fee = self.client.get_fees()
-        self.client.set_gas_strategy("medium")
-        medium_fee = self.client.get_fees()
-        self.client.set_gas_strategy("slow")
-        slow_fee = self.client.get_fees()
-        assert fast_fee >= medium_fee >= slow_fee
+    # def test_get_fees(self, test_init):
+    #     self.client.set_gas_strategy("fast")
+    #     fast_fee = self.client.get_fees()
+    #     self.client.set_gas_strategy("medium")
+    #     medium_fee = self.client.get_fees()
+    #     self.client.set_gas_strategy("slow")
+    #     slow_fee = self.client.get_fees()
+    #     assert fast_fee >= medium_fee >= slow_fee
 
     def test_get_transaction_data(self, test_init):
         data = self.client.get_transaction_data(self.test_hash)

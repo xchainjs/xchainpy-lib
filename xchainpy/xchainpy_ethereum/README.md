@@ -16,19 +16,21 @@ python3 setup.py install
 
 ## Initialization of Client
 Pass in your infura WSS api token as network, and pass your ether token as ether_api (not enforced).
-
-
-- Initialize mainnet client:
-``
-client = Client(phrase="mnemonimic", network="wss://mainnet.infura.io/ws/v3/...", network_type="mainnet",
-                             ether_api="...")
-``
-
-- Initialize ropsten(testnet) client:
-``
-client = Client(phrase="mnemonimic", network="wss://ropsten.infura.io/ws/v3/...", network_type="ropsten",
-                             ether_api="...")
-``
+initialization of parameters for xchainpy_etheruem client
+```
+    prefix = "../xchainpy_ethereum/resources/testnet/"
+    mnemonic = open(prefix + "mnemonic", 'r').readline()
+``` 
+web3 websocket provider is needed, e.g. infura
+```
+    wss = open(prefix + "infura", 'r').readline()
+```
+etherscan api is needed if there's intention to interact with non ERC20 token
+the client will fetch abi for specific contract
+```
+    eth_api = open("../xchainpy_ethereum/resources/ether_api", 'r').readline()
+    params = EthereumClientParams(wss_provider=wss, etherscan_token=eth_api, phrase=mnemonic)
+```
 
 Head to ``test/test_ropsten_client.py`` to see a
 more comprehensive way to using this client.
