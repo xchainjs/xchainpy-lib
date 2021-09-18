@@ -2,6 +2,7 @@ from xchainpy_util.asset import Asset
 from xchainpy_client.models.balance import Balance
 from xchainpy_util.chain import Chain
 
+
 class BinanceBalance(Balance):
 
     def __init__(self, balance):

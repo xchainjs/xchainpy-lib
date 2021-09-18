@@ -24,6 +24,7 @@ class CosmosSDKClient:
         self.derive_path = derive_path
         self.server = server
         self.chain_id = chain_id
+        self.client = http3.AsyncClient(timeout=5)
 
     def seed_to_privkey(self, seed: str) -> bytes:
         """
@@ -66,9 +67,7 @@ class CosmosSDKClient:
         try:
             api_url = f'{self.server}/bank/balances/{address}'
 
-            client = http3.AsyncClient()
-
-            response = await client.get(api_url)
+            response = await self.client.get(api_url)
 
             if response.status_code == 200:
                 return json.loads(response.content.decode('utf-8'))
@@ -81,9 +80,7 @@ class CosmosSDKClient:
         try:
             api_url = f'{self.server}/txs/{tx_id}'
 
-            client = http3.AsyncClient()
-
-            response = await client.get(api_url)
+            response = await self.client.get(api_url)
 
             if response.status_code == 200:
                 return json.loads(response.content.decode('utf-8'))
@@ -99,9 +96,7 @@ class CosmosSDKClient:
 
             api_url = f'{self.server}/auth/accounts/{address}'
 
-            client = http3.AsyncClient()
-
-            response = await client.get(api_url)
+            response = await self.client.get(api_url)
 
             if response.status_code == 200:
                 return json.loads(response.content.decode('utf-8'))
@@ -175,11 +170,7 @@ class CosmosSDKClient:
     async def do_transfer(self, content):
         api_url = f'{self.server}/txs'
 
-        client = http3.AsyncClient()
-
-        #print(content)
-
-        response = await client.post(api_url, data=content)
+        response = await self.client.post(api_url, data=content)
 
         #print(response)
 
@@ -235,8 +226,7 @@ class CosmosSDKClient:
             address = utils.tobech32(address)
             local_var_path = re.sub("{address}", quote(address.encode("utf-8")),"/auth/accounts/{address}")
             url = self.server + local_var_path
-            client = http3.AsyncClient()
-            response = await client.get(url)
+            response = await self.client.get(url)
 
             if response.status_code == 200:
                 result = json.loads(response.content.decode('utf-8'))['result']
@@ -296,8 +286,7 @@ class CosmosSDKClient:
 
             post_data = self.get_tx_post_data(tx , mode)
 
-            client = http3.AsyncClient()
-            response = await client.post(url=api_url, data=post_data)
+            response = await self.client.post(url=api_url, data=post_data)
 
             if response.status_code == 200:
                 res = json.loads(response.content.decode('utf-8'))

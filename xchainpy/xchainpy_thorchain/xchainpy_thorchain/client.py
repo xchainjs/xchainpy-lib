@@ -61,7 +61,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         if phrase:
             self.set_phrase(phrase)
 
-    def purge_client(self) -> None:
+    async def purge_client(self) -> None:
         """Purge client
 
         :return: returns void (None)
@@ -69,6 +69,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         """
         self.phrase = self.address = ''
         self.private_key = None
+        await self.thor_client.client.close()
 
     def set_network(self, network: str) -> None:
         """Set/update the current network.
