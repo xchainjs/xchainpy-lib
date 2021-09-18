@@ -117,15 +117,14 @@ class CosmosSDKClient:
             self.set_prefix()
             acc_address = utils.frombech32(from_address)
             account = await self.account_address_get(acc_address)
-            if "account_number" not in account:
-                account = {
-                    "address": utils.frombech32(account["value"]["address"]) if account["value"]["address"] else "",
-                    "public_key": account["value"]["public_key"]["value"] if account["value"]["public_key"] else base64.b64encode(self.privkey_to_pubkey(private_key)).decode("utf-8"),
-                    "coins": account["value"]["coins"] if "coins" in account["value"] else [],
-                    "account_number": account["value"]["account_number"],
-                    # there is no "sequence" for a fresh wallet, so we use "get" with default
-                    "sequence": account["value"]["sequence"] if "sequence" in account["value"] else "0"
-                }
+            account = {
+                "address": utils.frombech32(account["value"]["address"]) if account["value"]["address"] else "",
+                "public_key": account["value"]["public_key"]["value"] if account["value"]["public_key"] else base64.b64encode(self.privkey_to_pubkey(privkey)).decode("utf-8"),
+                "coins": account["value"]["coins"] if "coins" in account["value"] else [],
+                "account_number": account["value"]["account_number"],
+                # there is no "sequence" for a fresh wallet, so we use "get" with default
+                "sequence": account["value"]["sequence"] if "sequence" in account["value"] else "0"
+            }
             self._account_num = account["account_number"]
             self._sequence = account["sequence"]
             self._gas = "10000000"
@@ -313,14 +312,13 @@ class CosmosSDKClient:
         try:
             self.set_prefix()
             account = await self.account_address_get(signer)
-            if "account_number" not in account:
-                account = {
-                    "address": utils.frombech32(account["value"]["address"]) if account["value"]["address"] else "",
-                    "public_key": account["value"]["public_key"]["value"] if account["value"]["public_key"] else base64.b64encode(self.privkey_to_pubkey(private_key)).decode("utf-8"),
-                    "coins": account["value"]["coins"] if "coins" in account["value"] else [],
-                    "account_number": account["value"]["account_number"],
-                    "sequence": account["value"]["sequence"] if "sequence" in account["value"] else "0"
-                }
+            account = {
+                "address": utils.frombech32(account["value"]["address"]) if "address" in account["value"] else "",
+                "public_key": account["value"]["public_key"]["value"] if "public_key" in account["value"] else base64.b64encode(self.privkey_to_pubkey(private_key)).decode("utf-8"),
+                "coins": account["value"]["coins"] if "coins" in account["value"] else [],
+                "account_number": account["value"]["account_number"],
+                "sequence": account["value"]["sequence"] if "sequence" in account["value"] else "0"
+            }
             signed_std_tx = self.sign_std_tx(private_key, unsigned_std_tx, str(account["account_number"]), str(account["sequence"]), str(account["public_key"]) )
             result = await self.tx_post(signed_std_tx, 'block')
             return result
