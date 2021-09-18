@@ -354,14 +354,14 @@ class Client(interface.IXChainClient, IThorchainClient):
 
     async def deposit(self, amount , memo , asset = {"chain" : "THOR", "symbol": "RUNE" , "ticker" : "RUNE"}):
         try:
-            asset_balance = await self.get_balance(self.get_address() , [asset])
+            asset_balance = await self.get_balance(self.get_address(), [asset])
             if len(asset_balance) == 0 or float(asset_balance[0]['amount']) < (float(amount)+ DEFAULT_GAS_VALUE):
                 raise Exception("insufficient funds")
 
             signer = self.get_address()
-            coins = [MsgCoin(getDenomWithChain(asset) , amount).to_obj()]
+            coins = [MsgCoin(getDenomWithChain(asset), amount).to_obj()]
 
-            msg_native_tx = message.msg_native_tx_from_json(coins , memo , signer)
+            msg_native_tx = message.msg_native_tx_from_json(coins, memo, signer)
             
             unsigned_std_tx = await self.build_deposit_tx(msg_native_tx)
             fee = unsigned_std_tx.fee
@@ -370,7 +370,7 @@ class Client(interface.IXChainClient, IThorchainClient):
             # max gas
             fee['gas'] = '10000000'
 
-            result = await self.thor_client.sign_and_broadcast(unsigned_std_tx , private_key , acc_address)
+            result = await self.thor_client.sign_and_broadcast(unsigned_std_tx, private_key, acc_address)
             if not result['logs']:
                 raise Exception("failed to broadcast transaction")
             else:
