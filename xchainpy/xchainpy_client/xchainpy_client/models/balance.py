@@ -1,7 +1,8 @@
 from xchainpy_util.asset import Asset
 
+
 class Balance:
-    _asset = None # Asset
+    _asset = None  # Asset
     _amount = 0
 
     def __init__(self, asset, amount):
