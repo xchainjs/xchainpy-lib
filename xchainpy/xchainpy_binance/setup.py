@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='xchainpy_binance',
     packages=find_packages(),
-    version='0.2.2',
+    version='0.2.3',
     license='MIT',
     description='Custom Binance client and utilities used by XChainPY clients',
     author='THORChain',
@@ -21,8 +21,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python'
     ],
 )
