@@ -27,6 +27,8 @@ class IBinanceClient():
         pass
     def get_multi_send_fees(self): 
         pass
+    async def get_account(self, address:str, index:int=0):
+        pass
     def get_single_and_multi_fees(self): 
         pass
     def multi_send(self, coins, recipient, memo):
@@ -141,6 +143,14 @@ class Client(BaseXChainClient, IBinanceClient):
         :returns: True or False
         """
         return crypto.check_address(address, utils.get_prefix(self.network))
+    
+    async def get_account(self, address:str=None, index: int = 0):
+        try:
+            address = address or self.get_address(index)
+            account = await self.client.get_account(address)
+            return account
+        except Exception as err:
+            raise Exception(f"Could not get account data for address {address}")
 
     async def get_balance(self, address:str, asset:Asset=None):
         """Get the balance of a given address

@@ -118,6 +118,8 @@ client = Client(XChainClientParams(network=Network.Testnet, phrase=phrase))
 
 address = client.get_address()
 
+account = await client.get_account(adderss=address)
+
 balances = await client.get_balance(address=address)
 
 for balance in balances:

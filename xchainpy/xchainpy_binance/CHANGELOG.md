@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2021-10-13
+
+### Added 
+
+- Add get_account
+
+
 ## 2021-08-3
 
 ### Added 

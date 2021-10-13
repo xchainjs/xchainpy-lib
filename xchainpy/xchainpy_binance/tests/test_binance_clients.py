@@ -72,6 +72,13 @@ class TestBinanceClient:
     async def test_has_balances(self, client):
         self.client.set_network('testnet')
         assert await self.client.get_balance(address=self.testnetaddress_path0)
+    
+    @pytest.mark.asyncio
+    async def test_has_account(self, client):
+        self.client.set_network('testnet')
+        account = await self.client.get_account(address=self.testnetaddress_path0)
+        assert account['address'] == self.testnetaddress_path0
+        assert account['account_number']
 
     @pytest.mark.asyncio
     async def test_balance_has_correct_asset(self, client):
