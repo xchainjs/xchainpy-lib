@@ -33,6 +33,19 @@ HASHFUNCTION = SHA256
 META = "xchain-keystore"
 ```
 
+
+## Installation
+
+```bash
+pip install xchainpy_crypto
+```
+
+### Before install the package on M1 Mac, execute this command:
+
+```bash
+brew install autoconf automake libffi libtool pkg-config
+```
+
 ## Usage
 
 ### Basic usage
@@ -267,6 +280,8 @@ class KdfParams:
 These packages needed to run tests:
 
 - pytest `pip install pytest`
+- pytest-asyncio `pip install pytest-asyncio`
+
 
 How to run test ?
 
