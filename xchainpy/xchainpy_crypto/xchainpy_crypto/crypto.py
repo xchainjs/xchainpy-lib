@@ -1,7 +1,5 @@
 from bip_utils import Bip39MnemonicValidator
-from bip_utils.bip.bip_keys import BipPrivateKey, BipPublicKey
 from mnemonic import Mnemonic
-from bip_utils import Bip32, P2WPKH, BitcoinConf
 from typing import Counter
 from .models.Keystore import Keystore
 from .models.KdfParams import KdfParams
@@ -34,8 +32,8 @@ def validate_phrase(phrase: str):
     :type phrase: str
     :returns: is the phrase valid or not (true or false)
     """
-    validator = Bip39MnemonicValidator(phrase)
-    return validator.IsValid() if hasattr(validator, 'IsValid') else validator.Validate()
+    validator = Bip39MnemonicValidator()
+    return validator.IsValid(phrase) if hasattr(validator, 'IsValid') else validator.Validate()
 
 
 def generate_mnemonic(size=12, language="english"):
