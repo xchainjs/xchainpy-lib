@@ -24,7 +24,7 @@ class CosmosSDKClient:
         self.derive_path = derive_path
         self.server = server
         self.chain_id = chain_id
-        self.client = http3.AsyncClient(timeout=5)
+        self.client = http3.AsyncClient(timeout=10)
 
     def seed_to_privkey(self, seed: str) -> bytes:
         """
@@ -304,8 +304,8 @@ class CosmosSDKClient:
             account = {
                 "address": utils.frombech32(account["value"]["address"]) if "address" in account["value"] else "",
                 "public_key": account["value"]["public_key"]["value"] if "public_key" in account["value"] else base64.b64encode(self.privkey_to_pubkey(private_key)).decode("utf-8"),
-                "coins": account["value"]["coins"] if "coins" in account["value"] else [],
-                "account_number": account["value"]["account_number"],
+                "coins": account["value"]["coins"] if "coins" in account["value"] else"",
+                "account_number": account["value"]["account_number"] if "account_number" in account["value"] else"",
                 "sequence": account["value"]["sequence"] if "sequence" in account["value"] else "0"
             }
             signed_std_tx = self.sign_std_tx(private_key, unsigned_std_tx, str(account["account_number"]), str(account["sequence"]), str(account["public_key"]) )
