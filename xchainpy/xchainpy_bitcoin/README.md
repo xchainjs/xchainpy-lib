@@ -30,6 +30,25 @@ This package uses the following service providers:
 Sochain API rate limits: https://sochain.com/api#rate-limits (300 requests/minute)
 
 
+## Installation
+
+```bash
+pip install xchainpy_bitcoin
+```
+
+### Before install the package on M1 Mac, execute these commands:
+
+```bash
+brew install gmp openblas openssl autoconf automake libffi libtool pkg-config
+
+CFLAGS=-I/opt/homebrew/opt/gmp/include LDFLAGS=-L/opt/homebrew/opt/gmp/lib pip3 install fastecdsa
+
+CFLAGS=-I$(brew --prefix openssl)/include LDFLAGS=-L$(brew --prefix openssl)/lib pip3 install scrypt
+
+export OPENBLAS="$(brew --prefix openblas) $OPENBLAS"
+```
+
+
 Bitcoin Client module
 -----------------
 

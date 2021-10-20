@@ -39,10 +39,7 @@ class TestBitcoinUtils:
             confirmed_only=False, # get all confirmed & unconfirmed UTXOs
             )
         assert len(utxos) > 100
-        assert utxos[0].hash == '82ac8b4e4efea7edbab6a91449be9a31863746ac5af45479e57a17133c72ecba'
-        assert utxos[189].hash == 'b963b8745623a4022b07220d4ffdd35f2ad9837530fef4fddbeabed26954da30'
-
-
+        
     @pytest.mark.asyncio
     async def test_get_utxos_associated_with_a_testnet_address(self):
         address = '2NA8UF8xz2KMgyW7AzxKRiaJQjSx1zBr7gi'
