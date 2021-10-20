@@ -17,9 +17,6 @@ class IThorchainClient():
     def set_client_url(self, client_url):
         pass
 
-    def set_client_url(self):
-        pass
-
     def set_explorer_url(self):
         pass
 
@@ -191,7 +188,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         :rtype: CosmosSDKClient Class    
         """
         network = self.get_network()
-        return CosmosSDKClient(server=self.get_default_client_url()[network]["node"], prefix=self.get_prefix(), derive_path="m/44'/931'/0'/0/0", chain_id=self.get_chain_id())
+        return CosmosSDKClient(server=self.client_url[network]["node"], prefix=self.get_prefix(), derive_path="m/44'/931'/0'/0/0", chain_id=self.get_chain_id())
 
     def get_private_key(self) -> bytes:
         """Get private key.
@@ -327,8 +324,8 @@ class Client(interface.IXChainClient, IThorchainClient):
 
     async def build_deposit_tx(self , msg_native_tx : MsgNativeTx) -> StdTx :
         try:
-            url = f'{self.get_default_client_url()[self.get_network()]["node"]}/thorchain/deposit'
-            client = http3.AsyncClient()
+            url = f'{self.client_url[self.get_network()]["node"]}/thorchain/deposit'
+            client = http3.AsyncClient(timeout=10)
             data = {
             "coins" : msg_native_tx.coins,
             "memo" : msg_native_tx.memo,
@@ -337,7 +334,7 @@ class Client(interface.IXChainClient, IThorchainClient):
                 "from" : msg_native_tx.signer
             }  
             }
-            response = await client.post(url=url , json=data)
+            response = await client.post(url=url, json=data)
 
             if response.status_code == 200:
                 res = json.loads(response.content.decode('utf-8'))['value']
@@ -350,13 +347,11 @@ class Client(interface.IXChainClient, IThorchainClient):
         except Exception as err:
             raise Exception(str(err))
         
-        
-        
 
     async def deposit(self, amount , memo , asset = {"chain" : "THOR", "symbol": "RUNE" , "ticker" : "RUNE"}):
         try:
             asset_balance = await self.get_balance(self.get_address(), [asset])
-            if len(asset_balance) == 0 or float(asset_balance[0]['amount']) < (float(amount)+ DEFAULT_GAS_VALUE):
+            if len(asset_balance) == 0 or float(asset_balance[0]['amount']) < (float(amount) + DEFAULT_GAS_VALUE):
                 raise Exception("insufficient funds")
 
             signer = self.get_address()
@@ -369,7 +364,7 @@ class Client(interface.IXChainClient, IThorchainClient):
             private_key = self.get_private_key()
             acc_address = frombech32(signer)
             # max gas
-            fee['gas'] = '10000000'
+            fee['gas'] = '100000000'
 
             result = await self.thor_client.sign_and_broadcast(unsigned_std_tx, private_key, acc_address)
             if not result['logs']:
