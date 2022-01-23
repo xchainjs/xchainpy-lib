@@ -2,7 +2,7 @@ import asyncio
 import json
 import os
 import requests
-from web3 import Web3, WebsocketProvider, Account
+from web3 import Web3, WebsocketProvider, HTTPProvider, Account
 from web3.gas_strategies.time_based import slow_gas_price_strategy, medium_gas_price_strategy, fast_gas_price_strategy
 from xchainpy_fantom.models.asset import Asset
 from xchainpy_fantom.models.client_types import FantomClientParams
@@ -59,7 +59,7 @@ class Client(BaseXChainClient, IFantomClient):
         self.account = self.w3.eth.account.from_mnemonic(mnemonic=params.phrase)
 
     def set_wss_provider(self, wss_provider: str):
-        self.w3 = Web3(WebsocketProvider(wss_provider))
+        self.w3 = Web3(HTTPProvider(wss_provider))
         if not self.is_web3_connected():
             raise Exception("websocket provider error")
 
