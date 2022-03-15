@@ -3,17 +3,21 @@ import enum
 class Network(enum.Enum):
     Mainnet = 'mainnet'
     Testnet = 'testnet'
+    Stagenet = 'stagenet'
 
 class RootDerivationPaths:
-    def __init__(self, mainnet, testnet):
+    def __init__(self, mainnet, testnet, stagenet):
         """
         :param mainnet: mainnet
         :type mainnet: str
         :param testnet: testnet 
         :type testnet: str
+        :param stagenet: stagenet
+        :type stagenet: str
         """
         self._mainnet = mainnet
         self._testnet = testnet
+        self._stagenet = stagenet
 
     @property
     def mainnet(self):
@@ -30,6 +34,14 @@ class RootDerivationPaths:
     @testnet.setter
     def testnet(self, testnet):
         self._testnet = testnet
+
+    @property
+    def stagenet(self):
+        return self._stagenet
+
+    @stagenet.setter
+    def stagenet(self, stagenet):
+        self._stagenet = stagenet
 
 class XChainClientParams:
     def __init__(self, network:Network=None, phrase=None, root_derivation_paths:RootDerivationPaths=None):

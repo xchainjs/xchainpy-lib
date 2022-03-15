@@ -315,3 +315,26 @@ class CosmosSDKClient:
         except Exception as err:
             raise Exception(str(err))
 
+    def get_priv_key_from_mnemonic(self, seed: str , derivation_path) -> bytes:
+        """
+        Get a private key from a mnemonic seed and a derivation path.
+        Assumes a BIP39 mnemonic seed with no passphrase. Raises
+        `cosmospy.BIP32DerivationError` if the resulting private key is
+        invalid.
+        """
+        seed_bytes = mnemonic.Mnemonic.to_seed(seed, passphrase="")
+        hd_wallet = hdwallets.BIP32.from_seed(seed_bytes)
+        # This can raise a `hdwallets.BIP32DerivationError` (which we alias so
+        # that the same exception type is also in the `cosmospy` namespace).
+        derived_privkey = hd_wallet.get_privkey_from_path(derivation_path)
+
+        return derived_privkey
+
+    def get_address_from_mnemonic(self, mnemonic : str , derivation_path : str) -> str:
+        self.set_prefix()
+
+        priv_key = self.get_priv_key_from_mnemonic(mnemonic , derivation_path)
+
+        return self.privkey_to_address(priv_key)
+
+

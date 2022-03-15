@@ -1,9 +1,46 @@
 from .cosmos.cosmosUtil import bech32_prefix 
 import bech32
+import http3
+import json
 
 DECIMAL = 8
-DEFAULT_GAS_VALUE = 2000000
+DEFAULT_GAS_VALUE = 3000000
+DEPOSIT_GAS_VALUE = 500000000
+MAX_TX_COUNT = 100
 
+DEFAULT_EXPLORER_URL = "https://viewblock.io/thorchain"
+
+
+def get_default_explorer_urls():
+    """Get the explorer url.
+
+    :returns: The explorer url (both mainnet and testnet) for thorchain.
+    :rtype: string
+    """
+    root = {
+        "testnet": f'{DEFAULT_EXPLORER_URL}?network=testnet',
+        "stagenet": f'{DEFAULT_EXPLORER_URL}?network=stagenet',
+        "mainnet" : DEFAULT_EXPLORER_URL,
+    }
+
+    txUrl = f'{DEFAULT_EXPLORER_URL}/tx'
+    tx = {
+        "testnet": txUrl,
+        "stagenet": txUrl,
+        "mainnet" : txUrl,
+    }
+    addressUrl = f'{DEFAULT_EXPLORER_URL}/address'
+    address = {
+        "testnet": addressUrl,
+        "stagenet": addressUrl,
+        "mainnet" : addressUrl,
+    }
+    
+    return {
+        root,
+        tx,
+        address
+    }
 
 def base_amount(value: str and int, decimal: int = DECIMAL) -> str:
     if type(value) == int:
@@ -61,3 +98,19 @@ def get_asset(denom : str):
 
 def asset_to_string(asset):
     return f'{asset["chain"]}.{asset["symbol"]}'
+
+async def get_chain_id(node_url : str) -> str:
+    try:
+        url = f'{node_url}/cosmos/base/tendermint/v1beta1/node_info'
+        client = http3.AsyncClient(timeout=10)
+        response = await client.get(url)
+        if  response.status_code == 200:
+            res = json.loads(response.content.decode('utf-8'))['data']
+            if res:
+                if res['default_node_info']:
+                    if res['default_node_info']['network']:
+                        return res['default_node_info']['network']
+            else:
+                raise Exception("Could not parse chain id")  
+    except Exception as err:
+        raise Exception(err)
