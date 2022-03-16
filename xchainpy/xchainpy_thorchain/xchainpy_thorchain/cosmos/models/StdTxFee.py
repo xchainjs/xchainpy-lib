@@ -13,7 +13,7 @@ class StdTxFee:
         return self._gas
 
     @gas.setter
-    def asset(self, gas):
+    def gas(self, gas):
         self._gas = gas
 
     @property

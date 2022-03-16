@@ -1,4 +1,6 @@
 import binascii
+from xchainpy.xchainpy_client.xchainpy_client.models.types import Network, RootDerivationPaths
+from xchainpy.xchainpy_thorchain.xchainpy_thorchain.cosmos.models.StdTxFee import StdTxFee
 from .cosmos.models.StdTx import StdTx
 import http3
 import json
@@ -10,7 +12,7 @@ from .cosmos.models.MsgCoin import MsgCoin
 from .cosmos.models.MsgNativeTx import MsgNativeTx
 from .cosmos.sdk_client import CosmosSDKClient
 from .cosmos import message
-from .utils import DEFAULT_GAS_VALUE, asset_to_string, frombech32, getDenomWithChain, get_asset
+from .utils import DEFAULT_GAS_VALUE, DEPOSIT_GAS_VALUE, asset_to_string, frombech32, get_chain_id, get_default_explorer_urls, getDenomWithChain, get_asset
 
 
 class IThorchainClient():
@@ -33,7 +35,7 @@ class Client(interface.IXChainClient, IThorchainClient):
     phrase = address = network = ''
     private_key = None
 
-    def __init__(self, phrase: str, network: str = "testnet", client_url: str = None, explorer_url: str = None) -> None:
+    def __init__(self, phrase: str ,chain_ids ,root_derivation_path : RootDerivationPaths = RootDerivationPaths("44'/931'/0'/0/" ,"44'/931'/0'/0/" , "44'/931'/0'/0/"), network: str = "testnet", client_url: str = None, explorer_urls: str = None) -> None:
         """Constructor
 
         Client has to be initialised with network type and phrase.
@@ -50,10 +52,12 @@ class Client(interface.IXChainClient, IThorchainClient):
         :return: returns void (None)
         :rtype: None
         """
+        self.root_derivation_path = root_derivation_path
         self.network = network
         self.client_url = client_url or self.get_default_client_url()
-        self.explorer_url = explorer_url or self.get_default_explorer_url()
-        self.thor_client = self.get_new_thor_client()
+        self.explorer_url = explorer_urls or get_default_explorer_urls()
+        self.chain_ids = chain_ids
+        self.cosmos_client = CosmosSDKClient(server=self.client_url[self.network]['node'],prefix=self.get_prefix(self.network),chain_id=self.get_chain_id(self.network))
 
         if phrase:
             self.set_phrase(phrase)
@@ -66,7 +70,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         """
         self.phrase = self.address = ''
         self.private_key = None
-        await self.thor_client.client.close()
+        await self.cosmos_client.client.close()
 
     def set_network(self, network: str) -> None:
         """Set/update the current network.
@@ -81,7 +85,6 @@ class Client(interface.IXChainClient, IThorchainClient):
             raise Exception('Network must be provided')
         else:
             self.network = network
-            self.thor_client = self.get_new_thor_client()
             self.address = ''
 
     def set_phrase(self, phrase: str) -> str:
@@ -112,7 +115,6 @@ class Client(interface.IXChainClient, IThorchainClient):
         :rtype: None
         """
         self.client_url = client_url
-        self.thor_client = self.get_new_thor_client()
 
     def validate_address(self, address: str, prefix: str):
         """Validate the given address
@@ -137,18 +139,16 @@ class Client(interface.IXChainClient, IThorchainClient):
                 "rpc": 'https://testnet.rpc.thorchain.info',
             },
             "mainnet": {
-                "node": 'https://thornode.thorchain.info',
+                "node": 'https://thornode.ninerealms.com',
                 "rpc": 'https://rpc.thorchain.info',
             },
+            "stagenet":{
+                "node": "https://stagenet-thornode.ninerealms.com",
+                "rpc":"https://stagenet-rpc.ninerealms.com"
+            }
         }
 
-    def get_default_explorer_url(self) -> str:
-        """Get the explorer url.
 
-        :returns: The explorer url (both mainnet and testnet) for thorchain.
-        :rtype: string
-        """
-        return 'https://testnet.thorchain.net' if self.network == 'testnet' else 'https://thorchain.net'
 
     def get_explorer_tx_url(self , tx_id: str) -> str:
         """Get the explorer url for the given transaction id.
@@ -160,7 +160,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         """
         return f'{self.get_default_explorer_url()}/txs/${tx_id}'
 
-    def get_prefix(self, network: str = None) -> str:
+    def get_prefix(self, network) -> str:
         """Get address prefix based on the network.
 
         :param network: network
@@ -168,29 +168,22 @@ class Client(interface.IXChainClient, IThorchainClient):
         :returns: The address prefix based on the network.
         :rtype: string
         """
-        if network:
-            return 'tthor' if network == 'testnet' else 'thor'
-        else:
-            return 'tthor' if self.network == 'testnet' else 'thor'
+        if network == "mainnet":
+            return "thor"
+        elif network == "stagenet":
+            return "sthor"
+        elif network == "testnet":
+            return "tthor"
 
-    def get_chain_id(self) -> str:
+    def get_chain_id(self , network) -> str:
         """Get the chain id.
 
         :returns: The chain id based on the network.
         :rtype: string
         """
-        return 'thorchain'
+        return self.chain_ids[network if network != None else self.network]
 
-    def get_new_thor_client(self):
-        """Get new thorchain client.
-
-        :returns: The new thorchain client.
-        :rtype: CosmosSDKClient Class    
-        """
-        network = self.get_network()
-        return CosmosSDKClient(server=self.client_url[network]["node"], prefix=self.get_prefix(), derive_path="m/44'/931'/0'/0/0", chain_id=self.get_chain_id())
-
-    def get_private_key(self) -> bytes:
+    def get_private_key(self , wallet_index = 0) -> bytes:
         """Get private key.
 
         :returns: The private key generated from the given phrase
@@ -198,15 +191,27 @@ class Client(interface.IXChainClient, IThorchainClient):
         :raises: 
             Exception: {"Phrase not set"} -> Throws an error if phrase has not been set before
         """
+
+
+
         if not self.private_key:
             if not self.phrase:
                 raise Exception('Phrase not set')
 
-            self.private_key = self.thor_client.seed_to_privkey(self.phrase)
+            self.private_key = self.cosmos_client.get_priv_key_from_mnemonic(self.phrase , self.get_full_derivation_path(wallet_index))
 
         return self.private_key
 
-    def get_address(self) -> str:
+    def get_full_derivation_path(self , index : int) -> str:
+        if self.network == "testnet":
+            return f'{self.root_derivation_path.testnet}{index}'
+        elif self.network == "mainnet":
+            return f'{self.root_derivation_path.mainnet}{index}'
+        elif self.network == "stagenet":
+            return f'{self.root_derivation_path.stagenet}{index}'
+        
+
+    def get_address(self , index = 0) -> str:
         """Get the current address
 
         :returns: the current address
@@ -215,13 +220,11 @@ class Client(interface.IXChainClient, IThorchainClient):
             Exception: {"Address has to be set. Or set a phrase by calling `setPhrase` before to use an address of an imported key."}
                         -> Raises if phrase has not been set before. A phrase is needed to create a wallet and to derive an address from it.
         """
-        if not self.address:
-            self.address = self.thor_client.privkey_to_address(
-                self.get_private_key())
-            if not self.address:
-                raise Exception(
-                    "Address has to be set. Or set a phrase by calling `setPhrase` before to use an address of an imported key.")
-        return self.address
+        address = self.cosmos_client.get_address_from_mnemonic(self.phrase, self.get_full_derivation_path(index))
+        if not address:
+            raise Exception("address not defined")
+        
+        return address
 
     async def get_balance(self, address: str = None, assets = None) -> list:
         """
@@ -234,7 +237,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         """
         if not address:
             address = self.get_address()
-        response = await self.thor_client.get_balance(address)
+        response = await self.cosmos_client.get_balance(address)
         response = response["result"]
 
         balances = []
@@ -262,7 +265,7 @@ class Client(interface.IXChainClient, IThorchainClient):
         :rtype: object
         """
         try:
-            tx_result = await self.thor_client.txs_hash_get(tx_id)
+            tx_result = await self.cosmos_client.txs_hash_get(tx_id)
             if not tx_result:
                 raise Exception("transaction not found")
             return tx_result
@@ -301,10 +304,10 @@ class Client(interface.IXChainClient, IThorchainClient):
                 'input asset amout is higher than current (asset balance - transfer fee)')
 
         try:
-            await self.thor_client.make_transaction(self.get_private_key(), self.get_address(), fee_denom=asset['symbol'].lower(), memo=memo)
-            self.thor_client.add_transfer(recipient, amount, denom=asset['symbol'].lower())
-            Msg = self.thor_client.get_pushable()
-            return await self.thor_client.do_transfer(Msg)
+            await self.cosmos_client.make_transaction(self.get_private_key(), self.get_address(), fee_denom=asset['symbol'].lower(), memo=memo)
+            self.cosmos_client.add_transfer(recipient, amount, denom=asset['symbol'].lower())
+            Msg = self.cosmos_client.get_pushable()
+            return await self.cosmos_client.do_transfer(Msg)
         except Exception as err:
             raise Exception(err)
 
@@ -314,23 +317,43 @@ class Client(interface.IXChainClient, IThorchainClient):
         :returns: The fees with three rates
         :rtype: dict
         """
-        fee = utils.DEFAULT_GAS_VALUE
-
-        return {
-            "fast": fee,
-            "fastest": fee,
-            "average": fee,
-        }
-
-    async def build_deposit_tx(self , msg_native_tx : MsgNativeTx) -> StdTx :
         try:
-            url = f'{self.client_url[self.get_network()]["node"]}/thorchain/deposit'
+            url = f'{self.client_url[self.network]["node"]}/thorchain/constants'
+            client = http3.AsyncClient(timeout=10)
+            response = await client.get(url)
+            if  response.status_code == 200:
+                res = json.loads(response.content.decode('utf-8'))['data']['int_64_values']['NativeTransactionFee']
+                if not res or res < 0:
+                    raise Exception(f'Invalid fee : {str(res)}')
+                
+                return {
+                    "average" : res,
+                    "fast" : res,
+                    "fastest" : res,
+                    "type" : "base"
+                }
+        except:
+            return {
+                    "average" : 0.02,
+                    "fast" : 0.02,
+                    "fastest" : 0.02,
+                    "type" : "base"
+                }
+
+
+    async def build_deposit_tx(self , msg_native_tx : MsgNativeTx , node_url , chain_id) -> StdTx :
+        try:
+            network_chain_id = await get_chain_id(node_url)
+            if not network_chain_id or chain_id != network_chain_id:
+                raise Exception(f"Invalid network (asked : {chain_id} / returned : {network_chain_id})")
+            
+            url = f'{node_url}/thorchain/deposit'
             client = http3.AsyncClient(timeout=10)
             data = {
             "coins" : msg_native_tx.coins,
             "memo" : msg_native_tx.memo,
             "base_req" : {
-                "chain_id" : "thorchain",
+                "chain_id" : chain_id,
                 "from" : msg_native_tx.signer
             }  
             }
@@ -338,7 +361,14 @@ class Client(interface.IXChainClient, IThorchainClient):
 
             if response.status_code == 200:
                 res = json.loads(response.content.decode('utf-8'))['value']
-                unsigned_std_tx = StdTx(res['msg'] , res['fee'] ,[] ,'')
+                fee : StdTxFee = None
+                if res['fee']:
+                    fee.gas = DEPOSIT_GAS_VALUE
+                    fee.amount = res['fee']['amount']
+                else:
+                    fee.amount = []
+                    fee.gas = DEPOSIT_GAS_VALUE
+                unsigned_std_tx = StdTx(res['msg'] , fee ,[] ,'')
 
                 return unsigned_std_tx
             else:
@@ -348,25 +378,26 @@ class Client(interface.IXChainClient, IThorchainClient):
             raise Exception(str(err))
         
 
-    async def deposit(self, amount , memo , asset = {"chain" : "THOR", "symbol": "RUNE" , "ticker" : "RUNE"}):
+    async def deposit(self, amount , memo , asset = {"chain" : "THOR", "symbol": "RUNE" , "ticker" : "RUNE"} , wallet_index = 0):
         try:
-            asset_balance = await self.get_balance(self.get_address(), [asset])
-            if len(asset_balance) == 0 or float(asset_balance[0]['amount']) < (float(amount) + DEFAULT_GAS_VALUE):
+            asset_balance = await self.get_balance(self.get_address(wallet_index), [asset])
+            
+            fee = self.get_fees()["average"]
+
+            if len(asset_balance) == 0 or float(asset_balance[0]['amount']) < (float(amount) + fee):
                 raise Exception("insufficient funds")
 
-            signer = self.get_address()
+            signer = self.get_address(wallet_index)
             coins = [MsgCoin(getDenomWithChain(asset), amount).to_obj()]
 
             msg_native_tx = message.msg_native_tx_from_json(coins, memo, signer)
             
-            unsigned_std_tx = await self.build_deposit_tx(msg_native_tx)
-            fee = unsigned_std_tx.fee
-            private_key = self.get_private_key()
-            acc_address = frombech32(signer)
-            # max gas
-            fee['gas'] = '100000000'
+            unsigned_std_tx = await self.build_deposit_tx(msg_native_tx,self.client_url[self.network]["node"] , self.get_chain_id())
 
-            result = await self.thor_client.sign_and_broadcast(unsigned_std_tx, private_key, acc_address)
+            private_key = self.get_private_key(wallet_index)
+            acc_address = frombech32(signer)
+
+            result = await self.cosmos_client.sign_and_broadcast(unsigned_std_tx, private_key, acc_address)
             if not result['logs']:
                 raise Exception("failed to broadcast transaction")
             else:
